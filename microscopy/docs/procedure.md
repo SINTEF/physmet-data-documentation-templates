@@ -71,6 +71,20 @@ MyProject/
 └── SEM/                 # SEM microscopy data folder
 ```
 
+**Important: Complete the project readme.txt**
+
+After creating the project, open `MyProject/readme.txt` and fill in the following sections:
+- **PROJECT DESCRIPTION**: Describe the overall purpose and scope
+- **OBJECTIVES**: List the main goals and questions to answer
+- **SAMPLE OVERVIEW**: General information about the samples (material types, source, etc.)
+- **SAMPLE NAMING CONVENTION**: Describe your sample ID naming scheme
+- **PROCESSING CONDITIONS**: Document common experimental parameters
+- **CONTACT INFORMATION**: Add institution name and email
+- **NOTES**: Add any project-specific information (collaborators, funding, etc.)
+- **REFERENCES**: Link to related projects, publications, or SOPs
+
+The readme template provides detailed guidance for each section. Completing this documentation at the start helps maintain consistency throughout the project.
+
 ---
 
 ## Step 2: Define Processing Routes
