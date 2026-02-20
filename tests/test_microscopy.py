@@ -35,7 +35,7 @@ def clean_output_folder():
             raise
 
 
-def run_script(args: list, input_data: str = None):
+def run_script(args: list, input_data: str | None = None):
     """ Run a command "$ python physmet-folders.py ARGS" with user inputs """
 
     output_dir.mkdir(exist_ok=True)
@@ -108,45 +108,17 @@ def test_add_sample():
 
     assert init.returncode == 0, process_str(init, 'Init command failed')
 
-    # run script to add sample
-    add = run_script([
-        "add", "-s", "SAMPLE001", "-d", "2026-02-20", "-p", "TestProject"
-    ])
-
-    assert add.returncode == 0, process_str(add, 'Add command failed')
-
-    proc_init = subprocess.run(
-        cmd_init,
-        cwd=output_dir,
-        capture_output=True,
-        text=True,
-        input=input_data,
-        timeout=30,
-    )
-
-    assert proc_init.returncode == 0, (
-        f"Init command failed (rc={proc_init.returncode})\nstdout:\n{proc_init.stdout}\nstderr:\n{proc_init.stderr}"
-    )
-
     # Manually add a sample to samples.csv (as users would do)
     samples_file = output_dir / "TestProject" / "samples.csv"
     with open(samples_file, 'a', encoding='utf-8') as f:
         f.write('SAMPLE001, 2026-02-20, [P001]\n')
 
-    # Then, add a SEM characterization session for that sample
-    cmd_add = [sys.executable, str(script), "add", "-s", "SAMPLE001", "-d", "2026-02-20", "-p", "TestProject"]
+    # run script to add SEM characterization session
+    add = run_script([
+        "add", "-s", "SAMPLE001", "-d", "2026-02-20", "-p", "TestProject"
+    ])
 
-    proc_add = subprocess.run(
-        cmd_add,
-        cwd=output_dir,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-
-    assert proc_add.returncode == 0, (
-        f"Add command failed (rc={proc_add.returncode})\nstdout:\n{proc_add.stdout}\nstderr:\n{proc_add.stderr}"
-    )
+    assert add.returncode == 0, process_str(add, 'Add command failed')
     
     # Verify that the SEM folder and readme.txt were created
     sem = output_dir / "TestProject" / "SEM" / "SEM_SAMPLE001_2026-02-20"

@@ -36,6 +36,7 @@ from pathlib import Path
 from datetime import datetime
 import json
 from argparse import ArgumentParser, Namespace
+from typing import Optional, Union
 
 # name of the folder in the AppData folder
 # - on linux: ~/.physmet-folders/
@@ -80,7 +81,7 @@ def appdata() -> Path:
     return path
 
 
-def read_config(key=''):
+def read_config(key='') -> Union[dict, None]:
     """ Read a config parameter from the app data file config.json """
     fil = appdata() / 'config.json'
     cfg = json.loads(fil.read_text()) if fil.exists() else {}
@@ -89,7 +90,9 @@ def read_config(key=''):
 
 def write_config(key, data):
     """ Write a config parameter to the app data file config.json """
-    cfg = read_config()
+    cfg = read_config()  # Call without key to get whole dict
+    if not isinstance(cfg, dict):
+        cfg = {}
     cfg[key] = data
     fil = appdata() / 'config.json'
     fil.write_text(json.dumps(cfg, default=str))
@@ -125,7 +128,7 @@ def mkdir(path: Path):
     path.mkdir(exist_ok=True)
 
 
-def write_text(path: Path, text: str):
+def write_text(path: Path, text: Union[str, list]):
     print('create file:')
     print(path)
     if isinstance(text, list):
@@ -134,7 +137,7 @@ def write_text(path: Path, text: str):
         path.write_text(text, encoding='utf-8')
 
 
-def copy_template(name: str, dst: Path, newname: str = '', data: dict = None):
+def copy_template(name: str, dst: Path, newname: str = '', data: Optional[dict] = None):
     """ Copy a template file """
     thisdir = Path(__file__).resolve().parent
     tpldir = thisdir.parent / 'templates'
@@ -194,9 +197,11 @@ def init_project(args: Namespace):
                 prj = read_config('projects')
                 if not prj:
                     prj = []
-                prj.append({'name': project, 'path': pdir})
-                write_config('projects', prj)
-                if len(prj) == 1:
+                # Cast to list to help type checker
+                prj_list = prj if isinstance(prj, list) else []
+                prj_list.append({'name': project, 'path': pdir})
+                write_config('projects', prj_list)
+                if len(prj_list) == 1:
                     write_config('default', project)
         else:
             print('error: the destination directory does not exist.')
