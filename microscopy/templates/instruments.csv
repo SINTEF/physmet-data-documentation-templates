@@ -1,0 +1,5 @@
+Instrument,Type,Location,Contact,Notes
+SEM_1,Scanning Electron Microscope,,,"Example: JEOL JSM-7000F, 15kV max"
+EDX_1,Energy Dispersive X-ray,,,"Coupled with SEM"
+XRD_1,X-ray Diffractometer,,,
+AFM_1,Atomic Force Microscope,,,

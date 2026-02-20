@@ -32,6 +32,7 @@
 import os
 import getpass
 import platform
+import shutil
 from pathlib import Path
 from datetime import datetime
 import json
@@ -162,7 +163,37 @@ def init_project(args: Namespace):
                     f'Author: {author}'
                 ])
                 write_text(pdir / 'samples.csv',
-                           text='SampleId, Date(YYYY-MM-DD)\n')
+                           text='SampleId, Date(YYYY-MM-DD), ProcessIDs\n')
+                
+                # Copy instruments.csv from template
+                instruments_template = Path(__file__).parent.parent / 'templates' / 'instruments.csv'
+                if instruments_template.exists():
+                    shutil.copy(instruments_template, pdir / 'instruments.csv')
+                    print('create file:')
+                    print(pdir / 'instruments.csv')
+                else:
+                    print(f'warning: instruments.csv template not found at {instruments_template}')
+                
+                # Copy processing.csv from template
+                processing_template = Path(__file__).parent.parent / 'templates' / 'processing.csv'
+                if processing_template.exists():
+                    shutil.copy(processing_template, pdir / 'processing.csv')
+                    print('create file:')
+                    print(pdir / 'processing.csv')
+                else:
+                    print(f'warning: processing.csv template not found at {processing_template}')
+                
+                # Create project readme.txt from template
+                template_path = Path(__file__).parent.parent / 'templates' / 'readme_project_template.txt'
+                if template_path.exists():
+                    readme_content = template_path.read_text(encoding='utf-8')
+                    readme_content = readme_content.replace('{project_name}', project)
+                    readme_content = readme_content.replace('{author}', author)
+                    readme_content = readme_content.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
+                    write_text(pdir / 'readme.txt', readme_content)
+                else:
+                    print(f'warning: template not found at {template_path}')
+                
                 mkdir(pdir / 'SEM')
                 # add the project in the global config.json
                 prj = read_config('projects')
@@ -233,9 +264,9 @@ def add_sample(args: Namespace):
         # Add sample to samples.csv
         samples_file = project_path / 'samples.csv'
         if samples_file.exists():
-            # Append the new sample
+            # Append the new sample (ProcessIDs column left empty for user to fill)
             with open(samples_file, 'a', encoding='utf-8') as f:
-                f.write(f'{args.sample}, {args.date}\n')
+                f.write(f'{args.sample}, {args.date}, \n')
         else:
             print(f'error: samples.csv not found in project "{project_name}".')
             return

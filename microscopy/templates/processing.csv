@@ -1,0 +1,4 @@
+ProcessID,ProcessingRoute,Notes
+P001,"Heat treatment: 500C for 2h, Air cooling","Optional: add any relevant details about this process"
+P002,"As-received, No processing","Baseline/control samples"
+P003,"Cold rolling: 50% reduction","Mechanical deformation"
