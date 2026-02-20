@@ -161,9 +161,9 @@ def init_project(args: Namespace):
                     f'Name: {project}',
                     f'Author: {author}'
                 ])
-                mkdir(pdir / 'SEM')
-                write_text(pdir / 'SEM/samples.csv',
+                write_text(pdir / 'samples.csv',
                            text='SampleId, Date(YYYY-MM-DD)\n')
+                mkdir(pdir / 'SEM')
                 # add the project in the global config.json
                 prj = read_config('projects')
                 if not prj:
@@ -210,34 +210,71 @@ def datacheck(args: Namespace):
 
 
 def add_sample(args: Namespace):
-    """ Create a folder SAMPLE_YYYYMMDD """
-    if args.sample and args.date:
+    """ Add a sample to a project """
+    # Determine which project to use
+    project_name = args.project if args.project else read_config('default')
+    
+    if not project_name:
+        print('error: no project specified and no default project set.')
+        return
+    
+    if not args.sample:
+        print('error: sample ID is required.')
+        return
+    
+    if not args.date:
+        print('error: date is required.')
+        return
+    
+    try:
+        # Find the project path
+        project_path = find_project(project_name)
+        
+        # Add sample to samples.csv
+        samples_file = project_path / 'samples.csv'
+        if samples_file.exists():
+            # Append the new sample
+            with open(samples_file, 'a', encoding='utf-8') as f:
+                f.write(f'{args.sample}, {args.date}\n')
+        else:
+            print(f'error: samples.csv not found in project "{project_name}".')
+            return
+        
+        # Parse the date
         date = None
+        date_str = None
         try:
             if '-' in args.date:
                 date = datetime.strptime(args.date, '%Y-%m-%d')
             else:
                 date = datetime.strptime(args.date, '%Y%m%d')
+            date_str = date.strftime("%Y-%m-%d")
         except Exception as ex:
             print('error: expected date formats: "yyyymmdd" or "yyyy-mm-dd".')
             print(ex)
-            date = None
-
-        if date is not None:
-            name = read_config('default')
-            prj = find_project(name)
-            if prj:
-                if prj.exists():
-                    cwd = prj / f'SEM/{args.sample}_{args.date}'
-                    mkdir(cwd)
-                    write_text(cwd / 'info.txt', [
-                        f'SampleId: {args.sample}', f'Date: {args.date}'
-                    ])
-                else:
-                    print(f'error: project path does not exists for "{name}":')
-                    print(prj)
-            else:
-                print('error: default project not found.')
+            return
+        
+        # Create a folder for the sample in SEM directory
+        sem_dir = project_path / 'SEM'
+        if not sem_dir.exists():
+            print(f'error: SEM directory not found in project "{project_name}".')
+            return
+        
+        folder_name = f"SEM_{args.sample}_{date_str}"
+        sample_dir = sem_dir / folder_name
+        
+        if sample_dir.exists():
+            print(f'warning: sample directory "{folder_name}" already exists.')
+        else:
+            mkdir(sample_dir)
+            write_text(sample_dir / 'info.txt', [
+                f'SampleId: {args.sample}',
+                f'Date: {date_str}'
+            ])
+            print(f'Sample "{args.sample}" added to project "{project_name}".')
+            
+    except (KeyError, FileNotFoundError) as e:
+        print(f'error: {e}')
 
 
 def main():
@@ -260,11 +297,11 @@ def main():
     if args.task == 'init':
         init_project(args)
 
-    elif (args.task == 'add') and args.project:
-        init_project(args)
-
     elif (args.task == 'add') and args.sample:
         add_sample(args)
+
+    elif (args.task == 'add') and args.project:
+        init_project(args)
 
     elif args.task == 'list':
         if args.sample:
