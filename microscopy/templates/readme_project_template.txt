@@ -31,8 +31,8 @@ FOLDER STRUCTURE
 ├── readme.txt           # This file - project documentation
 ├── info.txt             # Basic project metadata
 ├── samples.csv          # Sample tracking list
-├── instruments.csv          # Instruments list
-├── processing.csv          # Sample processing list
+├── instruments.csv      # Instruments list
+├── processing.csv       # Sample processing list
 └── SEM/                 # SEM microscopy data
     └── SEM_SAMPLE_DATE/ # Individual sample folders
 

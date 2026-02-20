@@ -162,8 +162,15 @@ def init_project(args: Namespace):
                     f'Name: {project}',
                     f'Author: {author}'
                 ])
-                write_text(pdir / 'samples.csv',
-                           text='SampleId, Date(YYYY-MM-DD), ProcessIDs\n')
+                
+                # Copy samples.csv from template
+                samples_template = Path(__file__).parent.parent / 'templates' / 'samples.csv'
+                if samples_template.exists():
+                    shutil.copy(samples_template, pdir / 'samples.csv')
+                    print('create file:')
+                    print(pdir / 'samples.csv')
+                else:
+                    print(f'warning: samples.csv template not found at {samples_template}')
                 
                 # Copy instruments.csv from template
                 instruments_template = Path(__file__).parent.parent / 'templates' / 'instruments.csv'
