@@ -69,6 +69,22 @@ def test_create_folder():
     assert proc.returncode == 0, (
         f"Command failed (rc={proc.returncode})\nstdout:\n{proc.stdout}\nstderr:\n{proc.stderr}"
     )
+    
+    # Verify that the project readme.txt was created
+    project_readme = output_dir / "PhysMet" / "readme.txt"
+    assert project_readme.exists(), f"Project readme.txt not created: {project_readme}"
+    
+    # Verify readme contains project info
+    readme_content = project_readme.read_text(encoding='utf-8')
+    assert "PhysMet" in readme_content, "Project name not in readme.txt"
+    assert "PROJECT DOCUMENTATION" in readme_content, "Template header not in readme.txt"
+    
+    # Verify that instruments.csv and processing.csv were created
+    instruments_csv = output_dir / "PhysMet" / "instruments.csv"
+    assert instruments_csv.exists(), f"instruments.csv not created: {instruments_csv}"
+    
+    processing_csv = output_dir / "PhysMet" / "processing.csv"
+    assert processing_csv.exists(), f"processing.csv not created: {processing_csv}"
 
 
 def test_add_sample():
