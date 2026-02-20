@@ -105,7 +105,7 @@ def test_add_sample():
     )
 
     # Then, add a sample
-    cmd_add = [sys.executable, str(script), "add", "-s", "SAMPLE_001", "-d", "2026-02-20", "-p", "TestProject"]
+    cmd_add = [sys.executable, str(script), "add", "-s", "SAMPLE001", "-d", "2026-02-20", "-p", "TestProject"]
 
     proc_add = subprocess.run(
         cmd_add,

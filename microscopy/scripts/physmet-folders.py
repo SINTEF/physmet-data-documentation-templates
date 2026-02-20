@@ -161,9 +161,9 @@ def init_project(args: Namespace):
                     f'Name: {project}',
                     f'Author: {author}'
                 ])
-                mkdir(pdir / 'SEM')
-                write_text(pdir / 'SEM/samples.csv',
+                write_text(pdir / 'samples.csv',
                            text='SampleId, Date(YYYY-MM-DD)\n')
+                mkdir(pdir / 'SEM')
                 # add the project in the global config.json
                 prj = read_config('projects')
                 if not prj:
@@ -240,33 +240,38 @@ def add_sample(args: Namespace):
             print(f'error: samples.csv not found in project "{project_name}".')
             return
         
+        # Parse the date
         date = None
+        date_str = None
         try:
             if '-' in args.date:
                 date = datetime.strptime(args.date, '%Y-%m-%d')
             else:
                 date = datetime.strptime(args.date, '%Y%m%d')
+            date_str = date.strftime("%Y-%m-%d")
         except Exception as ex:
             print('error: expected date formats: "yyyymmdd" or "yyyy-mm-dd".')
             print(ex)
-            date = None
+            return
         
         # Create a folder for the sample in SEM directory
-        folder_name = f"SEM_{args.sample}_{date}"
-        sem_dir = project_path / 'SEM' / folder_name
-        if sem_dir.exists():
-            sample_dir = sem_dir / args.sample
-            if sample_dir.exists():
-                print(f'warning: sample directory "{args.sample}" already exists.')
-            else:
-                sample_dir.mkdir()
-                write_text(sample_dir / 'info.txt', [
-                        f'SampleId: {args.sample}', f'Date: {date}'
-                    ])
-                print(f'Sample "{args.sample}" added to project "{project_name} with SEM characterization folder".')
-        else:
+        sem_dir = project_path / 'SEM'
+        if not sem_dir.exists():
             print(f'error: SEM directory not found in project "{project_name}".')
             return
+        
+        folder_name = f"SEM_{args.sample}_{date_str}"
+        sample_dir = sem_dir / folder_name
+        
+        if sample_dir.exists():
+            print(f'warning: sample directory "{folder_name}" already exists.')
+        else:
+            mkdir(sample_dir)
+            write_text(sample_dir / 'info.txt', [
+                f'SampleId: {args.sample}',
+                f'Date: {date_str}'
+            ])
+            print(f'Sample "{args.sample}" added to project "{project_name}".')
             
     except (KeyError, FileNotFoundError) as e:
         print(f'error: {e}')
