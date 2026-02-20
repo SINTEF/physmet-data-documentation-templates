@@ -118,6 +118,18 @@ def test_add_sample():
     assert proc_add.returncode == 0, (
         f"Add command failed (rc={proc_add.returncode})\nstdout:\n{proc_add.stdout}\nstderr:\n{proc_add.stderr}"
     )
+    
+    # Verify that the SEM folder and readme.txt were created
+    sem_folder = output_dir / "TestProject" / "SEM" / "SEM_SAMPLE001_2026-02-20"
+    assert sem_folder.exists(), f"SEM folder not created: {sem_folder}"
+    
+    readme_file = sem_folder / "readme.txt"
+    assert readme_file.exists(), f"readme.txt not created: {readme_file}"
+    
+    # Verify readme contains sample info
+    readme_content = readme_file.read_text(encoding='utf-8')
+    assert "SAMPLE001" in readme_content, "Sample ID not in readme.txt"
+    assert "2026-02-20" in readme_content, "Date not in readme.txt"
 
 
 if __name__ == "__main__":
