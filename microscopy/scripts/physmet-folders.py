@@ -33,6 +33,7 @@ import os
 import getpass
 import platform
 from pathlib import Path
+from datetime import datetime
 import json
 from argparse import ArgumentParser, Namespace
 
@@ -118,6 +119,21 @@ def userinput(msg, default):
     return val if val else default
 
 
+def mkdir(path: Path):
+    print('create directory:')
+    print(path)
+    path.mkdir(exist_ok=True)
+
+
+def write_text(path: Path, text: str):
+    print('create file:')
+    print(path)
+    if isinstance(text, list):
+        path.write_text('\n'.join(text), encoding='utf-8')
+    elif isinstance(text, str):
+        path.write_text(text, encoding='utf-8')
+
+
 def init_project(args: Namespace):
     """ Init a project from user inputs """
     msg = [
@@ -140,14 +156,14 @@ def init_project(args: Namespace):
                 print('error: the project directory already exists.')
             else:
                 # create directory and files
-                pdir.mkdir()
-                info = pdir / 'info.txt'
-                info_text = f'Name: {project}\nAuthor: {author}\n'
-                info.write_text(info_text, 'utf-8')
-                samples = pdir / 'samples.csv'
-                samples.write_text('SampleId, Date(YYYY-MM-DD)\n')
-                sem = pdir / 'SEM'
-                sem.mkdir()
+                mkdir(pdir)
+                write_text(pdir / 'info.txt', [
+                    f'Name: {project}',
+                    f'Author: {author}'
+                ])
+                mkdir(pdir / 'SEM')
+                write_text(pdir / 'SEM/samples.csv',
+                           text='SampleId, Date(YYYY-MM-DD)\n')
                 # add the project in the global config.json
                 prj = read_config('projects')
                 if not prj:
@@ -186,15 +202,42 @@ def set_default(args):
         else:
             print(f'error: project not found "{args.project}".')
     else:
-        print('error: cannot set the default project (no names given).')
+        print('error: cannot set the default project (name not given).')
 
 
 def datacheck(args: Namespace):
-    print('error: datacheck not yet implemented')
+    print('error: datacheck not yet implemented.')
 
 
 def add_sample(args: Namespace):
-    pass
+    """ Create a folder SAMPLE_YYYYMMDD """
+    if args.sample and args.date:
+        date = None
+        try:
+            if '-' in args.date:
+                date = datetime.strptime(args.date, '%Y-%m-%d')
+            else:
+                date = datetime.strptime(args.date, '%Y%m%d')
+        except Exception as ex:
+            print('error: expected date formats: "yyyymmdd" or "yyyy-mm-dd".')
+            print(ex)
+            date = None
+
+        if date is not None:
+            name = read_config('default')
+            prj = find_project(name)
+            if prj:
+                if prj.exists():
+                    cwd = prj / f'SEM/{args.sample}_{args.date}'
+                    mkdir(cwd)
+                    write_text(cwd / 'info.txt', [
+                        f'SampleId: {args.sample}', f'Date: {args.date}'
+                    ])
+                else:
+                    print(f'error: project path does not exists for "{name}":')
+                    print(prj)
+            else:
+                print('error: default project not found.')
 
 
 def main():
