@@ -194,7 +194,51 @@ def datacheck(args: Namespace):
 
 
 def add_sample(args: Namespace):
-    pass
+    """ Add a sample to a project """
+    # Determine which project to use
+    project_name = args.project if args.project else read_config('default')
+    
+    if not project_name:
+        print('error: no project specified and no default project set.')
+        return
+    
+    if not args.sample:
+        print('error: sample ID is required.')
+        return
+    
+    if not args.date:
+        print('error: date is required.')
+        return
+    
+    try:
+        # Find the project path
+        project_path = find_project(project_name)
+        
+        # Add sample to samples.csv
+        samples_file = project_path / 'samples.csv'
+        if samples_file.exists():
+            # Append the new sample
+            with open(samples_file, 'a', encoding='utf-8') as f:
+                f.write(f'{args.sample}, {args.date}\n')
+        else:
+            print(f'error: samples.csv not found in project "{project_name}".')
+            return
+        
+        # Create a folder for the sample in SEM directory
+        sem_dir = project_path / 'SEM'
+        if sem_dir.exists():
+            sample_dir = sem_dir / args.sample
+            if sample_dir.exists():
+                print(f'warning: sample directory "{args.sample}" already exists.')
+            else:
+                sample_dir.mkdir()
+                print(f'Sample "{args.sample}" added to project "{project_name}".')
+        else:
+            print(f'error: SEM directory not found in project "{project_name}".')
+            return
+            
+    except (KeyError, FileNotFoundError) as e:
+        print(f'error: {e}')
 
 
 def main():
@@ -217,11 +261,11 @@ def main():
     if args.task == 'init':
         init_project(args)
 
-    elif (args.task == 'add') and args.project:
-        init_project(args)
-
     elif (args.task == 'add') and args.sample:
         add_sample(args)
+
+    elif (args.task == 'add') and args.project:
+        init_project(args)
 
     elif args.task == 'list':
         if args.sample:
