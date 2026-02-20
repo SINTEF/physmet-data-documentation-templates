@@ -271,6 +271,19 @@ def add_sample(args: Namespace):
                 f'SampleId: {args.sample}',
                 f'Date: {date_str}'
             ])
+            
+            # Create readme.txt from template
+            template_path = Path(__file__).parent.parent / 'templates' / 'readme_sem_template.txt'
+            if template_path.exists():
+                readme_content = template_path.read_text(encoding='utf-8')
+                readme_content = readme_content.replace('{project_name}', project_name)
+                readme_content = readme_content.replace('{sample_id}', args.sample)
+                readme_content = readme_content.replace('{date}', date_str)
+                readme_content = readme_content.replace('{operator}', username())
+                write_text(sample_dir / 'readme.txt', readme_content)
+            else:
+                print(f'warning: template not found at {template_path}')
+            
             print(f'Sample "{args.sample}" added to project "{project_name}".')
             
     except (KeyError, FileNotFoundError) as e:
