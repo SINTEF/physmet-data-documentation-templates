@@ -25,15 +25,13 @@
     - print the version of the program:
       $ python physmet-folders.py --version
 
-    - add a SEM characterization session for an existing sample:
+    - add a measurement on a sample (enter sample identifier and date):
       $ python physmet-folders.py add -s SAMPLE_ID -d YYYY-MM-DD
-      (Note: sample must already be registered in samples.csv)
 """
 
 import os
 import getpass
 import platform
-import shutil
 from pathlib import Path
 from datetime import datetime
 import json
@@ -136,6 +134,19 @@ def write_text(path: Path, text: str):
         path.write_text(text, encoding='utf-8')
 
 
+def copy_template(name: str, dst: Path, newname: str = '', data: dict = None):
+    """ Copy a template file """
+    thisdir = Path(__file__).resolve().parent
+    tpldir = thisdir.parent / 'templates'
+    fil = tpldir / name
+    if fil.exists():
+        text = fil.read_text().format(**data) if data else fil.read_text()
+        newfil = dst / newname if newname else dst / name
+        write_text(newfil, text)
+    else:
+        print(f'warning: template "{name}" not found at "{tpldir}".')
+
+
 def init_project(args: Namespace):
     """ Init a project from user inputs """
     msg = [
@@ -163,45 +174,21 @@ def init_project(args: Namespace):
                     f'Name: {project}',
                     f'Author: {author}'
                 ])
-                
-                # Copy samples.csv from template
-                samples_template = Path(__file__).parent.parent / 'templates' / 'samples.csv'
-                if samples_template.exists():
-                    shutil.copy(samples_template, pdir / 'samples.csv')
-                    print('create file:')
-                    print(pdir / 'samples.csv')
-                else:
-                    print(f'warning: samples.csv template not found at {samples_template}')
-                
-                # Copy instruments.csv from template
-                instruments_template = Path(__file__).parent.parent / 'templates' / 'instruments.csv'
-                if instruments_template.exists():
-                    shutil.copy(instruments_template, pdir / 'instruments.csv')
-                    print('create file:')
-                    print(pdir / 'instruments.csv')
-                else:
-                    print(f'warning: instruments.csv template not found at {instruments_template}')
-                
-                # Copy processing.csv from template
-                processing_template = Path(__file__).parent.parent / 'templates' / 'processing.csv'
-                if processing_template.exists():
-                    shutil.copy(processing_template, pdir / 'processing.csv')
-                    print('create file:')
-                    print(pdir / 'processing.csv')
-                else:
-                    print(f'warning: processing.csv template not found at {processing_template}')
-                
-                # Create project readme.txt from template
-                template_path = Path(__file__).parent.parent / 'templates' / 'readme_project_template.txt'
-                if template_path.exists():
-                    readme_content = template_path.read_text(encoding='utf-8')
-                    readme_content = readme_content.replace('{project_name}', project)
-                    readme_content = readme_content.replace('{author}', author)
-                    readme_content = readme_content.replace('{date}', datetime.now().strftime('%Y-%m-%d'))
-                    write_text(pdir / 'readme.txt', readme_content)
-                else:
-                    print(f'warning: template not found at {template_path}')
-                
+
+                copy_template('samples.csv', pdir)
+                copy_template('instruments.csv', pdir)
+                copy_template('processing.csv', pdir)
+
+                copy_template(
+                    name='readme_project_template.txt',
+                    dst=pdir,
+                    newname='readme.txt',
+                    data=dict(
+                        project_name=project,
+                        author=author,
+                        date=datetime.now().strftime('%Y-%m-%d')
+                    )
+                )
                 mkdir(pdir / 'SEM')
                 # add the project in the global config.json
                 prj = read_config('projects')
@@ -249,48 +236,37 @@ def datacheck(args: Namespace):
 
 
 def add_sample(args: Namespace):
-    """ Add a SEM characterization session for an existing sample """
+    """ Add a sample to a project """
     # Determine which project to use
     project_name = args.project if args.project else read_config('default')
-    
+
     if not project_name:
         print('error: no project specified and no default project set.')
         return
-    
+
     if not args.sample:
         print('error: sample ID is required.')
         return
-    
+
     if not args.date:
         print('error: date is required.')
         return
-    
+
     try:
         # Find the project path
         project_path = find_project(project_name)
-        
-        # Verify sample exists in samples.csv
+
+        # Add sample to samples.csv
         samples_file = project_path / 'samples.csv'
-        if not samples_file.exists():
+        if samples_file.exists():
+            # Append the new sample (ProcessIDs column left empty for user to
+            # fill)
+            with open(samples_file, 'a', encoding='utf-8') as f:
+                f.write(f'{args.sample}, {args.date}, \n')
+        else:
             print(f'error: samples.csv not found in project "{project_name}".')
             return
-            
-        # Check if sample is registered
-        sample_found = False
-        with open(samples_file, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-            for line in lines[1:]:  # Skip header
-                if line.strip():
-                    sample_id = line.split(',')[0].strip()
-                    if sample_id == args.sample:
-                        sample_found = True
-                        break
-        
-        if not sample_found:
-            print(f'error: sample "{args.sample}" not found in samples.csv.')
-            print(f'Please add the sample to samples.csv first.')
-            return
-        
+
         # Parse the date
         date = None
         date_str = None
@@ -304,39 +280,38 @@ def add_sample(args: Namespace):
             print('error: expected date formats: "yyyymmdd" or "yyyy-mm-dd".')
             print(ex)
             return
-        
-        # Create a folder for the SEM characterization in SEM directory
+
+        # Create a folder for the sample in SEM directory
         sem_dir = project_path / 'SEM'
         if not sem_dir.exists():
             print(f'error: SEM directory not found in project "{project_name}".')
             return
-        
+
         folder_name = f"SEM_{args.sample}_{date_str}"
         sample_dir = sem_dir / folder_name
-        
+
         if sample_dir.exists():
-            print(f'warning: SEM characterization folder "{folder_name}" already exists.')
+            print(f'warning: sample directory "{folder_name}" already exists.')
         else:
             mkdir(sample_dir)
             write_text(sample_dir / 'info.txt', [
                 f'SampleId: {args.sample}',
                 f'Date: {date_str}'
             ])
-            
-            # Create readme.txt from template
-            template_path = Path(__file__).parent.parent / 'templates' / 'readme_sem_template.txt'
-            if template_path.exists():
-                readme_content = template_path.read_text(encoding='utf-8')
-                readme_content = readme_content.replace('{project_name}', project_name)
-                readme_content = readme_content.replace('{sample_id}', args.sample)
-                readme_content = readme_content.replace('{date}', date_str)
-                readme_content = readme_content.replace('{operator}', username())
-                write_text(sample_dir / 'readme.txt', readme_content)
-            else:
-                print(f'warning: template not found at {template_path}')
-            
-            print(f'SEM characterization session for sample "{args.sample}" added to project "{project_name}".')
-            
+
+            copy_template(
+                name='readme_sem_template.txt',
+                dst=sample_dir,
+                newname='readme.txt',
+                data=dict(
+                    project_name=project_name,
+                    sample_id=args.sample,
+                    date=date_str,
+                    operator=username()
+                )
+            )
+            print(f'Sample "{args.sample}" added to project "{project_name}".')
+
     except (KeyError, FileNotFoundError) as e:
         print(f'error: {e}')
 
