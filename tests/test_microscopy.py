@@ -88,7 +88,7 @@ def test_create_folder():
 
 
 def test_add_sample():
-    """Test the command line for adding a sample to a project.
+    """Test the command line for adding a SEM characterization session.
 
     This runs `python physmet-folders.py add -s SAMPLE_ID -d YYYY-MM-DD`
     with the working directory set to the `tests/output` folder.
@@ -120,7 +120,12 @@ def test_add_sample():
         f"Init command failed (rc={proc_init.returncode})\nstdout:\n{proc_init.stdout}\nstderr:\n{proc_init.stderr}"
     )
 
-    # Then, add a sample
+    # Manually add a sample to samples.csv (as users would do)
+    samples_file = output_dir / "TestProject" / "samples.csv"
+    with open(samples_file, 'a', encoding='utf-8') as f:
+        f.write('SAMPLE001, 2026-02-20, [P001]\n')
+
+    # Then, add a SEM characterization session for that sample
     cmd_add = [sys.executable, str(script), "add", "-s", "SAMPLE001", "-d", "2026-02-20", "-p", "TestProject"]
 
     proc_add = subprocess.run(

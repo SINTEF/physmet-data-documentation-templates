@@ -25,8 +25,9 @@
     - print the version of the program:
       $ python physmet-folders.py --version
 
-    - add a measurement on a sample (enter sample identifier and date):
+    - add a SEM characterization session for an existing sample:
       $ python physmet-folders.py add -s SAMPLE_ID -d YYYY-MM-DD
+      (Note: sample must already be registered in samples.csv)
 """
 
 import os
@@ -248,7 +249,7 @@ def datacheck(args: Namespace):
 
 
 def add_sample(args: Namespace):
-    """ Add a sample to a project """
+    """ Add a SEM characterization session for an existing sample """
     # Determine which project to use
     project_name = args.project if args.project else read_config('default')
     
@@ -268,14 +269,26 @@ def add_sample(args: Namespace):
         # Find the project path
         project_path = find_project(project_name)
         
-        # Add sample to samples.csv
+        # Verify sample exists in samples.csv
         samples_file = project_path / 'samples.csv'
-        if samples_file.exists():
-            # Append the new sample (ProcessIDs column left empty for user to fill)
-            with open(samples_file, 'a', encoding='utf-8') as f:
-                f.write(f'{args.sample}, {args.date}, \n')
-        else:
+        if not samples_file.exists():
             print(f'error: samples.csv not found in project "{project_name}".')
+            return
+            
+        # Check if sample is registered
+        sample_found = False
+        with open(samples_file, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+            for line in lines[1:]:  # Skip header
+                if line.strip():
+                    sample_id = line.split(',')[0].strip()
+                    if sample_id == args.sample:
+                        sample_found = True
+                        break
+        
+        if not sample_found:
+            print(f'error: sample "{args.sample}" not found in samples.csv.')
+            print(f'Please add the sample to samples.csv first.')
             return
         
         # Parse the date
@@ -292,7 +305,7 @@ def add_sample(args: Namespace):
             print(ex)
             return
         
-        # Create a folder for the sample in SEM directory
+        # Create a folder for the SEM characterization in SEM directory
         sem_dir = project_path / 'SEM'
         if not sem_dir.exists():
             print(f'error: SEM directory not found in project "{project_name}".')
@@ -302,7 +315,7 @@ def add_sample(args: Namespace):
         sample_dir = sem_dir / folder_name
         
         if sample_dir.exists():
-            print(f'warning: sample directory "{folder_name}" already exists.')
+            print(f'warning: SEM characterization folder "{folder_name}" already exists.')
         else:
             mkdir(sample_dir)
             write_text(sample_dir / 'info.txt', [
@@ -322,7 +335,7 @@ def add_sample(args: Namespace):
             else:
                 print(f'warning: template not found at {template_path}')
             
-            print(f'Sample "{args.sample}" added to project "{project_name}".')
+            print(f'SEM characterization session for sample "{args.sample}" added to project "{project_name}".')
             
     except (KeyError, FileNotFoundError) as e:
         print(f'error: {e}')
