@@ -1,2 +1,3 @@
-@id,@type,name,email,affiliation.name
-https://orcid.org/0000-0002-1560-809X,foaf:Person,"Jesper Friis",jesper.friis@sintef.no,SINTEF
+@id,@type,name,email,affiliation.name,identifier
+orcid:0000-0002-1560-809X,foaf:Person,Jesper Friis,jesper.friis@sintef.no,SINTEF,nvaid:40356
+nvaid:978376,foaf:Person,Andreas Voll Bugten,,NTNU,

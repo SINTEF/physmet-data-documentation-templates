@@ -1,0 +1,57 @@
+{
+  "@version": 1.1,
+  "@context": {
+    "org": "https://www.w3.org/TR/vocab-org/",
+    "frapro": "http://purl.org/cerif/frapo/",
+    "orcid": "https://orcid.org/",
+    "nvaid": "https://nva.sikt.no/research-profile/",
+    "emmo": "https://w3id.org/emmo#",
+    "micro": "https://w3id.org/emmo/domain/microstructure#",
+    "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/",
+    "emlab-equip": "https://www.ntnu.edu/ima/research/emlab/equipment/",
+    "nanolab-equip": "https://www.ntnu.edu/nanolab/equipment/",
+
+    "affiliation": {
+      "@id": "org:memberOf",
+      "@type": "@id"
+    },
+    "hasIPROwner": {
+      "@id": "org:hasIPROwmer",
+      "@type": "@id"
+    },
+    "hasFundingAgency": {
+      "@id": "frapro:hasFundingAgency",
+      "@type": "@id"
+    },
+    "hasGrantNumber": {
+      "@id": "frapro:hasGrantNumber",
+      "@type": "@id"
+    },
+    "hasAcronym": {
+      "@id": "frapro:hasAcronym",
+      "@type": "@id"
+    },
+    "performedBy": {
+      "@id": "emmo:performedBy",
+      "@type": "@id"
+    },
+    "performedWith": {
+      "@id": "emmo:performedWith",
+      "@type": "@id"
+    },
+    "creationDate": {
+      "@id": "dcterms:created",
+      "@type": "xsd:dateTime"
+    },
+    "version": {
+      "@id": "dcat:version",
+      "@type": "xsd:string"
+    },
+    "priorRelease": {
+      "@id": "ddoc:priorRelease",
+      "@type": "@id"
+    },
+
+
+  }
+}
