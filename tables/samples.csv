@@ -1,1 +1,1 @@
-@id,@type,title,description,hasComposition,creator,creationDate,location
+@id,@type,title,description,note,hasComposition,creator,creationDate,location,isTemporalPartOf,isSpatialPartOf
