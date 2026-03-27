@@ -19,8 +19,20 @@ Keywords in YAML-sections in README-files and table headers should be:
 - be a single word without special characters
 - be written with lowerCamelCase (unless there are good reasons to do otherwise)
 
+I don't think that we should be afraid to have two initial columns labeled `@id` and `@type` in the tables exposed to the users (can be discussed).
+The experience from PINK is that it is easy for people to understand them.
+The challenge is to make people being consistent with identifiers.
+The benefit of including `@id` and `@type` is that the then can be directly converted to RDF using DataDocWeb/Tripper.
+
+
 We should publish lists of available keywords and their meaning.
 The Tripper documentation already contain such a [list](https://emmc-asbl.github.io/tripper/latest/datadoc/keywords/), but that should be improved.
+
+
+Standard conformance
+--------------------
+The data documentation in SFI PhysMet should adhere to EMMO.
+Conformance with DCAT and PROV-O will be ensured by postprocessing (most likely with CONSTRUCT SPARQL queries).
 
 
 
