@@ -1,2 +1,2 @@
-@id,@type,name,hasFundingAgency,hasGrantNumber
-https://www.ntnu.edu/physmet,foaf:Project,SFI PhysMet,https://ror.org/00epmv149,309584
+@id,@type,name,prefix,hasFundingAgency,hasGrantNumber
+https://www.ntnu.edu/physmet,foaf:Project,SFI PhysMet,pm,https://ror.org/00epmv149,309584
