@@ -44,7 +44,7 @@ When documenting the above dataset, we will refer to it with the following IRI:
 Samples coming from Elkem, should use the Elkem prefix, and so forth.
 
 > [!NOTE]
-> An IRI written with a prefix is called a [CURIE] (compact URI).
+> An IRI written with a prefix, like `abd:JP16/SEM/220406aa/nitride5.tif`, is called a [CURIE] (compact URI).
 > A CURIE differ from a [QName] in that the part following the colon may contain embedded slashes.
 
 The prefixes are maintained in the three global tables:
