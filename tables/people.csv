@@ -1,4 +1,4 @@
 @id,@type,name,prefix,namespace,email,affiliation.name,sameAs,sameAs
 people:AndreasVollBugten,foaf:Person,Andreas Voll Bugten,avb,https://www.ntnu.edu/physmet/data/avb/,,NTNU,orcid:0000-0003-0311-8584,nnvaid:978376
-people:MarisaDiSabatino,foaf:Person,Marisa Di Sabatino,,,marisa.di.sabatino@ntnu.no,NTNU,0000-0001-9306-414X,
+people:MarisaDiSabatino,foaf:Person,Marisa Di Sabatino,,,marisa.di.sabatino@ntnu.no,orcid:NTNU,0000-0001-9306-414X,
 people:JesperFriis,foaf:Person,Jesper Friis,,,jesper.friis@sintef.no,SINTEF,orcid:0000-0002-1560-809X,nvaid:40356

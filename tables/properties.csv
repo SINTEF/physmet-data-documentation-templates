@@ -1,0 +1,2 @@
+@id,@type,subPropertyOf,prefLabel,elucidation,hasUnit
+avb:nominalBoron,owl:datatypeProperty,emmo:hasNumberValue,nominalBoron,Nominal boron content in ppm.,ppm
