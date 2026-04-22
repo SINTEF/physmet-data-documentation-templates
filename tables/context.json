@@ -1,15 +1,21 @@
 {
   "@version": 1.1,
   "@context": {
-    "org": "https://www.w3.org/TR/vocab-org/",
+    "vorg": "https://www.w3.org/TR/vocab-org/",
     "frapro": "http://purl.org/cerif/frapo/",
     "orcid": "https://orcid.org/",
     "nvaid": "https://nva.sikt.no/research-profile/",
+    "ror": "https://ror.org/",
     "emmo": "https://w3id.org/emmo#",
+    "chameo": "https://w3id.org/emmo/domain/characterisation-methodology/chameo#",
     "micro": "https://w3id.org/emmo/domain/microstructure#",
+    "temgo": "https://www.ntnu.edu/temgemini/vocab/temgo#",
+    "people": "https://www.ntnu.edu/physmet/people/",
+    "org": "https://www.ntnu.edu/physmet/org/",
     "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/",
     "emlab-equip": "https://www.ntnu.edu/ima/research/emlab/equipment/",
     "nanolab-equip": "https://www.ntnu.edu/nanolab/equipment/",
+    "elkem": "https://www.elkem.com/physmet/",
 
     "affiliation": {
       "@id": "org:memberOf",
@@ -31,8 +37,8 @@
       "@id": "frapro:hasAcronym",
       "@type": "@id"
     },
-    "performedBy": {
-      "@id": "emmo:performedBy",
+    "hasOperator": {
+      "@id": "emmo:hasOperator",
       "@type": "@id"
     },
     "performedWith": {
