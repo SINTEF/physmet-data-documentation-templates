@@ -18,8 +18,8 @@ Individuals documented by the user:
 - **[datasets.csv](datasets.csv)**: Datasets.
 - **[samples.csv](samples.csv)**: Physical samples (material objects) that are processed and characterised.
 - **[processes.csv](processes.csv)**: Processes and procedures. Includes materials processing, characterisation and computations. Has samples/datasets as input and output.
-- **[software.csv](samples.csv)**: Software used for driving a process.
-- **[composition.csv](samples.csv)**: Chemical composition of a sample.
+- **[software.csv](software.csv)**: Software used for driving a process.
+- **[composition.csv](composition.csv)**: Chemical composition of a sample.
 
 Class-level documentation - generalised input provided by the user:
 - **[datasetClasses.csv](datasetClasses.csv)**: Dataset classes, like the general concept of a TEM bright field image. An actual TEM bright field image would be an instance of this class.
