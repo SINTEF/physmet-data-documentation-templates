@@ -12,7 +12,7 @@ The figure below shows an overview of the templates and how they relate to each 
 > classes and properties.
 
 Each row in the tables documents an individual, class or property that will be added to the knowledge base.
-The templates can be grouped into three categories
+The templates can be grouped into three categories:
 
 Individuals documented by the user:
 - **[datasets.csv](datasets.csv)**: Datasets.
@@ -41,5 +41,5 @@ Workflows are documented as a set of processes with objects (samples/datasets) a
 
 Workflows can both be documented at individual-level (for provenance) or at a class-level (to describe a reusable workflow that might or might not yet have been executed).
 
-![General workflow](https://raw.githubusercontent.com/HEU-MatCHMaker/DataDocumentation/refs/heads/master/tutorial/figs/workflow.svg)
+![General workflow](figs/workflow.svg)
 > Figure 2. General workflow.
