@@ -40,7 +40,21 @@ Identifiers
 -----------
 Everything in the knowledge base should have a globally unique and persistent identifier.
 In the context of the knowledge base we call these IDs for *International Resource Identifiers* (IRIs).
-We use namespaces to ensure globally uniqueness.
+
+Furthermore, it is considered a [good practice](https://faircookbook.elixir-europe.org/content/recipes/findability/identifiers.html#generating-resolvable-urls) for FAIR data that IRIs are resolvable.
+
+How SFI PhysMet address these requirements on IRIs:
+- **Globally uniqueness** is ensured by the use of namespaces that we own.
+- **Persistence** means that identifiers, once given, should never be changed.
+- **Resolvability** is addressed by redirections to ensure persistence even if the documented resource is moved.
+
+### Base IRI for common resources in SFI PhysMet
+We need to agree on base IRI for common resources in SFI PhysMet. It should be one of these
+- https://www.ntnu.edu/physmet/
+- https://w3id.org/physmet/
+
+###
+
 
 For example, a SEM dataset by Andreas Voll Bugten may be identified by the IRI
 https://orcid.org/0000-0003-0311-8584/JP16/SEM/220406aa/nitride5.tif
