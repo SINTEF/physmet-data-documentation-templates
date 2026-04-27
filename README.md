@@ -59,13 +59,13 @@ with this output,
 To combine with ontologies, the variables can be named from the corresponding
 ontology, then later parsed with e.g. `tripper.datadoc`.
 ```bash
-python scripts/path2dict.py tests/data --config "/prov:wasDerivedFrom/emmo:isOutputOf/@type/dcterms:title"
+python scripts/path2dict.py tests/data --config "/emmo:processedFrom/emmo:isOutputOf/@type/dcterms:title"
 ```
-has output 
+has output
 ```
-prov:wasDerivedFrom="JM12" / emmo:isOutputOf="SEM" / @type="EDS" / dcterms:title="220304f" / 
-prov:wasDerivedFrom="JM12" / emmo:isOutputOf="SEM" / @type="EDS" / dcterms:title="220303h" / 
-prov:wasDerivedFrom="JM12" / emmo:isOutputOf="SEM" / @type="Imaging" / dcterms:title="Areas analyzed with SIMS" / 
+emmo:processedFrom="JM12" / emmo:isOutputOf="SEM" / @type="EDS" / dcterms:title="220304f" /
+emmo:processedFrom="JM12" / emmo:isOutputOf="SEM" / @type="EDS" / dcterms:title="220303h" /
+emmo:processedFrom="JM12" / emmo:isOutputOf="SEM" / @type="Imaging" / dcterms:title="Areas analyzed with SIMS" /
 ...
 ```
 
