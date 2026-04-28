@@ -1,14 +1,16 @@
+import csv
 import urllib
 from pathlib import Path
 from secrets import token_urlsafe
 
-from tripper import Triplestore, EMMO
+from tripper import Triplestore, CHAMEO, EMMO
 
 from path2dict import find_datadocs
 
 
 rootdir = Path(__file__).resolve().parent.parent
 datadir = rootdir / "tests" / "data"
+outdir = rootdir / "tests" / "output"
 
 # TODO
 # - to extend keys to the actual datasets
@@ -23,8 +25,9 @@ user_prefix = "avb"
 rightsHolder = "org:NTNU"
 license = "TBD"  # XXX - define a license
 creator = "pers:AnderasVollBugten"
+operator = creator
 contactPerson = "pers:MarisaDiSabatino"
-
+material = ""  # the material that the base samples are taken from
 
 
 def newid(prefix, nbytes=8):
@@ -37,54 +40,60 @@ def dict2row(header, d):
     return [d.get(h, "") for h in header]
 
 
+def write_csv(filename, headers, data):
+    with open(filename, "wt", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(headers))
+        writer.writeheader()
+        writer.writerows(data)
+
+
 def document(pathdicts):
-    sample_header = [
-        "@id",
-        "@type",
-        "title",
-        "description",
-        "note",
-        #"hasComposition",
-        "creator",
-        "creationDate",
-        "location",
-        "isTemporalPartOf",
-        "isSpatioTemporalPartOf",
-    ]
-    dataset_header = [
-        "@id",
-        "@type",
-        "distribution.accessURL",
-        #"distribution.downloadURL",
-        "title",
-        "description",
-        "processedFrom",
-        "rightsHolder",
-        "license",
-        "creator",
-        "contactPerson",
-        "releaseDate",
-    ]
-    process_header = [
-        "@id",
-        "@type",
-        "note",
-        "hasInput",
-        "hasOutput",
-        "hasOperator",
-        "performedWith",
-    ]
-
-
+    """
+    """
     samples = []
     datasets = []
     processes = []
+    basesample_iris = set()
 
     for pd in pathdicts:
-        path = "/".join(d.values())  # restore the path
-        sample_iri = f"{user_prefix}:{pd['sample']}"
-        process_iri = f"{sample_iri}-{pd['method']}"
-        dataset_iri = f"{process_iri}-{pd['experiment']}"
+        path = "/".join(pd.values())  # restore the path
+        basesample_iri = f"{user_prefix}:{pd['sample']}"
+        process_iri = f"{basesample_iri}/{pd['method']}"
+        dataset_iri = f"{process_iri}/{pd['experiment']}"
+        sample_iri = f"{dataset_iri}-sample"
+        instrument_iri = None  # infer from table of pre-defined equipment
+
+        if basesample_iri not in basesample_iris:
+            basesample_iris.add(basesample_iri)
+            basesample = {
+                "@id": basesample_iri,
+                "@type": CHAMEO.Sample,  # should ideally be more specific
+                "title": pd["sample"],
+                "description": None,  # add more info...
+                "note": None,
+                "hasComposition": None,  # XXX TODO
+                "creator": creator,
+                "creationDate": None,  # not sure how this can be inferred
+                "location": None,  # XXX - sample storage location
+                "isTemporalPartOf": material,
+                "isSpatioTemporalPartOf": None,
+            }
+            samples.append(basesample)
+
+        sample = {
+            "@id": sample_iri,
+            "@type": CHAMEO.Sample,  # should ideally be more specific
+            "title": sample_iri.split(":", 1)[1],
+            "description": None,  # add more info...
+            "note": None,
+            "hasComposition": None,  # XXX TODO
+            "creator": creator,
+            "creationDate": None,  # not sure how this can be inferred
+            "location": None,  # XXX - sample storage location
+            "isTemporalPartOf": None,
+            "isSpatioTemporalPartOf": basesample_iri,
+        }
+        samples.append(sample)
 
         dataset = {
             "@id": dataset_iri,
@@ -101,15 +110,27 @@ def document(pathdicts):
             "license": license,
             "creator": creator,
             "contactPerson": contactPerson,
-            "releaseDate": "",  # XXX get creation data from file system
+            "releaseDate": None,  # XXX get creation data from file system
         }
+        datasets.append(dataset)
+
+        process = {
+            "@id": process_iri,
+            "@type": EMMO.Measurement,
+            "note": None,
+            "hasInput": sample_iri,
+            "hasOutput": dataset_iri,
+            "hasOperator": operator,
+            "performedWith": instrument_iri,
+        }
+        processes.append(process)
 
 
+    write_csv(outdir / "samples.csv", sample.keys(), samples)
+    write_csv(outdir / "datasets.csv", dataset.keys(), datasets)
+    write_csv(outdir / "processes.csv", process.keys(), processes)
 
 
-
-dicts = find_datadocs("tests/data", keys)
-
-for d in dicts:
-    path = "/".join(d.values())
-    print(path)
+if __name__ == "__main__":
+    pathdicts = find_datadocs("tests/data", keys)
+    document(pathdicts)
