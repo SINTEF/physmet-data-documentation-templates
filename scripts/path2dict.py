@@ -6,16 +6,22 @@ import json
 from pathlib import Path
 import csv
 import sys
+from typing import Optional
 
-def build_datadoc(parts, keys):
+def _build_datadoc(parts, keys, store_path):
     result = {}
     for key, value in zip(keys, parts):
         if key:  # skip empty key names
             result[key] = value
+    if store_path:
+        result[store_path] = "/".join(parts)
 
     return result
 
-def find_datadocs(root, keys):
+def find_datadocs(root, keys, store_path : Optional[str] = "localPath"):
+    """ If store_path, also store the full path in a variable with that name.
+    E.g. store_path = "localPath" would produce localPath="data/JM12/SEM/EDS"
+    """
     root = Path(root).resolve()
 
     # sanity check
@@ -26,7 +32,7 @@ def find_datadocs(root, keys):
 
     def walk(current_path, depth, parts):
         if depth == len(keys):
-            results.append(build_datadoc(parts, keys))
+            results.append(_build_datadoc(parts, keys, store_path))
             return
 
         for child in current_path.iterdir():
@@ -52,7 +58,7 @@ def main():
         default="/user/sample/instrument/method/experiment",
         help='''Slash-separated structure, (default: %(default)s)".
 
-        Not starting with a slash (e.g. user/) will ignore the root-directory.
+        Starting with a slash (e.g. /user) will ignore the root-directory.
         Empty values like user//inst will cause the middle directory names to
         not be stored.'''
     )
@@ -66,19 +72,31 @@ def main():
         action="store_true",
         help="Output as CSV"
     )
+    parser.add_argument(
+        "--store_path",
+        default="localPath",
+        help="""Store path in a key (default: %(default)s). To not store, set
+        to 'None'."""
+    )
 
     args = parser.parse_args()
+
+    if args.store_path.lower() == "none":
+        args.store_path = None
 
     keys = [k.strip() for k in args.config.split("/")]
 
     if not keys:
         raise ValueError("Config must contain at least one field")
 
-    results = find_datadocs(args.path, keys)
+    results = find_datadocs(args.path, keys, store_path = args.store_path)
 
     if args.json:
         print(json.dumps(results, indent=2))
     elif args.csv:
+        if args.store_path:
+            keys.append(args.store_path)
+        keys = [k for k in keys if k]
         writer = csv.DictWriter(sys.stdout, fieldnames=keys)
         writer.writeheader()
         writer.writerows(results)
