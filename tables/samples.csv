@@ -1,2 +1,2 @@
 @id,@type,title,description,note,hasComposition,creator,creationDate,location,isTemporalPartOf,isSpatialPartOf
-avb:JM11,chameo:Sample,JM11,pers:AndersVollBugten,A spheroidal graphite cast iron sample with nominal boron content specified by avb:nominalBoron.,,,pers:AndreasVollBugten,,,,
+avb:JM11,chameo:Sample,JM11,"A spheroidal graphite cast iron sample with nominal boron content specified by avb:nominalBoron.",,,pers:AndersVollBugten,,,,
