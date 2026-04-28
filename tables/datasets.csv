@@ -1,2 +1,2 @@
-@id,@type,distribution.downloadURL,title,description,processedFrom,rightsHolder,license,creator,contact,releaseDate,version,priorRelease
+@id,@type,distribution.downloadURL,title,description,processedFrom,rightsHolder,license,creator,contactPerson,releaseDate,version,priorRelease
 avb:JM11_EDS,temgo:EDSMap,"https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%203%20Sustainable%20and%20high-performance%20material%20development/Andreas%20Voll%20Bugten%20data/JM11/SEM/EDS?csf=1&web=1&e=8vpJwN",JM11_EDS,...,avb:JM11,org:NTNU,,pers:AndreasVollBugten,pers:MarisaDiSabatino,,
