@@ -14,6 +14,7 @@ from tripper import Triplestore, CHAMEO, EMMO
 rootdir = Path(__file__).resolve().parent.parent
 datadir = rootdir / "tests" / "data"
 outdir = rootdir / "tests" / "output"
+tablesdir = rootdir / "tables"
 
 
 def find_datadocs(root, keys=None):
@@ -73,6 +74,19 @@ def write_csv(filename, headers, data):
         writer.writerows(data)
 
 
+_instrument_iris = {}  # cache
+
+def get_instrument_iri(identifier):
+    """Return the instrument IRI for `identifier`."""
+    if not _instrument_iris:
+        with open(tablesdir / "equipments.csv", "rt") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if "identifier" in row:
+                    _instrument_iris[row["identifier"]] = row["@id"]
+    return _instrument_iris.get(identifier)
+
+
 def document(pathdicts):
     """
     """
@@ -83,24 +97,26 @@ def document(pathdicts):
 
     for info in infodicts:
         path = info["path"]
+        fullpath = (datadir.parent / path).resolve()
         prefix = info.get("user_prefix", "physmet")
         basesample_iri = f"{prefix}:{info['sample']}"
         process_iri = f"{basesample_iri}/{info['process']}"
         dataset_iri = f"{process_iri}/{info['dataset']}"
         sample_iri = f"{dataset_iri}-sample"
-        instrument_iri = None  # infer from table of pre-defined equipment
 
         if "base_url" in info:
             url = info["base_url"] + urllib.parse.quote(path)
         else:
             url = None
 
-        if "filename" in info:
-            releaseDate = info.get("releaseDate")
+        releaseDate = info.get("releaseDate")
+        if not releaseDate:
+            mtime = Path(fullpath).stat().st_mtime
+            releaseDate = datetime.fromtimestamp(mtime).isoformat()
 
-            if not releaseDate:
-                mtime = Path(info["path"]).stat().st_mtime
-                releaseDate = datetime.fromtimestamp(mtime).isoformat()
+        instrument = info.get("instrument")
+
+        if "filename" in info:
             dataset = {
                 "@id": f"{dataset_iri}/{info['filename']}",
                 "@type": EMMO.Dataset,  # XXX - should be more specific
@@ -152,7 +168,7 @@ def document(pathdicts):
                 "title": info["dataset"],
                 "description": (
                     f"{info['process']} investigation of sample "
-                    f"{info['sample'] } using {info['instrument']}"
+                    f"{info['sample'] } using {instrument}"
                 ),
                 "processedFrom": sample_iri,
                 "isDatumOf": None,
@@ -171,7 +187,7 @@ def document(pathdicts):
                 "hasInput": sample_iri,
                 "hasOutput": dataset_iri,
                 "hasOperator": info.get("operator"),
-                "performedWith": instrument_iri,
+                "performedWith": get_instrument_iri(instrument),
             }
             processes.append(process)
 
@@ -185,5 +201,5 @@ if __name__ == "__main__":
     infodicts = find_datadocs("tests/data")
     document(infodicts)
 
-    #import json
+    import json
     #print(json.dumps(infodicts, indent=4))
