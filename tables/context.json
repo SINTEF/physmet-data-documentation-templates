@@ -1,11 +1,17 @@
 {
   "@version": 1.1,
   "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
     "vorg": "https://www.w3.org/TR/vocab-org/",
     "frapro": "http://purl.org/cerif/frapo/",
     "orcid": "https://orcid.org/",
     "nvaid": "https://nva.sikt.no/research-profile/",
     "ror": "https://ror.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
     "emmo": "https://w3id.org/emmo#",
     "chameo": "https://w3id.org/emmo/domain/characterisation-methodology/chameo#",
     "micro": "https://w3id.org/emmo/domain/microstructure#",
@@ -32,7 +38,7 @@
     },
     "hasGrantNumber": {
       "@id": "frapro:hasGrantNumber",
-      "@type": "@id"
+      "@type": "xsd:string"
     },
     "hasAcronym": {
       "@id": "frapro:hasAcronym",
@@ -46,26 +52,45 @@
       "@id": "emmo:performedWith",
       "@type": "@id"
     },
-    "creationDate": {
-      "@id": "dcterms:created",
-      "@type": "xsd:dateTime"
-    },
     "location": {
       "@id": "dcterms:spatial",
       "@type": "@id"
     },
-    "version": {
-      "@id": "dcat:version",
-      "@type": "xsd:string"
+    "note": {
+      "@id": "skos:note",
+      "@language": "en"
     },
     "priorRelease": {
       "@id": "ddoc:priorRelease",
       "@type": "@id"
     },
-    "contact": {
-      "@id": "ddoc:contact",
+    "contactPerson": {
+      "@id": "ddoc:contactPerson",
       "@type": "@id"
     },
+    "email": {
+      "@id": "foaf:mbox",
+      "@type": "xsd:string"
+    },
+    "homepage": {
+      "@id": "foaf:homepage",
+      "@type": "xsd:anyURI"
+    },
+    "sameAs": {
+      "@id": "owl:sameAs",
+      "@type": "@id"
+    },
+    "seeAlso": {
+      "@id": "owl:seeAlso"
+    },
+    "prefix": {
+      "@id": "ddoc:hasPrefix",
+      "@type": "xsd:string"
+    },
+    "namespace": {
+      "@id": "ddoc:hasNamespace",
+      "@type": "xsd:anyURI"
+    }
 
 
   }
