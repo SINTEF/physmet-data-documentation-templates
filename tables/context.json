@@ -90,6 +90,10 @@
     "namespace": {
       "@id": "ddoc:hasNamespace",
       "@type": "xsd:anyURI"
+    },
+    "isDatumOf": {
+      "@reverse": "emmo:hasDatum",
+      "@type": "@id"
     }
 
 

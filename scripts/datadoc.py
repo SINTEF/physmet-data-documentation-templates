@@ -1,43 +1,69 @@
 import csv
+import fnmatch
 import urllib
+from datetime import datetime
 from pathlib import Path
-from secrets import token_urlsafe
+
+import yaml
 
 from tripper import Triplestore, CHAMEO, EMMO
 
-from path2dict import find_datadocs
+#from path2dict import find_datadocs
 
 
 rootdir = Path(__file__).resolve().parent.parent
 datadir = rootdir / "tests" / "data"
 outdir = rootdir / "tests" / "output"
 
-# TODO
-# - to extend keys to the actual datasets
-# - sample should refer to
-# - instrument should refer to an instrument individual in the equipment table
-#keys = "/sample/instrument/method/experiment/datasets".split("/")
-keys = "/sample/instrument/method/experiment".split("/")
 
+def find_datadocs(root, keys=None):
+    """
+    """
+    root = Path(root).resolve()
 
-base_url = "https://studntnu.sharepoint.com/:i:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%203%20Sustainable%20and%20high-performance%20material%20development/Andreas%20Voll%20Bugten%20data/"
-user_prefix = "avb"
-rightsHolder = "org:NTNU"
-license = "TBD"  # XXX - define a license
-creator = "pers:AnderasVollBugten"
-operator = creator
-contactPerson = "pers:MarisaDiSabatino"
-material = ""  # the material that the base samples are taken from
+    # sanity check
+    if not root.is_dir():
+        raise ValueError(f"{root} is not a directory")
 
+    results = []
+    default_info = {}
 
-def newid(prefix, nbytes=8):
-    """Return a new random URL-safe ID with given prefix."""
-    return f"{prefix}:{token_urlsafe(nbytes)}"
+    def walk(current_path, depth, parts, keys, info):
+        if (current_path / ".ddocignore").exists():
+            return
 
+        infofile = current_path / "info.yaml"
+        if infofile.exists():
+            with open(infofile, "rt") as f:
+                conf = yaml.safe_load(f)
+            if "dir_structure" in conf:
+                depth = 1
+                keys = conf["dir_structure"].split("/")
+            info.update(conf)
 
-def dict2row(header, d):
-    """Return a list with the data items in `d` ordered according to `header`."""
-    return [d.get(h, "") for h in header]
+        if depth >= len(keys):
+            info["path"] = "/".join(parts)
+            results.append(info.copy())
+            for child in current_path.iterdir():
+                if child.is_file():
+                    for pattern in info.get("data_files", []):
+                        if fnmatch.fnmatch(child.name, pattern):
+                            info["path"] = str(child)
+                            info["filename"] = child.name
+                            results.append(info.copy())
+            return
+
+        key = keys[depth].strip()
+        for child in current_path.iterdir():
+            if child.is_dir():
+                if key:
+                    info[key] = child.name
+                walk(child, depth + 1, parts + [child.name], keys, info.copy())
+
+    # root corresponds to first key
+    walk(root, 1, [root.name], keys, default_info)
+
+    return results
 
 
 def write_csv(filename, headers, data):
@@ -55,75 +81,99 @@ def document(pathdicts):
     processes = []
     basesample_iris = set()
 
-    for pd in pathdicts:
-        path = "/".join(pd.values())  # restore the path
-        basesample_iri = f"{user_prefix}:{pd['sample']}"
-        process_iri = f"{basesample_iri}/{pd['method']}"
-        dataset_iri = f"{process_iri}/{pd['experiment']}"
+    for info in infodicts:
+        path = info["path"]
+        prefix = info.get("user_prefix", "physmet")
+        basesample_iri = f"{prefix}:{info['sample']}"
+        process_iri = f"{basesample_iri}/{info['process']}"
+        dataset_iri = f"{process_iri}/{info['dataset']}"
         sample_iri = f"{dataset_iri}-sample"
         instrument_iri = None  # infer from table of pre-defined equipment
 
-        if basesample_iri not in basesample_iris:
-            basesample_iris.add(basesample_iri)
-            basesample = {
-                "@id": basesample_iri,
+        if "base_url" in info:
+            url = info["base_url"] + urllib.parse.quote(path)
+        else:
+            url = None
+
+        if "filename" in info:
+            releaseDate = info.get("releaseDate")
+
+            if not releaseDate:
+                mtime = Path(info["path"]).stat().st_mtime
+                releaseDate = datetime.fromtimestamp(mtime).isoformat()
+            dataset = {
+                "@id": f"{dataset_iri}/{info['filename']}",
+                "@type": EMMO.Dataset,  # XXX - should be more specific
+                "distribution.downloadURL": url,
+                "isDatumOf": dataset_iri,
+                "releaseDate": releaseDate,
+            }
+            datasets.append(dataset)
+
+        else:
+
+            if basesample_iri not in basesample_iris:
+                basesample_iris.add(basesample_iri)
+                basesample = {
+                    "@id": basesample_iri,
+                    "@type": CHAMEO.Sample,  # should be more specific
+                    "title": info["sample"],
+                    "description": None,  # add more info...
+                    "note": None,
+                    "hasComposition": None,  # XXX TODO
+                    "creator": info.get("creator"),
+                    "creationDate": None,  # from info
+                    "location": None,  # XXX - sample storage location
+                    "isTemporalPartOf": info.get("material"),
+                    "isSpatioTemporalPartOf": None,
+                }
+                samples.append(basesample)
+
+            sample = {
+                "@id": sample_iri,
                 "@type": CHAMEO.Sample,  # should ideally be more specific
-                "title": pd["sample"],
+                "title": sample_iri.split(":", 1)[1],
                 "description": None,  # add more info...
                 "note": None,
                 "hasComposition": None,  # XXX TODO
-                "creator": creator,
+                "creator": info.get("creator"),
                 "creationDate": None,  # not sure how this can be inferred
                 "location": None,  # XXX - sample storage location
-                "isTemporalPartOf": material,
-                "isSpatioTemporalPartOf": None,
+                "isTemporalPartOf": None,
+                "isSpatioTemporalPartOf": basesample_iri,
             }
-            samples.append(basesample)
+            samples.append(sample)
 
-        sample = {
-            "@id": sample_iri,
-            "@type": CHAMEO.Sample,  # should ideally be more specific
-            "title": sample_iri.split(":", 1)[1],
-            "description": None,  # add more info...
-            "note": None,
-            "hasComposition": None,  # XXX TODO
-            "creator": creator,
-            "creationDate": None,  # not sure how this can be inferred
-            "location": None,  # XXX - sample storage location
-            "isTemporalPartOf": None,
-            "isSpatioTemporalPartOf": basesample_iri,
-        }
-        samples.append(sample)
+            dataset = {
+                "@id": dataset_iri,
+                "@type": EMMO.Dataset,  # XXX - should be more specific
+                "distribution.accessURL": url,
+                "distribution.downloadURL": None,
+                "title": info["dataset"],
+                "description": (
+                    f"{info['process']} investigation of sample "
+                    f"{info['sample'] } using {info['instrument']}"
+                ),
+                "processedFrom": sample_iri,
+                "isDatumOf": None,
+                "rightsHolder": info.get("rightsHolder"),
+                "license": license,
+                "creator": info.get("creator"),
+                "contactPerson": info.get("contactPerson"),
+                "releaseDate": None,
+            }
+            datasets.append(dataset)
 
-        dataset = {
-            "@id": dataset_iri,
-            "@type": EMMO.Dataset,  # XXX - should be more specific
-            "distribution.accessURL": base_url + urllib.parse.quote(path),
-            #"distribution.downloadURL":  # XXX - we path to actual datasets
-            "title": pd["experiment"],
-            "description": (
-                f"{pd['method']} investigation of sample {pd['sample'] } "
-                f"using {pd['instrument']}"
-            ),
-            "processedFrom": sample_iri,
-            "rightsHolder": rightsHolder,
-            "license": license,
-            "creator": creator,
-            "contactPerson": contactPerson,
-            "releaseDate": None,  # XXX get creation data from file system
-        }
-        datasets.append(dataset)
-
-        process = {
-            "@id": process_iri,
-            "@type": EMMO.Measurement,
-            "note": None,
-            "hasInput": sample_iri,
-            "hasOutput": dataset_iri,
-            "hasOperator": operator,
-            "performedWith": instrument_iri,
-        }
-        processes.append(process)
+            process = {
+                "@id": process_iri,
+                "@type": EMMO.Measurement,
+                "note": None,
+                "hasInput": sample_iri,
+                "hasOutput": dataset_iri,
+                "hasOperator": info.get("operator"),
+                "performedWith": instrument_iri,
+            }
+            processes.append(process)
 
 
     write_csv(outdir / "samples.csv", sample.keys(), samples)
@@ -132,5 +182,8 @@ def document(pathdicts):
 
 
 if __name__ == "__main__":
-    pathdicts = find_datadocs("tests/data", keys)
-    document(pathdicts)
+    infodicts = find_datadocs("tests/data")
+    document(infodicts)
+
+    #import json
+    #print(json.dumps(infodicts, indent=4))

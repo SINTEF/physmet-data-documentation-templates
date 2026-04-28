@@ -7,6 +7,7 @@ from tripper import Triplestore
 from tripper.datadoc import TableDoc, get_context, store
 
 rootdir = Path(__file__).resolve().parent.parent
+outdir = rootdir / "tests" / "output"
 tablesdir = rootdir / "tables"
 
 
@@ -38,5 +39,5 @@ def add_general_agents(ts: "Triplestore"):
 
 if __name__ == "__main__":
     ts = Triplestore("rdflib")
-    doc_general_agents(ts)
-    ts.serialize("general.ttl")
+    add_general_agents(ts)
+    ts.serialize(outdir / "general.ttl")
