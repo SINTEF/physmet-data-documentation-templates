@@ -26,6 +26,7 @@ directory trees.
 
 * Parse paths to values
 * Configure for your path structure with `--config`
+* Optionally mint object values for selected predicates with repeated `--template`
 * Outputs as json or CSV to stdout
 
 ### Usage
@@ -53,6 +54,22 @@ with this output,
 ,JM12,SEM,Imaging,Areas analyzed with SIMS
 ...
 ```
+
+To mint object values for selected predicates, repeat `--template` with
+`PREDICATE=TEMPLATE` entries:
+
+```bash
+python scripts/path2dict.py tests/data \
+  --config "/processedFrom/isOutputOf/@id" \
+  --template "processedFrom=physmet:sample/{value}" \
+  --template "isOutputOf=physmet:instrument/{value}" \
+  --json
+```
+
+`@id` remains the current row identifier. Any other `--config` token is treated
+as a predicate name, and if it has a matching `--template` then the
+corresponding path value is minted by replacing `{value}` in the template.
+Predicates without a matching `--template` keep the existing raw behavior.
 
 ### Ontologies
 
