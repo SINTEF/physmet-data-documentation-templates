@@ -1,17 +1,20 @@
 mkdir -p output
 
-python scripts/path2dict.py tests/data --config "/@id" --csv \
-    --template "@id=physmet:sample/{value}" |
-    csvsql --query "SELECT *, 'chameo:Sample' AS \"@type\" FROM stdin" > output/samples.csv
+python scripts/path2dict.py tests/data --csv \
+    --config "/@id" \
+    --template "@id=physmet:sample/{@id}" \
+    --template "@type=chameo:Sample" > output/samples.csv
 
-python scripts/path2dict.py tests/data --config "/processedFrom///@id" --csv \
-    --template "@id=physmet:dataset/{value}" \
-    --template "processedFrom=physmet:sample/{value}" |
-    csvsql --query "SELECT *, 'ddoc:Dataset' AS \"@type\" FROM stdin" > output/datasets.csv
+python scripts/path2dict.py tests/data --csv \
+    --config "/sampleId///@id" \
+    --template "@id=physmet:dataset/{@id}" \
+    --template "processedFrom=physmet:sample/{sampleId}" \
+    --template "@type=ddoc:Dataset" > output/datasets.csv
 
-python scripts/path2dict.py tests/data --config "/hasInput/instrument/label/hasOutput" --csv \
+python scripts/path2dict.py tests/data --csv \
+    --config "/sampleId/instrument/label/expId" \
     --store_path "localPath" \
-    --template "hasInput=physmet:sample/{value}" \
-    --template "hasOutput=physmet:dataset/{value}" |
-    csvsql --query "SELECT *, 'ddoc:Procedure' AS \"@type\" FROM stdin" |
-    csvsql --query "SELECT *, 'physmet:procedure/' || \"localPath\" AS \"@id\" FROM stdin" > output/procedures.csv
+    --template "hasInput=physmet:sample/{sampleId}" \
+    --template "hasOutput=physmet:dataset/{expId}" \
+    --template "@id=physmet:procedure/{localPath}" \
+    --template "@type=ddoc:Procedure" > output/procedures.csv

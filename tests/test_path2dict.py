@@ -24,14 +24,14 @@ def test_path2dict_cli():
     ) in result.stdout
 
 
-def test_path2dict_template_mints_configured_predicates():
+def test_path2dict_template_can_rewrite_existing_fields():
     result = run_path2dict(
         "--config",
         "/processedFrom/isOutputOf/@id",
         "--template",
-        "processedFrom=physmet:sample/{value}",
+        "processedFrom=physmet:sample/{processedFrom}",
         "--template",
-        "isOutputOf=physmet:instrument/{value}",
+        "isOutputOf=physmet:instrument/{isOutputOf}",
         "--json",
         "--store_path",
         "None",
@@ -52,9 +52,9 @@ def test_path2dict_template_can_mint_at_id():
         "--config",
         "/processedFrom/test/@id",
         "--template",
-        "processedFrom=physmet:sample/{value}",
+        "processedFrom=physmet:sample/{processedFrom}",
         "--template",
-        "@id=physmet:{value}",
+        "@id=physmet:{@id}",
         "--json",
         "--store_path",
         "None",
@@ -70,14 +70,58 @@ def test_path2dict_template_can_mint_at_id():
     } in rows
 
 
+def test_path2dict_template_can_add_derived_field():
+    result = run_path2dict(
+        "--config",
+        "/processedFrom/test/@id",
+        "--template",
+        "newProp={processedFrom}_{@id}",
+        "--json",
+        "--store_path",
+        "None",
+    )
+
+    assert result.returncode == 0
+
+    rows = json.loads(result.stdout)
+    assert {
+        "processedFrom": "JM11",
+        "test": "SEM",
+        "@id": "EDS",
+        "newProp": "JM11_EDS",
+    } in rows
+
+
+def test_path2dict_template_can_add_constant_field():
+    result = run_path2dict(
+        "--config",
+        "/processedFrom/test/@id",
+        "--template",
+        "kind=dataset",
+        "--json",
+        "--store_path",
+        "None",
+    )
+
+    assert result.returncode == 0
+
+    rows = json.loads(result.stdout)
+    assert {
+        "processedFrom": "JM11",
+        "test": "SEM",
+        "@id": "EDS",
+        "kind": "dataset",
+    } in rows
+
+
 def test_path2dict_template_rejects_conflicting_duplicates():
     result = run_path2dict(
         "--config",
         "/processedFrom/isOutputOf/@id",
         "--template",
-        "processedFrom=physmet:sample/{value}",
+        "processedFrom=physmet:sample/{processedFrom}",
         "--template",
-        "processedFrom=physmet:other/{value}",
+        "processedFrom=physmet:other/{processedFrom}",
     )
 
     assert result.returncode != 0

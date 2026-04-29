@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 import csv
+import re
 import sys
 from typing import Optional
 
@@ -16,34 +17,42 @@ def _parse_slash_config(config, option_name):
     return tokens
 
 
+PLACEHOLDER_PATTERN = re.compile(r"\{([^{}]+)\}")
+
+
 def _parse_template_mappings(templates):
     mapping = {}
+    ordered_templates = []
     for template_arg in templates or []:
-        predicate, sep, template = template_arg.partition("=")
-        predicate = predicate.strip()
+        target, sep, template = template_arg.partition("=")
+        target = target.strip()
         template = template.strip()
 
-        if not sep or not predicate or not template:
+        if not sep or not target or not template:
             raise ValueError(
-                "--template must be on the form PREDICATE=TEMPLATE"
+                "--template must be on the form FIELD=TEMPLATE"
             )
-        if "{value}" not in template:
+        if target in mapping and mapping[target] != template:
             raise ValueError(
-                "--template must contain the '{value}' placeholder"
+                f"conflicting --template definitions for field '{target}'"
             )
-        if predicate in mapping and mapping[predicate] != template:
-            raise ValueError(
-                f"conflicting --template definitions for predicate '{predicate}'"
-            )
-        mapping[predicate] = template
+        if target not in mapping:
+            ordered_templates.append((target, template))
+        mapping[target] = template
 
-    return mapping
+    return ordered_templates
 
 
-def _transform_value(value, key, templates=None):
-    if templates and key in templates:
-        return templates[key].format(value=value)
-    return value
+def _render_template(template, context):
+    def replace(match):
+        field_name = match.group(1)
+        if field_name not in context:
+            raise ValueError(
+                f"--template references unknown field '{field_name}'"
+            )
+        return context[field_name]
+
+    return PLACEHOLDER_PATTERN.sub(replace, template)
 
 
 def _build_datadoc(
@@ -56,13 +65,12 @@ def _build_datadoc(
 
     for key, value in zip(keys, parts):
         if key:  # skip empty key names
-            result[key] = _transform_value(
-                value,
-                key,
-                templates=templates,
-            )
+            result[key] = value
     if store_path:
         result[store_path] = "/".join(parts)
+
+    for target, template in templates or []:
+        result[target] = _render_template(template, result)
 
     return result
 
@@ -127,10 +135,11 @@ def main():
         "--template",
         action="append",
         default=[],
-        metavar="PREDICATE=TEMPLATE",
-        help="""Template for minting object values for a predicate from
-        --config. May be given multiple times. Use "{value}" as the path
-        segment placeholder, e.g. processedFrom=physmet:sample/{value}."""
+        metavar="FIELD=TEMPLATE",
+        help="""Template for assigning or deriving field values. May be given
+        multiple times. Templates can reference extracted fields as
+        "{fieldName}", for example processedFrom=physmet:sample/{processedFrom}
+        or newProp={processedFrom}_{@id}."""
     )
     parser.add_argument(
         "--json",
@@ -167,10 +176,13 @@ def main():
     if args.json:
         print(json.dumps(results, indent=2))
     elif args.csv:
+        fieldnames = [k for k in keys if k]
         if args.store_path:
-            keys.append(args.store_path)
-        keys = [k for k in keys if k]
-        writer = csv.DictWriter(sys.stdout, fieldnames=keys)
+            fieldnames.append(args.store_path)
+        for target, _template in templates:
+            if target not in fieldnames:
+                fieldnames.append(target)
+        writer = csv.DictWriter(sys.stdout, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(results)
     else:

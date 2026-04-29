@@ -26,7 +26,7 @@ directory trees.
 
 * Parse paths to values
 * Configure for your path structure with `--config`
-* Optionally mint object values for selected predicates with repeated `--template`
+* Optionally rewrite or derive fields with repeated `--template`
 * Outputs as json or CSV to stdout
 
 ### Usage
@@ -55,21 +55,34 @@ with this output,
 ...
 ```
 
-To mint object values for selected predicates, repeat `--template` with
-`PREDICATE=TEMPLATE` entries:
+To rewrite or derive fields, repeat `--template` with `FIELD=TEMPLATE`
+entries:
 
 ```bash
 python scripts/path2dict.py tests/data \
   --config "/processedFrom/isOutputOf/@id" \
-  --template "processedFrom=physmet:sample/{value}" \
-  --template "isOutputOf=physmet:instrument/{value}" \
+  --template "processedFrom=physmet:sample/{processedFrom}" \
+  --template "isOutputOf=physmet:instrument/{isOutputOf}" \
   --json
 ```
 
-`@id` remains the current row identifier. Any other `--config` token is treated
-as a predicate name, and if it has a matching `--template` then the
-corresponding path value is minted by replacing `{value}` in the template.
-Predicates without a matching `--template` keep the existing raw behavior.
+Templates can reference any extracted field by name, including `@id`. The
+template target may be an existing field or a new derived field. Templates may
+also be constant strings:
+
+```bash
+python scripts/path2dict.py tests/data \
+  --config "/processedFrom/test/@id" \
+  --template "newProp={processedFrom}_{@id}"
+```
+
+```bash
+python scripts/path2dict.py tests/data \
+  --config "/processedFrom/test/@id" \
+  --template "kind=dataset"
+```
+
+Fields without a matching `--template` keep the existing raw behavior.
 
 ### Ontologies
 
