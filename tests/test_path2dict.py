@@ -2,12 +2,16 @@ import json
 import subprocess
 
 
-def run_path2dict(*args):
+def run_path2dict(*args, path="tests/data"):
     return subprocess.run(
-        ["python", "scripts/path2dict.py", "tests/data", *args],
+        ["python", "scripts/path2dict.py", path, "--intent", "dataset", *args],
         capture_output=True,
         text=True,
     )
+
+
+def write_treeweaver(path, text):
+    path.joinpath("treeweaver.yaml").write_text(text, encoding="utf-8")
 
 
 def test_path2dict_cli():
@@ -126,3 +130,242 @@ def test_path2dict_template_rejects_conflicting_duplicates():
 
     assert result.returncode != 0
     assert "conflicting --template definitions" in result.stderr
+
+
+def test_treeweaver_root_config_is_loaded(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}"
+""",
+    )
+    tmp_path.joinpath("JM11").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {"sample": "JM11"} in json.loads(result.stdout)
+
+
+def test_treeweaver_selected_intent_is_used(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{dataset}"
+  sample:
+    config: "/{sample}"
+""",
+    )
+    tmp_path.joinpath("DS1").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {"dataset": "DS1"} in json.loads(result.stdout)
+
+
+def test_treeweaver_unselected_intents_are_ignored(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{dataset}"
+  sample:
+    config: "/{sample}"
+    template:
+      bad: "{missing}"
+""",
+    )
+    tmp_path.joinpath("DS1").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {"dataset": "DS1"} in json.loads(result.stdout)
+
+
+def test_treeweaver_child_config_overrides_parent_config(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}"
+""",
+    )
+    sample = tmp_path / "JM11"
+    sample.mkdir()
+    write_treeweaver(
+        sample,
+        """
+version: 1
+intents:
+  dataset:
+    config: "{sample}/{dataset}"
+""",
+    )
+    sample.joinpath("EDS").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {"sample": "JM11", "dataset": "EDS"} in json.loads(result.stdout)
+
+
+def test_treeweaver_child_config_merges_template(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+    template:
+      type: "physmet:Dataset"
+""",
+    )
+    sample = tmp_path / "JM11"
+    sample.mkdir()
+    write_treeweaver(
+        sample,
+        """
+version: 1
+intents:
+  dataset:
+    template:
+      label: "{dataset}"
+""",
+    )
+    sample.joinpath("EDS").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {
+        "sample": "JM11",
+        "dataset": "EDS",
+        "type": "physmet:Dataset",
+        "label": "EDS",
+    } in json.loads(result.stdout)
+
+
+def test_treeweaver_child_template_can_use_parent_context(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+    template:
+      "@id": "physmet:dataset/{dataset}"
+      processedFrom: "physmet:sample/{sample}"
+""",
+    )
+    sample = tmp_path / "JM11"
+    sample.mkdir()
+    write_treeweaver(
+        sample,
+        """
+version: 1
+intents:
+  dataset:
+    config: "/{measurement}"
+    template:
+      label: "{processedFrom}/{@id}/{measurement}"
+""",
+    )
+    sample.joinpath("EDS").mkdir()
+
+    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert {
+        "sample": "JM11",
+        "dataset": "EDS",
+        "@id": "physmet:dataset/EDS",
+        "processedFrom": "physmet:sample/JM11",
+        "measurement": "EDS",
+        "label": "physmet:sample/JM11/physmet:dataset/EDS/EDS",
+    } in json.loads(result.stdout)
+
+
+def test_treeweaver_cli_config_override_wins_over_yaml(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}"
+""",
+    )
+    tmp_path.joinpath("JM11", "EDS").mkdir(parents=True)
+
+    result = run_path2dict(
+        "--config",
+        "/{sample}/{dataset}",
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+    )
+
+    assert result.returncode == 0
+    assert {"sample": "JM11", "dataset": "EDS"} in json.loads(result.stdout)
+
+
+def test_treeweaver_config_file_provenance_is_retained(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+""",
+    )
+    sample = tmp_path / "JM11"
+    sample.mkdir()
+    write_treeweaver(
+        sample,
+        """
+version: 1
+intents:
+  dataset:
+    template:
+      label: "{dataset}"
+""",
+    )
+    sample.joinpath("EDS").mkdir()
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        "--store_config_provenance",
+        "configFiles",
+        path=str(tmp_path),
+    )
+
+    assert result.returncode == 0
+    row = json.loads(result.stdout)[0]
+    assert str(tmp_path / "treeweaver.yaml") in row["configFiles"]
+    assert str(sample / "treeweaver.yaml") in row["configFiles"]
