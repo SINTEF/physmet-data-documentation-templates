@@ -2,12 +2,12 @@ import json
 import subprocess
 
 
-def run_path2dict(*args, path="tests/data"):
-    return subprocess.run(
-        ["python", "scripts/path2dict.py", path, "--intent", "dataset", *args],
-        capture_output=True,
-        text=True,
-    )
+def run_path2dict(*args, path="tests/data", intent=None):
+    command = ["python", "scripts/path2dict.py", path]
+    if intent:
+        command.extend(["--intent", intent])
+    command.extend(args)
+    return subprocess.run(command, capture_output=True, text=True)
 
 
 def write_treeweaver(path, text):
@@ -26,6 +26,38 @@ def test_path2dict_cli():
         'sample="JM12" / instrument="SEM" / method="EDS" / '
         'experiment="220304f" /'
     ) in result.stdout
+
+
+def test_path2dict_cli_uses_default_config_without_intent():
+    result = run_path2dict()
+
+    assert result.returncode == 0
+    assert (
+        'user="JM11" / sample="SEM" / instrument="Imaging" / '
+        'method="Areas-analyzed-with-SIMS" / experiment="220304i" /'
+    ) in result.stdout
+
+
+def test_path2dict_cli_ignores_treeweaver_without_intent(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{dataset}"
+    template:
+      bad: "{missing}"
+""",
+    )
+    tmp_path.joinpath("JM11").mkdir()
+
+    result = run_path2dict("--config", "/{sample}", path=str(tmp_path))
+
+    assert result.returncode == 0
+    assert 'sample="JM11"' in result.stdout
+    assert "treeweaver" not in result.stderr
 
 
 def test_path2dict_template_can_rewrite_existing_fields():
@@ -145,7 +177,13 @@ intents:
     )
     tmp_path.joinpath("JM11").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {"sample": "JM11"} in json.loads(result.stdout)
@@ -166,7 +204,13 @@ intents:
     )
     tmp_path.joinpath("DS1").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {"dataset": "DS1"} in json.loads(result.stdout)
@@ -189,7 +233,13 @@ intents:
     )
     tmp_path.joinpath("DS1").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {"dataset": "DS1"} in json.loads(result.stdout)
@@ -219,7 +269,13 @@ intents:
     )
     sample.joinpath("EDS").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {"sample": "JM11", "dataset": "EDS"} in json.loads(result.stdout)
@@ -252,7 +308,13 @@ intents:
     )
     sample.joinpath("EDS").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {
@@ -292,7 +354,13 @@ intents:
     )
     sample.joinpath("EDS").mkdir()
 
-    result = run_path2dict("--json", "--store_path", "None", path=str(tmp_path))
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
 
     assert result.returncode == 0
     assert {
@@ -325,6 +393,7 @@ intents:
         "--store_path",
         "None",
         path=str(tmp_path),
+        intent="dataset",
     )
 
     assert result.returncode == 0
@@ -363,6 +432,7 @@ intents:
         "--store_config_provenance",
         "configFiles",
         path=str(tmp_path),
+        intent="dataset",
     )
 
     assert result.returncode == 0

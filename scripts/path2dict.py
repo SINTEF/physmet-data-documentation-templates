@@ -393,7 +393,6 @@ def main():
     )
     parser.add_argument(
         "--intent",
-        required=True,
         help="Intent section to use from treeweaver.yaml"
     )
     parser.add_argument(
@@ -435,12 +434,15 @@ def main():
         args.store_path = None
 
     cli_templates = _parse_template_mappings(args.template)
+    cli_config = args.config
+    if not args.intent and not cli_config:
+        cli_config = "/user/sample/instrument/method/experiment"
 
     results = find_datadocs(
         args.path,
         store_path=args.store_path,
         intent=args.intent,
-        cli_config=args.config,
+        cli_config=cli_config,
         cli_templates=cli_templates,
         store_config_provenance=args.store_config_provenance,
     )
