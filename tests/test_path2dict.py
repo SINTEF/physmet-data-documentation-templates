@@ -1,5 +1,7 @@
 import json
+import importlib.util
 import subprocess
+from pathlib import Path
 
 
 def run_path2dict(*args, path="tests/data", intent=None):
@@ -12,6 +14,14 @@ def run_path2dict(*args, path="tests/data", intent=None):
 
 def write_treeweaver(path, text):
     path.joinpath("treeweaver.yaml").write_text(text, encoding="utf-8")
+
+
+def load_path2dict_module():
+    module_path = Path(__file__).parents[1] / "scripts" / "path2dict.py"
+    spec = importlib.util.spec_from_file_location("path2dict", module_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_path2dict_cli():
@@ -439,3 +449,278 @@ intents:
     row = json.loads(result.stdout)[0]
     assert str(tmp_path / "treeweaver.yaml") in row["configFiles"]
     assert str(sample / "treeweaver.yaml") in row["configFiles"]
+
+
+def test_treeweaver_root_prune_pattern_prunes_matching_child_directories(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "raw/"
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+""",
+    )
+    tmp_path.joinpath("raw", "DS1").mkdir(parents=True)
+    tmp_path.joinpath("keep", "DS2").mkdir(parents=True)
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"sample": "keep", "dataset": "DS2"} in rows
+    assert {"sample": "raw", "dataset": "DS1"} not in rows
+
+
+def test_treeweaver_child_prune_patterns_append_to_parent_patterns(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "raw/"
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+""",
+    )
+    keep = tmp_path / "keep"
+    keep.mkdir()
+    write_treeweaver(
+        keep,
+        """
+version: 1
+prune:
+  patterns:
+    - "scratch/"
+""",
+    )
+    tmp_path.joinpath("raw", "DS1").mkdir(parents=True)
+    keep.joinpath("scratch", "DS2").mkdir(parents=True)
+    keep.joinpath("DS3").mkdir()
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"sample": "keep", "dataset": "DS3"} in rows
+    assert {"sample": "raw", "dataset": "DS1"} not in rows
+    assert {"sample": "keep", "dataset": "scratch"} not in rows
+
+
+def test_treeweaver_pruning_is_independent_of_selected_intent(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "skip/"
+intents:
+  dataset:
+    config: "/{name}"
+  sample:
+    config: "/{name}"
+""",
+    )
+    tmp_path.joinpath("skip").mkdir()
+    tmp_path.joinpath("keep").mkdir()
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="sample",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"name": "keep"} in rows
+    assert {"name": "skip"} not in rows
+
+
+def test_treeweaver_directory_prune_pattern_matches_directories(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "__pycache__/"
+intents:
+  dataset:
+    config: "/{name}"
+""",
+    )
+    tmp_path.joinpath("__pycache__").mkdir()
+    tmp_path.joinpath("not_cache").mkdir()
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"name": "not_cache"} in rows
+    assert {"name": "__pycache__"} not in rows
+
+
+def test_treeweaver_non_matching_directories_are_still_traversed(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "*.tmp"
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+""",
+    )
+    tmp_path.joinpath("sample.tmp", "DS1").mkdir(parents=True)
+    tmp_path.joinpath("sample", "DS2").mkdir(parents=True)
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"sample": "sample", "dataset": "DS2"} in rows
+    assert {"sample": "sample.tmp", "dataset": "DS1"} not in rows
+
+
+def test_treeweaver_matched_prune_rule_retains_provenance(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "raw/"
+intents:
+  dataset:
+    config: "/{name}"
+""",
+    )
+    raw = tmp_path / "raw"
+    raw.mkdir()
+
+    path2dict = load_path2dict_module()
+    effective = path2dict.resolve_effective_config(tmp_path, "dataset")
+    rule = path2dict.explain_prune(raw, effective)
+
+    assert rule.pattern == "raw/"
+    assert rule.source == (tmp_path / "treeweaver.yaml").resolve()
+    assert rule.base == tmp_path.resolve()
+
+
+def test_treeweaver_yaml_in_non_pruned_directories_is_discovered(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+intents:
+  dataset:
+    config: "/{sample}"
+""",
+    )
+    keep = tmp_path / "keep"
+    keep.mkdir()
+    write_treeweaver(
+        keep,
+        """
+version: 1
+intents:
+  dataset:
+    template:
+      label: "{sample}"
+""",
+    )
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    assert {"sample": "keep", "label": "keep"} in json.loads(result.stdout)
+
+
+def test_treeweaver_yaml_inside_pruned_directory_is_not_loaded(tmp_path):
+    write_treeweaver(
+        tmp_path,
+        """
+root: true
+version: 1
+prune:
+  patterns:
+    - "skip/"
+intents:
+  dataset:
+    config: "/{sample}"
+""",
+    )
+    skip = tmp_path / "skip"
+    skip.mkdir()
+    write_treeweaver(
+        skip,
+        """
+version: 1
+intents:
+  dataset:
+    config: "/{sample}/{dataset}"
+""",
+    )
+    skip.joinpath("DS1").mkdir()
+    tmp_path.joinpath("keep").mkdir()
+
+    result = run_path2dict(
+        "--json",
+        "--store_path",
+        "None",
+        path=str(tmp_path),
+        intent="dataset",
+    )
+
+    assert result.returncode == 0
+    rows = json.loads(result.stdout)
+    assert {"sample": "keep"} in rows
+    assert {"sample": "skip"} not in rows
+    assert {"sample": "skip", "dataset": "DS1"} not in rows

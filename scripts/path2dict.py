@@ -5,6 +5,7 @@ import argparse
 import json
 from pathlib import Path
 import csv
+import fnmatch
 import re
 import sys
 from dataclasses import dataclass, field
@@ -60,10 +61,18 @@ class IntentConfig:
 
 
 @dataclass(frozen=True)
+class PruneRule:
+    pattern: str
+    source: Path
+    base: Path
+
+
+@dataclass(frozen=True)
 class Config:
     root: bool = False
     version: Optional[int] = None
     prefixes: dict = field(default_factory=dict)
+    prune_rules: tuple = field(default_factory=tuple)
     intents: dict = field(default_factory=dict)
     sources: tuple = field(default_factory=tuple)
 
@@ -74,6 +83,7 @@ class EffectiveConfig:
     config_base: Optional[Path] = None
     template: dict = field(default_factory=dict)
     prefixes: dict = field(default_factory=dict)
+    prune_rules: tuple = field(default_factory=tuple)
     sources: tuple = field(default_factory=tuple)
 
 
@@ -110,10 +120,26 @@ def load_config_file(path):
             ),
         )
 
+    prune = _as_mapping(data.get("prune"), "prune", path)
+    prune_patterns = prune.get("patterns", [])
+    if prune_patterns is None:
+        prune_patterns = []
+    if not isinstance(prune_patterns, list):
+        raise ValueError(f"{path}: prune.patterns must be a list")
+    prune_rules = tuple(
+        PruneRule(
+            pattern=str(pattern),
+            source=path.resolve(),
+            base=path.parent.resolve(),
+        )
+        for pattern in prune_patterns
+    )
+
     return Config(
         root=bool(data.get("root", False)),
         version=data.get("version"),
         prefixes=dict(_as_mapping(data.get("prefixes"), "prefixes", path)),
+        prune_rules=prune_rules,
         intents=intents,
         sources=(path.resolve(),),
     )
@@ -146,6 +172,7 @@ def merge_configs(parent, child):
         root=child.root,
         version=child.version if child.version is not None else parent.version,
         prefixes={**parent.prefixes, **child.prefixes},
+        prune_rules=parent.prune_rules + child.prune_rules,
         intents=intents,
         sources=parent.sources + child.sources,
     )
@@ -205,6 +232,7 @@ def resolve_effective_config(directory, intent):
         config_base=intent_config.config_base,
         template=dict(intent_config.template),
         prefixes=dict(config.prefixes),
+        prune_rules=config.prune_rules,
         sources=config.sources,
     )
 
@@ -219,6 +247,49 @@ def _merge_template_overrides(config_templates, cli_templates):
 def _parts_from_base(base, current_path):
     relative_parts = current_path.relative_to(base).parts
     return [base.name, *relative_parts]
+
+
+def _match_prune_rule(path, rule):
+    try:
+        relative = path.resolve().relative_to(rule.base).as_posix()
+    except ValueError:
+        return False
+
+    pattern = rule.pattern
+    dir_only = pattern.endswith("/")
+    pattern = pattern.rstrip("/")
+    if dir_only and not path.is_dir():
+        return False
+
+    if not pattern:
+        return False
+
+    if "/" in pattern:
+        return (
+            fnmatch.fnmatchcase(relative, pattern)
+            or (
+                pattern.startswith("**/")
+                and fnmatch.fnmatchcase(relative, pattern[3:])
+            )
+        )
+
+    return any(
+        fnmatch.fnmatchcase(part, pattern)
+        for part in Path(relative).parts
+    )
+
+
+def explain_prune(path, effective_config):
+    """Return the prune rule that matches path, or None."""
+    path = Path(path)
+    for rule in effective_config.prune_rules:
+        if _match_prune_rule(path, rule):
+            return rule
+    return None
+
+
+def should_prune(path, effective_config):
+    return explain_prune(path, effective_config) is not None
 
 
 def _build_context_from_config_chain(
@@ -366,7 +437,9 @@ def find_datadocs(
             results.append(result)
 
         for child in current_path.iterdir():
-            if child.is_dir():
+            if child.is_dir() and not (
+                intent and should_prune(child, effective)
+            ):
                 walk(child, parts + [child.name])
 
     # root corresponds to first key

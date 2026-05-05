@@ -1,6 +1,9 @@
 # Treeweaver configuration file
 root: true
 version: 1
+prune:
+  patterns:
+    - "JO11"
 intents:
   sample:
     config: "/@id"
