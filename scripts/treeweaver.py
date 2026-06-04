@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "pyyaml",
+# ]
+# ///
 # Get information from path to a dict (json)
 # Written with support from AI (ChatGPT Codex)
 
