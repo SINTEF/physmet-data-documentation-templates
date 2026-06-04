@@ -31,7 +31,7 @@ directory trees.
 
 ### Requirements
 
-Python 3.12 and pyyyaml. Can most easily be setup with `uv`,
+Python 3.12 and pyyaml. Can most easily be setup with `uv`,
 e.g. `uv run scripts/treeweaver.py --help`
 
 ### Usage
@@ -144,9 +144,9 @@ Then, the config is automatically read and
 used to write the corresponding documentation files. For instance in
 `scripts/datadoc_intent.sh`,
 ```bash
-uv run scripts/path2dict.py tests/data --intent "sample" --csv > output/samples.csv
-uv run scripts/path2dict.py tests/data --intent "dataset" --csv > output/datasets.csv
-uv run scripts/path2dict.py tests/data --intent "procedure" --csv > output/procedures.csv
+uv run scripts/treeweaver.py tests/data --intent "sample" --csv > output/samples.csv
+uv run scripts/treeweaver.py tests/data --intent "dataset" --csv > output/datasets.csv
+uv run scripts/treeweaver.py tests/data --intent "procedure" --csv > output/procedures.csv
 ```
 Each intent here is created to make different type of data documentation 
 on the same filetree. These configuation files are recursively read,
