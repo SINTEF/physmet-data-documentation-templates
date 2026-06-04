@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # Get information from path to a dict (json)
+# Written with support from AI (ChatGPT Codex)
 
 import argparse
-import json
-from pathlib import Path
 import csv
 import fnmatch
+import json
 import re
 import sys
 from dataclasses import dataclass, field
-from typing import Optional
+from pathlib import Path
 
 import yaml
 
@@ -55,8 +55,8 @@ def _parse_template_mappings(templates):
 
 @dataclass(frozen=True)
 class IntentConfig:
-    config: Optional[str] = None
-    config_base: Optional[Path] = None
+    config: str | None = None
+    config_base: Path | None = None
     template: dict = field(default_factory=dict)
 
 
@@ -70,7 +70,7 @@ class PruneRule:
 @dataclass(frozen=True)
 class Config:
     root: bool = False
-    version: Optional[int] = None
+    version: int | None = None
     prefixes: dict = field(default_factory=dict)
     prune_rules: tuple = field(default_factory=tuple)
     intents: dict = field(default_factory=dict)
@@ -79,8 +79,8 @@ class Config:
 
 @dataclass(frozen=True)
 class EffectiveConfig:
-    config: Optional[str] = None
-    config_base: Optional[Path] = None
+    config: str | None = None
+    config_base: Path | None = None
     template: dict = field(default_factory=dict)
     prefixes: dict = field(default_factory=dict)
     prune_rules: tuple = field(default_factory=tuple)
@@ -350,7 +350,7 @@ def _build_datadoc(
 ):
     result = {}
 
-    for key, value in zip(keys, parts):
+    for key, value in zip(keys, parts, strict=True):
         if key:  # skip empty key names
             result[key] = value
     if store_path:
@@ -370,7 +370,7 @@ def _build_datadoc(
 def find_datadocs(
     root,
     keys=None,
-    store_path: Optional[str] = "localPath",
+    store_path: str | None = "localPath",
     templates=None,
     intent=None,
     cli_config=None,
