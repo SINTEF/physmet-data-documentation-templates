@@ -19,9 +19,7 @@ def _parse_slash_config(config, option_name):
     if not tokens:
         raise ValueError(f"{option_name} must contain at least one field")
     return [
-        token[1:-1].strip()
-        if token.startswith("{") and token.endswith("}")
-        else token
+        token[1:-1].strip() if token.startswith("{") and token.endswith("}") else token
         for token in tokens
     ]
 
@@ -39,13 +37,9 @@ def _parse_template_mappings(templates):
         template = template.strip()
 
         if not sep or not target or not template:
-            raise ValueError(
-                "--template must be on the form FIELD=TEMPLATE"
-            )
+            raise ValueError("--template must be on the form FIELD=TEMPLATE")
         if target in mapping and mapping[target] != template:
-            raise ValueError(
-                f"conflicting --template definitions for field '{target}'"
-            )
+            raise ValueError(f"conflicting --template definitions for field '{target}'")
         if target not in mapping:
             ordered_templates.append((target, template))
         mapping[target] = template
@@ -152,11 +146,7 @@ def merge_configs(parent, child):
         parent_intent = intents.get(name, IntentConfig())
         child_has_config = child_intent.config is not None
         intents[name] = IntentConfig(
-            config=(
-                child_intent.config
-                if child_has_config
-                else parent_intent.config
-            ),
+            config=(child_intent.config if child_has_config else parent_intent.config),
             config_base=(
                 child_intent.config_base
                 if child_has_config
@@ -265,18 +255,11 @@ def _match_prune_rule(path, rule):
         return False
 
     if "/" in pattern:
-        return (
-            fnmatch.fnmatchcase(relative, pattern)
-            or (
-                pattern.startswith("**/")
-                and fnmatch.fnmatchcase(relative, pattern[3:])
-            )
+        return fnmatch.fnmatchcase(relative, pattern) or (
+            pattern.startswith("**/") and fnmatch.fnmatchcase(relative, pattern[3:])
         )
 
-    return any(
-        fnmatch.fnmatchcase(part, pattern)
-        for part in Path(relative).parts
-    )
+    return any(fnmatch.fnmatchcase(part, pattern) for part in Path(relative).parts)
 
 
 def explain_prune(path, effective_config):
@@ -313,7 +296,7 @@ def _build_context_from_config_chain(
             if len(parts) >= len(keys):
                 context.update(
                     _build_datadoc(
-                        parts[:len(keys)],
+                        parts[: len(keys)],
                         keys,
                         None,
                     )
@@ -331,9 +314,7 @@ def _render_template(template, context):
     def replace(match):
         field_name = match.group(1)
         if field_name not in context:
-            raise ValueError(
-                f"--template references unknown field '{field_name}'"
-            )
+            raise ValueError(f"--template references unknown field '{field_name}'")
         return context[field_name]
 
     return PLACEHOLDER_PATTERN.sub(replace, template)
@@ -377,7 +358,7 @@ def find_datadocs(
     cli_templates=None,
     store_config_provenance=None,
 ):
-    """ If store_path, also store the full path in a variable with that name.
+    """If store_path, also store the full path in a variable with that name.
     E.g. store_path = "localPath" would produce localPath="data/JM12/SEM/EDS"
     """
     root = Path(root).resolve()
@@ -437,9 +418,7 @@ def find_datadocs(
             results.append(result)
 
         for child in current_path.iterdir():
-            if child.is_dir() and not (
-                intent and should_prune(child, effective)
-            ):
+            if child.is_dir() and not (intent and should_prune(child, effective)):
                 walk(child, parts + [child.name])
 
     # root corresponds to first key
@@ -453,21 +432,17 @@ def main():
         description="Discover datadoc entries from a structured directory"
     )
     parser.add_argument(
-        "path",
-        help="Root path (corresponding to first config element)"
+        "path", help="Root path (corresponding to first config element)"
     )
     parser.add_argument(
         "--config",
-        help='''Slash-separated field mapping.
+        help="""Slash-separated field mapping.
 
         Starting with a slash (e.g. /user) will ignore the root-directory.
         Empty values like user//inst will cause the middle directory names to
-        not be stored.'''
+        not be stored.""",
     )
-    parser.add_argument(
-        "--intent",
-        help="Intent section to use from treeweaver.yaml"
-    )
+    parser.add_argument("--intent", help="Intent section to use from treeweaver.yaml")
     parser.add_argument(
         "--template",
         action="append",
@@ -476,29 +451,21 @@ def main():
         help="""Template for assigning or deriving field values. May be given
         multiple times. Templates can reference extracted fields as
         "{fieldName}", for example processedFrom=physmet:sample/{processedFrom}
-        or newProp={processedFrom}_{@id}."""
+        or newProp={processedFrom}_{@id}.""",
     )
-    parser.add_argument(
-        "--json",
-        action="store_true",
-        help="Output as JSON"
-    )
-    parser.add_argument(
-        "--csv",
-        action="store_true",
-        help="Output as CSV"
-    )
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
+    parser.add_argument("--csv", action="store_true", help="Output as CSV")
     parser.add_argument(
         "--store_path",
         default="localPath",
         help="""Store path in a key (default: %(default)s). To not store, set
-        to 'None'."""
+        to 'None'.""",
     )
     parser.add_argument(
         "--store_config_provenance",
         default=None,
         metavar="FIELD",
-        help="Store applied treeweaver.yaml file paths in FIELD."
+        help="Store applied treeweaver.yaml file paths in FIELD.",
     )
 
     args = parser.parse_args()
@@ -534,8 +501,9 @@ def main():
     else:
         for r in results:
             for k, v in r.items():
-                print(f"{k}=\"{v}\" / ", end="")
+                print(f'{k}="{v}" / ', end="")
             print()
+
 
 if __name__ == "__main__":
     main()
