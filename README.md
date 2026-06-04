@@ -14,7 +14,7 @@ be copied as-is (for example, a list of available equipment).
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-org/physmet-data-documentation-templates.git
+git clone https://gitlab.sintef.no/sfi-physmet/all-partners/physmet-data-documentation-templates.git
 ```
 
 Then go to your local (or synchronized SharePoint folder and follow the procedure).
