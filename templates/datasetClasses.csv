@@ -1,0 +1,2 @@
+@id,@type,subClassOf,prefLabel,elucidation
+avb:SIMSProfile,owl:Class,emmo:Dataset,SIMSProfile,Secondary Ion Mass Spectrometry (SIMS) depth profile of concentrations.

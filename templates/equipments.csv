@@ -1,0 +1,17 @@
+@id,@type,identifier,name,description,location,contactPerson,note,seeAlso
+tem-equip:ARM200F,chameo:TransmissionElectronMicroscope,ARM200F,ARM200F,"Jeol JEM ARM200F - Double corrected ColdFEG microscope",,,,https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/fgjgj
+tem-equip:2100F,chameo:TransmissionElectronMicroscope,2100F,2100F,"Jeol JEM 2100F - FEG microscope",,,,https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/jeol-jem-2100f
+tem-equip:2100,chameo:TransmissionElectronMicroscope,2100,2100,"Jeol JEM 2100 - LaB6 microscope",,,,https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/jeol-jem-2100
+emlab-equip:SemA,chameo:ScanningElectronMicroscope,SemA,"Sem A",,,,,https://www.ntnu.edu/documents/140082/1269041159/EM-lab-ProdInfoSEM_A.pdf/bd8b7377-2d34-45b7-ae66-c51dfb57b73d
+emlab-equip:LVSEM,chameo:ScanningElectronMicroscope,LVSEM,LV-SEM,,,,,https://www.ntnu.edu/documents/140082/1269041159/S-3400NSpecifications.pdf/6b94c26f-a9d4-4f36-82b3-7e9eb3603922
+emlab-equip:FeSEM,chameo:ScanningElectronMicroscope,FeSEM,Fe-SEM,,,,,https://www.ntnu.edu/documents/140082/1269041159/Em-lab-ULTRA_Technical.pdf/aad80164-f671-4c14-81c8-3a42c45f9dd8
+emlab-equip:EPMA,temgo:ElectronProbeMicroAnalyser,EPMA,Fe-SEM,,,,,https://www.ntnu.edu/documents/140082/1269041159/EM-lab-ProdInfoEPMA.pdf/13290111-9267-44d5-ab3e-20d9b9e13c6e
+emlab-equip:FishionePlasmaCleaner,temgo:PlasmaCleaner,FishionePlasmaCleaner,"Fishione Plasma Cleaner",,,,,http://www.fischione.com/products/model_1020.asp
+emlab-equip:AgarCoater,temgo:SEMSampleCoater,AgarCoater,"Agar Turbo Carbon Coater",,,,,
+emlab-equip:IT800HL,chameo:ScanningElectronMicroscope,IT800HL,"SEM JEOL IT800HL",,,,,
+emlab-equip:JeolCrossPolisher,temgo:CrossPolisher,JeolCrossPolisher,"JEOL - IB-19520CCP - Cross Polisher",,,,,
+emlab-equip:HitachiIonMiller,temgo:IonMiller,HitachiIonMiller,"Hitachi IM3000 - Ion Miller",,,,,
+elkem:IronFurnance,temgo:Furnance,IronFurnance,Furnace,"Iron furnace",,,,
+elkem:TreatmentLadle,temgo:Ladle,TreatmentLadle,Ladle,,,,,
+elkem:InoculationCrucible,temgo:Crucible,InoculationCrucible,Crucible,,,,,
+elkem:MouldBars30mm,temgo:Mould,MouldBars30mm,"Sand mould",,,,,

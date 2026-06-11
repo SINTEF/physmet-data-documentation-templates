@@ -1,0 +1,84 @@
+COMMENTS
+========
+
+General
+-------
+Documentation should be easy accessible and not require login to read.
+Remember, NTNU students are external with short-lived sessions before
+they have to login again.
+
+If you want to keep this repo private, at least put all the
+documentation on a public GitLab Pages.
+
+
+Keyword names
+-------------
+Keywords in YAML-sections in README-files and table headers should be:
+- case sensitive (JSON-LD mappings are case sensitive)
+- reuse names of terms in standard vocabularies (unless there are good reasons to do otherwise)
+- be a single word without special characters
+- be written with lowerCamelCase (unless there are good reasons to do otherwise)
+
+I don't think that we should be afraid to have two initial columns labeled `@id` and `@type` in the tables exposed to the users (can be discussed).
+The experience from PINK is that it is easy for people to understand them.
+The challenge is to make people being consistent with identifiers.
+The benefit of including `@id` and `@type` is that the then can be directly converted to RDF using DataDocWeb/Tripper.
+
+
+We should publish lists of available keywords and their meaning.
+The Tripper documentation already contain such a [list](https://emmc-asbl.github.io/tripper/latest/datadoc/keywords/), but that should be improved.
+
+
+Standard conformance
+--------------------
+The data documentation in SFI PhysMet should adhere to EMMO.
+Conformance with DCAT and PROV-O will be ensured by postprocessing (most likely with CONSTRUCT SPARQL queries).
+
+
+
+Identifiers
+-----------
+Everything in the knowledge base should have a globally unique and persistent identifier.
+In the context of the knowledge base we call these IDs for *International Resource Identifiers* (IRIs).
+
+Furthermore, it is considered a [good practice](https://faircookbook.elixir-europe.org/content/recipes/findability/identifiers.html#generating-resolvable-urls) for FAIR data that IRIs are resolvable.
+
+How SFI PhysMet address these requirements on IRIs:
+- **Globally uniqueness** is ensured by the use of namespaces that we own.
+- **Persistence** means that identifiers, once given, should never be changed.
+- **Resolvability** is addressed by redirections to ensure persistence even if the documented resource is moved.
+
+### Base IRI for common resources in SFI PhysMet
+We need to agree on base IRI for common resources in SFI PhysMet. It should be one of these
+- https://www.ntnu.edu/physmet/
+- https://w3id.org/physmet/
+
+###
+
+
+For example, a SEM dataset by Andreas Voll Bugten may be identified by the IRI
+https://orcid.org/0000-0003-0311-8584/JP16/SEM/220406aa/nitride5.tif
+where https://orcid.org/0000-0003-0311-8584/ is a unique prefix for all data and other resources related to Andreas.
+
+This namespace can be abbreviated with a prefix.
+Each person, project and organisation has a prefix assigned to them, which is unique within the scope of our knowledge base.
+
+For example, we have assigned the prefix "avb" to Andreas Voll Bugten.
+When documenting the above dataset, we will refer to it with the following IRI:
+`abd:JP16/SEM/220406aa/nitride5.tif`.
+
+Samples coming from Elkem, should use the Elkem prefix, and so forth.
+
+> [!NOTE]
+> An IRI written with a prefix, like `abd:JP16/SEM/220406aa/nitride5.tif`, is called a [CURIE] (compact URI).
+> A CURIE differ from a [QName] in that the part following the colon may contain embedded slashes.
+
+The prefixes are maintained in the three global tables:
+- people.csv
+- projects.csv
+- organisations.csv
+
+
+
+[CURIE]: https://www.w3.org/2001/sw/BestPractices/HTML/2005-10-27-CURIE
+[Qname]: https://en.wikipedia.org/wiki/QName

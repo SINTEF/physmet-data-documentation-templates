@@ -1,0 +1,101 @@
+{
+  "@version": 1.1,
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "vorg": "https://www.w3.org/TR/vocab-org/",
+    "frapro": "http://purl.org/cerif/frapo/",
+    "orcid": "https://orcid.org/",
+    "nvaid": "https://nva.sikt.no/research-profile/",
+    "ror": "https://ror.org/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "emmo": "https://w3id.org/emmo#",
+    "chameo": "https://w3id.org/emmo/domain/characterisation-methodology/chameo#",
+    "micro": "https://w3id.org/emmo/domain/microstructure#",
+    "temgo": "https://www.ntnu.edu/temgemini/vocab/temgo#",
+    "pers": "https://www.ntnu.edu/physmet/people/",
+    "proj": "https://www.ntnu.edu/physmet/project/",
+    "org": "https://www.ntnu.edu/physmet/org/",
+    "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/",
+    "emlab-equip": "https://www.ntnu.edu/ima/research/emlab/equipment/",
+    "nanolab-equip": "https://www.ntnu.edu/nanolab/equipment/",
+    "elkem": "https://www.elkem.com/physmet/",
+
+    "affiliation": {
+      "@id": "org:memberOf",
+      "@type": "@id"
+    },
+    "hasIPROwner": {
+      "@id": "org:hasIPROwmer",
+      "@type": "@id"
+    },
+    "hasFundingAgency": {
+      "@id": "frapro:hasFundingAgency",
+      "@type": "@id"
+    },
+    "hasGrantNumber": {
+      "@id": "frapro:hasGrantNumber",
+      "@type": "xsd:string"
+    },
+    "hasAcronym": {
+      "@id": "frapro:hasAcronym",
+      "@type": "@id"
+    },
+    "hasOperator": {
+      "@id": "emmo:hasOperator",
+      "@type": "@id"
+    },
+    "performedWith": {
+      "@id": "emmo:performedWith",
+      "@type": "@id"
+    },
+    "location": {
+      "@id": "dcterms:spatial",
+      "@type": "@id"
+    },
+    "note": {
+      "@id": "skos:note",
+      "@language": "en"
+    },
+    "priorRelease": {
+      "@id": "ddoc:priorRelease",
+      "@type": "@id"
+    },
+    "contactPerson": {
+      "@id": "ddoc:contactPerson",
+      "@type": "@id"
+    },
+    "email": {
+      "@id": "foaf:mbox",
+      "@type": "xsd:string"
+    },
+    "homepage": {
+      "@id": "foaf:homepage",
+      "@type": "xsd:anyURI"
+    },
+    "sameAs": {
+      "@id": "owl:sameAs",
+      "@type": "@id"
+    },
+    "seeAlso": {
+      "@id": "owl:seeAlso"
+    },
+    "prefix": {
+      "@id": "ddoc:hasPrefix",
+      "@type": "xsd:string"
+    },
+    "namespace": {
+      "@id": "ddoc:hasNamespace",
+      "@type": "xsd:anyURI"
+    },
+    "isDatumOf": {
+      "@reverse": "emmo:hasDatum",
+      "@type": "@id"
+    }
+
+
+  }
+}
