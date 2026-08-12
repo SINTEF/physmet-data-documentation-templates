@@ -14,6 +14,7 @@ dependencies = [
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
+extract_prefixes = "scripts.extract_prefixes:main"
 
 [build-system]
 requires = ["hatchling"]
