@@ -45,6 +45,12 @@ def parse(filename: Path, **spec) -> dict:
             prefix = row[iprefix]
             ns = row[ins]
             if prefix and ns:
+                if prefix in prefixes and ns != prefixes[prefix]:
+                    raise PrefixMismatchError(
+                        f"duplicate definitions of prefix: {prefix}\n"
+                        f"  - {prefixes[prefix]}\n"
+                        f"  - {ns}"
+                    )
                 prefixes[prefix] = ns
 
     return prefixes
