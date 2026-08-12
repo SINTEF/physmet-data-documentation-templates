@@ -24,6 +24,49 @@ contactPerson: "pers:MarisaDiSabatino"
 
 # IRI for the material that the base samples are taken from
 material: null
+location: null  # XXX - sample storage location
+
+basesample:
+  description: "Base sample description..."  # XXX
+
+sample:
+  description: "Sample description..."  # XXX
+
+
+PREFIXES:
+  chameo:
+
+OUTPUT:
+  basesample:
+    "@id": "{user_prefix}:{sample}"
+    "@type": "chameo:Sample"
+    "title": "{sample}"
+    "description": "{basesample.description}"
+    "note": null
+    "hasComposition": null  # XXX TODO
+    "creator": "{creator}"
+    "creationDate": null  # from info
+    "location": "{location}"
+    "isTemporalPartOf": "{material}"
+    "isSpatioTemporalPartOf": null  # unused for basesample
+
+  sample:
+    "@id": "{user_prefix}:{sample}-sample"
+    "@type": "chameo:Sample"
+    "title": "{sample}-sample"
+    "description": "{sample.description}"
+    "note": null
+    "hasComposition": null  # XXX TODO
+    "creator": "{creator}"
+    "creationDate": None,  # not sure how this can be inferred
+    "location": None,  # XXX - sample storage location
+    "isTemporalPartOf": None,
+    "isSpatioTemporalPartOf": basesample_iri,
+
+
+
+
+
 
 # Additional column
 datasets:
