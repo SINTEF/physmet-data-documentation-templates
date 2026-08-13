@@ -12,6 +12,23 @@ dependencies = [
     "pyyaml",
 ]
 
+[project.optional-dependencies]
+testing = [
+    "pytest==9.1.1",
+    "pytest-cov==6.0.0",
+]
+pre-commit = [
+    "Treeweaver[testing]",
+    "pre-commit==4.0.1",
+    "pylint==3.3.4",
+]
+dev = [
+    "Treeweaver[pre-commit]",
+    "virtualenvwrapper>=4.0.0",
+]
+
+
+
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
 extract_prefixes = "scripts.extract_prefixes:main"

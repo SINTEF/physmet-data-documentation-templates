@@ -6,11 +6,9 @@ It extract prefixes and stores them as a JSON-LD context.
 import argparse
 import csv
 import json
-import sys
 import warnings
 from pathlib import Path
 from typing import Optional
-
 
 thisdir = Path(__file__).resolve().parent
 default_files = [
@@ -21,6 +19,10 @@ default_files = [
 ]
 
 
+class PrefixMismatchError(ValueError):
+    """Same prefix is used for two different namespaces."""
+
+
 def parse(filename: Path, **spec) -> dict:
     """Parse a CSV file and return a dict with all prefixes defined in it.
 
@@ -29,9 +31,9 @@ def parse(filename: Path, **spec) -> dict:
         spec: Dict with keyword arguments to csv.reader() for specifying
             how `filename` is formatted.
     """
-    prefixes = {}
+    prefixes: dict = {}
     conf = spec if spec else {}
-    with open(filename, newline="") as csvfile:
+    with open(filename, newline="", encoding="utf8") as csvfile:
         reader = csv.reader(csvfile, **conf)
         header = next(reader)
         if not "prefix" in header and not "namespace" in header:
@@ -66,7 +68,7 @@ def write_jsonld(output: Optional[Path], prefixes: dict) -> None:
     context = {"@context": prefixes}
     jsonld = json.dumps(context, indent=2, sort_keys=False)
     if output:
-        with open(output, "w") as f:
+        with open(output, "w", encoding="utf8") as f:
             f.write(jsonld)
     else:
         print(jsonld)
@@ -103,7 +105,7 @@ def main() -> None:
 
     for path in args.paths:
         abspath = Path(path).resolve()
-        if abspath.is_dir:
+        if abspath.is_dir():
             for filename in default_files:
                 prefixes.update(parse(abspath / filename))
         else:
