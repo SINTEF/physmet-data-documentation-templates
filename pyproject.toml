@@ -19,18 +19,18 @@ testing = [
     "pytest-cov==6.0.0",
 ]
 pre-commit = [
-    "Treeweaver[testing]",
+    "PhysMetDatadoc[testing]",
     "pre-commit==4.0.1",
     "pylint==3.3.4",
 ]
 dev = [
-    "Treeweaver[pre-commit]",
+    "PhysMetDatadoc[pre-commit]",
     "virtualenvwrapper>=4.0.0",
 ]
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
-extract_prefixes = "extract_prefixes:main"
+extract-prefixes = "extract_prefixes:main"
 
 [build-system]
 requires = ["hatchling"]
