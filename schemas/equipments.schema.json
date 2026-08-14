@@ -1,0 +1,234 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "equipments.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "equipments",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "tem-equip:ARM200F",
+        "tem-equip:2100F",
+        "tem-equip:2100",
+        "emlab-equip:SemA",
+        "emlab-equip:LVSEM",
+        "emlab-equip:FeSEM",
+        "emlab-equip:EPMA",
+        "emlab-equip:FishionePlasmaCleaner",
+        "emlab-equip:AgarCoater",
+        "emlab-equip:IT800HL",
+        "emlab-equip:JeolCrossPolisher",
+        "emlab-equip:HitachiIonMiller",
+        "elkem:IronFurnance",
+        "elkem:TreatmentLadle",
+        "elkem:InoculationCrucible",
+        "elkem:MouldBars30mm"
+      ]
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "chameo:TransmissionElectronMicroscope",
+        "chameo:TransmissionElectronMicroscope",
+        "chameo:TransmissionElectronMicroscope",
+        "chameo:ScanningElectronMicroscope",
+        "chameo:ScanningElectronMicroscope",
+        "chameo:ScanningElectronMicroscope",
+        "temgo:ElectronProbeMicroAnalyser",
+        "temgo:PlasmaCleaner",
+        "temgo:SEMSampleCoater",
+        "chameo:ScanningElectronMicroscope",
+        "temgo:CrossPolisher",
+        "temgo:IonMiller",
+        "temgo:Furnance",
+        "temgo:Ladle",
+        "temgo:Crucible",
+        "temgo:Mould"
+      ]
+    },
+    "identifier": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "ARM200F",
+        "2100F",
+        "2100",
+        "SemA",
+        "LVSEM",
+        "FeSEM",
+        "EPMA",
+        "FishionePlasmaCleaner",
+        "AgarCoater",
+        "IT800HL",
+        "JeolCrossPolisher",
+        "HitachiIonMiller",
+        "IronFurnance",
+        "TreatmentLadle",
+        "InoculationCrucible",
+        "MouldBars30mm"
+      ]
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "ARM200F",
+        "2100F",
+        "2100",
+        "Sem A",
+        "LV-SEM",
+        "Fe-SEM",
+        "Fe-SEM",
+        "Fishione Plasma Cleaner",
+        "Agar Turbo Carbon Coater",
+        "SEM JEOL IT800HL",
+        "JEOL - IB-19520CCP - Cross Polisher",
+        "Hitachi IM3000 - Ion Miller",
+        "Furnace",
+        "Ladle",
+        "Crucible",
+        "Sand mould"
+      ]
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "Jeol JEM ARM200F - Double corrected ColdFEG microscope",
+        "Jeol JEM 2100F - FEG microscope",
+        "Jeol JEM 2100 - LaB6 microscope",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        "Iron furnace",
+        null,
+        null,
+        null
+      ]
+    },
+    "location": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "contactPerson": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/fgjgj",
+        "https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/jeol-jem-2100f",
+        "https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/jeol-jem-2100",
+        "https://www.ntnu.edu/documents/140082/1269041159/EM-lab-ProdInfoSEM_A.pdf/bd8b7377-2d34-45b7-ae66-c51dfb57b73d",
+        "https://www.ntnu.edu/documents/140082/1269041159/S-3400NSpecifications.pdf/6b94c26f-a9d4-4f36-82b3-7e9eb3603922",
+        "https://www.ntnu.edu/documents/140082/1269041159/Em-lab-ULTRA_Technical.pdf/aad80164-f671-4c14-81c8-3a42c45f9dd8",
+        "https://www.ntnu.edu/documents/140082/1269041159/EM-lab-ProdInfoEPMA.pdf/13290111-9267-44d5-ab3e-20d9b9e13c6e",
+        "http://www.fischione.com/products/model_1020.asp",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  }
+}

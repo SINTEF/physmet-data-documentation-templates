@@ -1,0 +1,93 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "software.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "software",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "keyword": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "rightsHolder": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "license": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "landingPage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "priorRelease": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  }
+}

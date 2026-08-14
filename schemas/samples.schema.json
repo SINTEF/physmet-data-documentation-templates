@@ -1,0 +1,129 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "samples.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "samples",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "avb:JM11"
+      ]
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "chameo:Sample"
+      ]
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "JM11"
+      ]
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "A spheroidal graphite cast iron sample with nominal boron content specified by avb:nominalBoron."
+      ]
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "hasComposition": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "contactPerson": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "creator": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "pers:AndersVollBugten"
+      ]
+    },
+    "creationDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "location": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "isTemporalPartOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "isSpatioTemporalPartOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    }
+  }
+}

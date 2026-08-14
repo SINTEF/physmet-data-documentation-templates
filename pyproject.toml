@@ -8,16 +8,25 @@ authors = [
     { name = "Jesper Friis", email = "jesper.friis@sintef.no" },
 ]
 requires-python = ">=3.12"
-dependencies = [
-    "pyyaml",
-]
+dependencies = ["pyyaml"]
+
+[project.optional-dependencies]
+test = ["pytest", "jsonschema", "requests"]
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
+oold-converter = "oold_converter.oold_converter:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+# Explicitly tell Hatchling where your packages live
+[tool.hatch.build.targets.wheel]
+packages = ["src/treeweaver", "src/oold_converter"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/treeweaver", "/src/oold_converter"]
 
 [tool.ruff]
 line-length = 88
@@ -30,4 +39,4 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.isort]
-known-first-party = ["treeweaver"]
+known-first-party = ["treeweaver", "oold_converter"]

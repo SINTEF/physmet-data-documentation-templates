@@ -1,0 +1,65 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "processes.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "processes",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasInput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOutput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOperator": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "performedWith": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  }
+}

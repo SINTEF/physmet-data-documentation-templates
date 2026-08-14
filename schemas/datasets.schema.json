@@ -1,0 +1,169 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "datasets.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "datasets",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "avb:JM11_EDS"
+      ]
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "temgo:EDSMap"
+      ]
+    },
+    "title": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "JM11_EDS"
+      ]
+    },
+    "description": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "EDS dataset for the JM11 crusible."
+      ]
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "keyword": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "EDS"
+      ]
+    },
+    "rightsHolder": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "org:NTNU"
+      ]
+    },
+    "license": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "creator": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "pers:AndreasVollBugten"
+      ]
+    },
+    "contactPerson": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "pers:MarisaDiSabatino"
+      ]
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "releaseDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "priorRelease": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "processedFrom": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "avb:JM11"
+      ]
+    },
+    "distribution.downloadURL": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%203%20Sustainable%20and%20high-performance%20material%20development/Andreas%20Voll%20Bugten%20data/JM11/SEM/EDS?csf=1&web=1&e=8vpJwN"
+      ]
+    }
+  }
+}

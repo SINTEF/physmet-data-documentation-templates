@@ -1,0 +1,93 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "organisations.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "organisations",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "org:EC",
+        "org:NFR",
+        "org:SINTEF",
+        "org:NTNU",
+        "org:Elkem"
+      ]
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "foaf:Organization",
+        "foaf:Organization",
+        "foaf:Organization",
+        "foaf:Organization",
+        "foaf:Organization"
+      ]
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "European Comission",
+        "Forskningsr\u00e5det",
+        "SINTEF",
+        "NTNU",
+        "Elkem"
+      ]
+    },
+    "prefix": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "ec",
+        "nfr",
+        "sintef",
+        "ntnu",
+        "elkem"
+      ]
+    },
+    "namespace": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "https://commission.europa.eu/",
+        "https://www.forskningsradet.no/",
+        "https://www.sintef.no/",
+        "https://www.ntnu.no/",
+        "https://www.elkem.com/"
+      ]
+    },
+    "sameAs": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "ror:00k4n6c32",
+        "ror:00epmv149",
+        "ror:0422tvz87",
+        "ror:05xg72x27",
+        null
+      ]
+    }
+  }
+}

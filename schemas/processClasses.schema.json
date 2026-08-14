@@ -1,0 +1,79 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "processClasses.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "processClasses",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "subClassOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "prefLabel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "altLabel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "elucidation": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasInput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOutput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  }
+}

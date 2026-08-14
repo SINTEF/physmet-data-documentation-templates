@@ -1,0 +1,108 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "people.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "people",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "pers:AndreasVollBugten",
+        "pers:MarisaDiSabatino",
+        "pers:JesperFriis"
+      ]
+    },
+    "@type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "foaf:Person",
+        "foaf:Person",
+        "foaf:Person"
+      ]
+    },
+    "name": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "Andreas Voll Bugten",
+        "Marisa Di Sabatino",
+        "Jesper Friis"
+      ]
+    },
+    "prefix": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "avb",
+        null,
+        null
+      ]
+    },
+    "namespace": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "https://www.ntnu.edu/physmet/data/avb/",
+        null,
+        null
+      ]
+    },
+    "email": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null,
+        "marisa.di.sabatino@ntnu.no",
+        "jesper.friis@sintef.no"
+      ]
+    },
+    "affiliation": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "org:NTNU",
+        "org:NTNU",
+        "org:SINTEF"
+      ]
+    },
+    "sameAs": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "nnvaid:978376",
+        "nnvaid:978376",
+        null,
+        null,
+        "nvaid:40356",
+        "nvaid:40356"
+      ]
+    }
+  }
+}
