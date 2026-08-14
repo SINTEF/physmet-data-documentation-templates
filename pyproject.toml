@@ -1,21 +1,30 @@
 [project]
-name = "Treeweaver"
+name = "PhysMetDatadoc"
 version = "0.1.0"
-description = "Parse file-tree information into a graph / table."
+description = "Data documentation templates and tools for physical metallurgy."
 readme = "README.md"
 authors = [
-    { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
     { name = "Jesper Friis", email = "jesper.friis@sintef.no" },
+    { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
+    { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
 dependencies = ["pyyaml"]
 
 [project.optional-dependencies]
-test = ["pytest", "jsonschema", "requests"]
+test = [
+    "pytest==9.1.1",
+    "pytest-cov==6.0.0",
+    "jsonschema>=4.26.0",
+    "requests>=2.34.2",
+]
+pre-commit = ["Treeweaver[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
+dev = ["Treeweaver[pre-commit]", "virtualenvwrapper>=4.0.0"]
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
 oold-converter = "oold_converter.oold_converter:main"
+extract_prefixes = "extract_prefixes:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -29,7 +38,7 @@ packages = ["src/treeweaver", "src/oold_converter"]
 include = ["/src/treeweaver", "/src/oold_converter"]
 
 [tool.ruff]
-line-length = 88
+line-length = 79
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]

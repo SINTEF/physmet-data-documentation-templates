@@ -1,0 +1,12 @@
+{
+  "@context": {
+    "ec": "https://commission.europa.eu/",
+    "nfr": "https://www.forskningsradet.no/",
+    "sintef": "https://www.sintef.no/",
+    "ntnu": "https://www.ntnu.no/",
+    "elkem": "https://www.elkem.com/",
+    "avb": "https://www.ntnu.edu/physmet/data/avb/",
+    "idk": "https://www.ntnu.edu/physmet/data/idk/",
+    "pm": "https://www.ntnu.edu/physmet/kb/"
+  }
+}

@@ -109,7 +109,7 @@ user/sample/instrument/method/experiment
 ### Installation
 
 Python 3.12 and pyyaml. Can most easily be setup with `uv`, e.g. `uv sync` in
-repository directory, or add it to path with a virtual environment, 
+repository directory, or add it to path with a virtual environment,
 ```sh
 uv venv
 source .venv/bin/activate
@@ -141,7 +141,7 @@ with this output,
 ...
 ```
 
-#### Templating 
+#### Templating
 
 To rewrite or derive fields, repeat `--template` with `FIELD=TEMPLATE`
 entries:
@@ -189,7 +189,7 @@ emmo:processedFrom="JM12" / emmo:isOutputOf="SEM" / @type="Imaging" / dcterms:ti
 If combined with `tripper.datadoc`, the output should be in a `--csv` instead.
 
 #### treeweaver.yaml
-Instead of passing all of the configuration and temlates to the CLI script, you can 
+Instead of passing all of the configuration and temlates to the CLI script, you can
 make a file `treeweaver.yaml` which defines all the templates. One example can be like
 in the `tests/data/treeweaver.yaml`.
 ```yaml
@@ -228,7 +228,7 @@ treeweaver tests/data --intent "sample" --csv > output/samples.csv
 treeweaver tests/data --intent "dataset" --csv > output/datasets.csv
 treeweaver tests/data --intent "procedure" --csv > output/procedures.csv
 ```
-Each intent here is created to make different type of data documentation 
+Each intent here is created to make different type of data documentation
 on the same filetree. These configuation files are recursively read,
 meaning that if a `treeweaver.yaml` is found inside a folder, it will override
 the configuration for that folder and all sub-folders.
