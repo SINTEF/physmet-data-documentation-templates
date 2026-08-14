@@ -6,6 +6,7 @@ readme = "README.md"
 authors = [
     { name = "Jesper Friis", email = "jesper.friis@sintef.no" },
     { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
+    { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
 dependencies = [
