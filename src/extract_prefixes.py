@@ -1,6 +1,10 @@
-"""Script that parses CSV files defining shared resources.
+"""Extract prefixes from centrally maintained CSV files:
 
-It extract prefixes and stores them as a JSON-LD context.
+  - organisations.csv
+  - people.csv
+  - projects.csv
+
+The extracted prefixes can be saved as a JSON-LD context.
 """
 
 import argparse
