@@ -1,11 +1,11 @@
 [project]
-name = "Treeweaver"
+name = "PhysMetDatadoc"
 version = "0.1.0"
-description = "Parse file-tree information into a graph / table."
+description = "Data documentation templates and tools for physical metallurgy."
 readme = "README.md"
 authors = [
-    { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
     { name = "Jesper Friis", email = "jesper.friis@sintef.no" },
+    { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -27,11 +27,9 @@ dev = [
     "virtualenvwrapper>=4.0.0",
 ]
 
-
-
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
-extract_prefixes = "scripts.extract_prefixes:main"
+extract_prefixes = "extract_prefixes:main"
 
 [build-system]
 requires = ["hatchling"]
