@@ -1,0 +1,48 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/composition-schema.json",
+  "title": "Composition",
+  "type": "object",
+  "properties": {
+    "hasComposition": {
+      "type": "object",
+      "description": "A chemical composition.",
+      "properties": {
+        "hasSingleComponentComposition": {
+          "type": "object",
+          "description": "The amount of a single component.",
+          "properties": {
+            "hasSpeciesPart": {
+              "type": "string",
+              "description": "Chemical species.",
+              "examples": ["emmo:aluminiumSymbol"],
+            },
+            "hasQuantityPart": {
+              "type": "object",
+              "description": "Physical quantity that the express the single component composition.",
+              "examples": ["emmo:MassFraction"],
+              "properties": {
+                "instanceOf": {
+                  "type": "string",
+                  "description": "IRI of physical quantity that express the single component composition."
+                },
+                "hasMeasurementUnit": {
+                  "type": "string",
+                  "description": "IRI of physical quantity that express the single component composition."
+                  "examples": ["emmo:WeightPercent"],
+                }
+                "dataValue": {
+                  "type": "float",
+                  "description": "Value of single component composition expressed in terms of the physical quantity referred to by 'instanceOf'.",
+                  "examples": [0.32],
+              }
+            }
+          }
+        }
+      }
+      "required": ["hasSingleComponentComposition"]
+    }
+  }
+  "required": ["hasComposition"]
+}
