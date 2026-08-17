@@ -1,46 +1,52 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "$id": "samples.schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Samples.schema.json",
   "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
-  "title": "samples",
+  "title": "Samples",
   "type": "object",
   "properties": {
     "@id": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "Unique IRI identifying the documented resource.",
       "examples": [
         "avb:JM11"
       ]
     },
     "@type": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "IRI of the class the resource belongs to.",
       "examples": [
         "chameo:Sample"
       ]
     },
     "title": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A name given to the resource.",
       "examples": [
         "JM11"
       ]
     },
     "description": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A free-text account of the resource.",
       "examples": [
         "A spheroidal graphite cast iron sample with nominal boron content specified by avb:nominalBoron."
       ]
@@ -50,7 +56,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "A description of the subject resource. Use `description` instead.",
       "examples": [
         null
       ]
@@ -80,7 +86,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "An entity responsible for producing the resource.",
       "examples": [
         "pers:AndersVollBugten"
       ]
@@ -90,7 +96,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "Date of creation",
       "examples": [
         null
       ]
@@ -125,5 +131,11 @@
         null
       ]
     }
-  }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "title",
+    "description"
+  ]
 }

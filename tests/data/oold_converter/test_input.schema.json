@@ -1,21 +1,42 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "$id": "test_input.schema.json",
+  "$id": "Test_input.schema.json",
   "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
-  "title": "test_input",
+  "title": "Test_input",
   "type": "object",
   "properties": {
     "@id": {
-      "type": "string",
-      "examples": ["id:1", "id:2"]
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "id:1",
+        "id:2"
+      ]
     },
     "title": {
-      "type": "string",
-      "examples": ["Sample 1", "Sample 2"]
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "Sample 1",
+        "Sample 2"
+      ]
     },
     "description": {
-      "type": "string",
-      "examples": ["Desc 1", null]
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "Desc 1",
+        null
+      ]
     }
   }
 }

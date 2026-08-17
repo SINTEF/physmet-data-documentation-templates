@@ -1,0 +1,105 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Software.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "Software",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "Unique IRI identifying the documented resource."
+    },
+    "@type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "IRI of the class the resource belongs to."
+    },
+    "title": {
+      "type": "string",
+      "description": "A name given to the resource."
+    },
+    "description": {
+      "type": "string",
+      "description": "A free-text account of the resource."
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A description of the subject resource. Use `description` instead."
+    },
+    "keyword": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A keyword or tag describing the resource."
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Indicates a resource that might provide additional information about the subject resource."
+    },
+    "rightsHolder": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "license": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A licence under which the resource is made available."
+    },
+    "landingPage": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A web page that provides access to the resource and/or additional information (e.g. the distribution for a dataset)."
+    },
+    "version": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Version indicator (name or identifier) of a resource."
+    },
+    "priorRelease": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "title",
+    "description"
+  ]
+}

@@ -1,44 +1,47 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "$id": "people.schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/People.schema.json",
   "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
-  "title": "people",
+  "title": "People",
   "type": "object",
   "properties": {
     "@id": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "Unique IRI identifying the documented resource.",
       "examples": [
-        "pers:AndreasVollBugten",
-        "pers:MarisaDiSabatino",
-        "pers:JesperFriis"
+        "pers:AndreasVollBugten"
       ]
     },
     "@type": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "IRI of the class the resource belongs to.",
       "examples": [
-        "foaf:Person",
-        "foaf:Person",
         "foaf:Person"
       ]
     },
     "name": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A name of the agent.",
       "examples": [
-        "Andreas Voll Bugten",
-        "Marisa Di Sabatino",
-        "Jesper Friis"
+        "Andreas Voll Bugten"
       ]
     },
     "prefix": {
@@ -48,9 +51,7 @@
       ],
       "description": "",
       "examples": [
-        "avb",
-        null,
-        null
+        "avb"
       ]
     },
     "namespace": {
@@ -60,9 +61,7 @@
       ],
       "description": "",
       "examples": [
-        "https://www.ntnu.edu/physmet/data/avb/",
-        null,
-        null
+        "https://www.ntnu.edu/physmet/data/avb/"
       ]
     },
     "email": {
@@ -72,9 +71,7 @@
       ],
       "description": "",
       "examples": [
-        null,
-        "marisa.di.sabatino@ntnu.no",
-        "jesper.friis@sintef.no"
+        null
       ]
     },
     "affiliation": {
@@ -84,9 +81,7 @@
       ],
       "description": "",
       "examples": [
-        "org:NTNU",
-        "org:NTNU",
-        "org:SINTEF"
+        "org:NTNU"
       ]
     },
     "sameAs": {
@@ -97,12 +92,13 @@
       "description": "",
       "examples": [
         "nnvaid:978376",
-        "nnvaid:978376",
-        null,
-        null,
-        "nvaid:40356",
-        "nvaid:40356"
+        "nnvaid:978376"
       ]
     }
-  }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "name"
+  ]
 }

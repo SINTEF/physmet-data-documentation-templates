@@ -1,0 +1,79 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Processes.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "title": "Processes",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "Unique IRI identifying the documented resource."
+    },
+    "@type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "IRI of the class the resource belongs to."
+    },
+    "description": {
+      "type": "string",
+      "description": "A free-text account of the resource."
+    },
+    "comment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A description of the subject resource. Use `description` instead."
+    },
+    "hasInput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOutput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOperator": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "performedWith": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "description"
+  ]
+}

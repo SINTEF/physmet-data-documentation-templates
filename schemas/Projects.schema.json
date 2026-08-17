@@ -1,36 +1,45 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "$id": "projects.schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Projects.schema.json",
   "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
-  "title": "projects",
+  "title": "Projects",
   "type": "object",
   "properties": {
     "@id": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "Unique IRI identifying the documented resource.",
       "examples": [
         "proj:physmet"
       ]
     },
     "@type": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "IRI of the class the resource belongs to.",
       "examples": [
         "foaf:Project"
       ]
     },
     "name": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A name of the agent.",
       "examples": [
         "SFI PhysMet"
       ]
@@ -67,7 +76,7 @@
     },
     "hasGrantNumber": {
       "type": [
-        "string",
+        "number",
         "null"
       ],
       "description": "",
@@ -75,5 +84,10 @@
         "309584"
       ]
     }
-  }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "name"
+  ]
 }

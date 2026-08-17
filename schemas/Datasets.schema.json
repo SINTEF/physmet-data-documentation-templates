@@ -1,46 +1,52 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "$id": "datasets.schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Datasets.schema.json",
   "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
-  "title": "datasets",
+  "title": "Datasets",
   "type": "object",
   "properties": {
     "@id": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "Unique IRI identifying the documented resource.",
       "examples": [
         "avb:JM11_EDS"
       ]
     },
     "@type": {
-      "type": [
-        "string",
-        "null"
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
       ],
-      "description": "",
+      "description": "IRI of the class the resource belongs to.",
       "examples": [
         "temgo:EDSMap"
       ]
     },
     "title": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A name given to the resource.",
       "examples": [
         "JM11_EDS"
       ]
     },
     "description": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "description": "",
+      "type": "string",
+      "description": "A free-text account of the resource.",
       "examples": [
         "EDS dataset for the JM11 crusible."
       ]
@@ -50,7 +56,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "A description of the subject resource. Use `description` instead.",
       "examples": [
         null
       ]
@@ -60,7 +66,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "A keyword or tag describing the resource.",
       "examples": [
         "EDS"
       ]
@@ -80,7 +86,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "A licence under which the resource is made available.",
       "examples": [
         null
       ]
@@ -90,7 +96,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "An entity responsible for producing the resource.",
       "examples": [
         "pers:AndreasVollBugten"
       ]
@@ -110,7 +116,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "Indicates a resource that might provide additional information about the subject resource.",
       "examples": [
         null
       ]
@@ -120,7 +126,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "The date of formal issuance (e.g., publication) of the resource.",
       "examples": [
         null
       ]
@@ -130,7 +136,7 @@
         "string",
         "null"
       ],
-      "description": "",
+      "description": "Version indicator (name or identifier) of a resource.",
       "examples": [
         null
       ]
@@ -165,5 +171,11 @@
         "https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%203%20Sustainable%20and%20high-performance%20material%20development/Andreas%20Voll%20Bugten%20data/JM11/SEM/EDS?csf=1&web=1&e=8vpJwN"
       ]
     }
-  }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "title",
+    "description"
+  ]
 }
