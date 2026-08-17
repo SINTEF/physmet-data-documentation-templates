@@ -1,5 +1,6 @@
 """Test parse_compositions."""
 
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -12,8 +13,23 @@ from parse_compositions import (
     to_wtpercent,
 )
 
+CONTEXT_FILE = Path(__file__).parent.parent / "context" / "context.json"
+
 # Data directory for this test module
 DATADIR = Path(__file__).parent / "data" / "parse_compositions"
+
+# Create a root temporary directory for the session
+_SESSION_TMPROOT = (
+    tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+)
+TMPROOT = Path(_SESSION_TMPROOT.name)
+
+
+def get_tmpdir(test_name: str) -> Path:
+    """Creates an isolated temporary directory for a specific test."""
+    p = TMPROOT / test_name
+    p.mkdir(exist_ok=True)
+    return p
 
 
 def test_normalize_unit():
@@ -70,7 +86,10 @@ def test_from_wtpercent():
 
 def test_parse():
     """Test parse()."""
-    from tripper import EMMO
+    from tripper import EMMO, Triplestore
+    from tripper.datadoc import get_context, store
+
+    tmpdir = get_tmpdir("parse")
 
     compositions = parse(DATADIR / "compositions.csv")
     assert compositions == [
@@ -117,3 +136,12 @@ def test_parse():
             ],
         }
     ]
+
+    # Save compositions to RDF
+    context = get_context(CONTEXT_FILE)
+
+    ts = Triplestore(backend="rdflib")
+    jsonld = store(ts, compositions, context=context)
+    ts.serialize(tmpdir / "compositions.turtle")
+
+    assert jsonld
