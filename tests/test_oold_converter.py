@@ -265,13 +265,12 @@ def test_csv_to_json_schema_oold_compliance():
     except ValidationError as e:
         raise AssertionError(f"Schema failed OO-LD validation: {e.message}")
 
-
 def test_csv_to_json_file_not_found():
     """Tests error handling for missing CSV files."""
     tmp_path = get_test_tmp_path("csv_to_json_file_not_found")
     missing_file = tmp_path / "does_not_exist.csv"
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ConversionError):
         csv_to_json_schema(missing_file, tmp_path)
 
 
