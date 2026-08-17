@@ -30,14 +30,19 @@ dev = [
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
-extract-prefixes = "ddoc.extract_prefixes:main"
+extract-prefixes = "extract_prefixes:main"
+parse-compositions = "parse_compositions:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/treeweaver", "src/extract_prefixes.py"]
+packages = [
+    "src/treeweaver",
+    "src/extract_prefixes.py",
+    "src/parse_compositions.py",
+]
 
 [tool.ruff]
 line-length = 79
