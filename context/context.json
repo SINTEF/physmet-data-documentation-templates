@@ -28,7 +28,7 @@
     "avail": "http://publications.europa.eu/resource/authority/planned-availability/",
     "emmo": "https://w3id.org/emmo#",
     "oteio": "https://w3id.org/emmo/domain/oteio#",
-    "chameo": "https://w3id.org/emmo/domain/characterisation-methodology/chameo#"
+    "chameo": "https://w3id.org/emmo/domain/characterisation-methodology/chameo#",
     "micro": "https://w3id.org/emmo/domain/microstructure#",
     "temgo": "https://www.ntnu.edu/temgemini/vocab/temgo#",
 
