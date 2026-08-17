@@ -443,7 +443,9 @@ intents:
     assert str(sample / "treeweaver.yaml") in row["configFiles"]
 
 
-def test_treeweaver_root_prune_pattern_prunes_matching_child_directories(tmp_path):
+def test_treeweaver_root_prune_pattern_prunes_matching_child_directories(
+    tmp_path,
+):
     write_treeweaver(
         tmp_path,
         """

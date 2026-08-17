@@ -11,6 +11,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "pyyaml",
+    "tripper",
 ]
 
 [project.optional-dependencies]

@@ -6,29 +6,108 @@ special handling.
 
 import argparse
 import csv
-import json
-import warnings
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Sequence, Union
 
-from tripper import Namespace, Session, Triplestore
+from tripper import Session, Triplestore
 from tripper.datadoc import store
 
-from utils import atomic_masses, get_emmo, get_species, get_unit, normalize_unit
+from utils import (
+    EMMO,
+    atomic_masses,
+    atomic_names,
+    get_species_iri,
+)
+
+__all__ = ("parse", "main")
 
 TEMPLATE_URL = (
     "https://github.com/SINTEF/physmet-data-documentation-templates/"
     "blob/main/templates/compositions.csv"
 )
 
-EMMO = Namespace(
-    "https://w3id.org/emmo#",
-    label_annotations=True,
-    triplestore=get_emmo,
-    check=True,
-)
+
+def normalize_unit(unit: str) -> str:
+    """Normalise composition unit. Raises ValueError if the unit is unknown."""
+    if unit in ("wt%", "weight%", "weight-percent", "mass%"):
+        return "wt%"
+    if unit in ("at%", "atom%", "atom-percent"):
+        return "at%"
+    if unit in ("wtfrac", "wt-fraction", "weight-fraction"):
+        return "wtfrac"
+    if unit in ("atfrac", "at-fraction", "atom-fraction"):
+        return "atfrac"
+    raise ValueError(f"unknown composition unit: {unit}")
 
 
+def _asfloat(
+    values: Sequence[Union[str, float]], balance: float = 100
+) -> list[float]:
+    """Returns `v` as a list of floating point numbers."""
+    ib = -1
+    vsum = 0.0
+    vals = []
+    for i, v in enumerate(values):
+        if isinstance(v, str) and v.startswith("bal"):
+            ib = i
+            vals.append(0.0)
+        else:
+            val = float(v) if v else 0.0
+            vals.append(val)
+            vsum += val
+    if ib > -1:
+        vals[ib] = balance - vsum
+
+    # Check ranges
+    for i, v in enumerate(vals):
+        if v < 0 or v > balance:
+            raise ValueError(f"composition {i} is out of range: {v}")
+    if vsum > balance:
+        raise ValueError(f"composition sum out of range: {vsum}")
+
+    return vals
+
+
+def to_wtpercent(
+    values: Sequence[Union[str, float]],
+    symbols: Sequence[str],
+    unit: Optional[str] = None,
+) -> list[float]:
+    """Convert `values` from unit `unit` to 'wt%'."""
+    unit = normalize_unit(unit) if unit else "wt%"
+    vals = _asfloat(values, balance=100 if unit.endswith("%") else 1)
+    if unit == "wt%":
+        return vals
+    if unit == "at%":
+        t = sum(v * atomic_masses[s] for v, s in zip(vals, symbols))
+        return [100 * v * atomic_masses[s] / t for v, s in zip(vals, symbols)]
+    if unit == "wtfrac":
+        return [0.01 * v for v in vals]
+    if unit == "atfrac":
+        t = sum(v * atomic_masses[s] for v, s in zip(vals, symbols))
+        return [v * atomic_masses[s] / t for v, s in zip(vals, symbols)]
+    raise ValueError(f"not a normalised unit: {unit}")
+
+
+def from_wtpercent(
+    values: Sequence[Union[str, float]],
+    symbols: Sequence[str],
+    unit: Optional[str] = None,
+) -> list[float]:
+    """Convert `values` from unit 'wt%' to `unit`."""
+    unit = normalize_unit(unit) if unit else "wt%"
+    vals = _asfloat(values, balance=100 if unit.endswith("%") else 1)
+    if unit == "wt%":
+        return [100 * v for v in vals]
+    if unit == "at%":
+        t = sum(v / atomic_masses[s] for v, s in zip(vals, symbols))
+        return [100 * v / atomic_masses[s] / t for v, s in zip(vals, symbols)]
+    if unit == "wtfrac":
+        return vals
+    if unit == "atfrac":
+        t = sum(v / atomic_masses[s] for v, s in zip(vals, symbols))
+        return [v / atomic_masses[s] / t for v, s in zip(vals, symbols)]
+    raise ValueError(f"not a normalised unit: {unit}")
 
 
 def parse(filename: Path, **spec) -> list:
@@ -42,6 +121,7 @@ def parse(filename: Path, **spec) -> list:
     Returns:
         List of compositions correctly represented according to EMMO.
     """
+    # pylint: disable=too-many-locals
     conf = spec if spec else {}
     with open(filename, newline="", encoding="utf8") as csvfile:
         reader = csv.reader(csvfile, **conf)
@@ -58,26 +138,28 @@ def parse(filename: Path, **spec) -> list:
         # Determine unit
         unitname = None
         for i in icomp:
+            h = header[i]
             u = normalize_unit(
-                header[i].split("[")[1].rstrip("]") if "[" in h else "wt%"
+                h.split("[")[1].rstrip("]") if "[" in h else "wt%"
             )
             if unitname is None:
                 unitname = u
             elif u != unitname:
                 raise ValueError("All compositions must have the same unit")
-        quantity, unit = get_unit(unitname)
+        # quantity, unit = get_unit(unitname)
+        quantity, unit = EMMO.MassFraction, EMMO.MassPercent
 
         compositions = []
         for row in reader:
             d = {
                 "@id": [cell for h, cell in zip(header, row) if h == "@id"][0],
-                "@type": EMMO:ChemicalComposition,
+                "@type": EMMO.ChemicalComposition,
                 "hasSingleComponentComposition": [],
                 # TODO: include other non-composition annotations
             }
             values = to_wtpercent([row[i] for i in icomp], symbols, unitname)
             for symbol, v in zip(symbols, values):
-                species = get_species(symbol)
+                species = get_species_iri(symbol)
                 d["hasSingleComponentComposition"].append(
                     {
                         "@type": EMMO.SingleComponentComposition,
@@ -100,7 +182,7 @@ def main() -> None:
         description="Converts CSV with chemical composition to RDF.",
         epilog="The output can be specified with either the "
         "--triplestore/--config options or with the --backend/"
-        "--base-iri/--database/--package options."
+        "--base-iri/--database/--package options.",
     )
     parser.add_argument(
         "csvfile",
