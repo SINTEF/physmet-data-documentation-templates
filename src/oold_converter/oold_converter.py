@@ -2,10 +2,10 @@ import argparse
 import csv
 import json
 import logging
-import os
+import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 # Configure package-level logging
 logging.basicConfig(
@@ -18,6 +18,25 @@ logger = logging.getLogger("oold.converter")
 # Global schemas and contexts
 CONTEXT_URL = "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json"
 META_SCHEMA = "https://oo-ld.org/latest/meta/oold-meta-schema.json"
+
+# Strict regex for a valid JSON number (RFC 8259)
+# Excludes NaN, Inf, -Inf, etc.
+JSON_NUMBER_PATTERN = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$")
+
+
+IRI_PATTERN = r"^([A-Za-z][A-Za-z0-9\-_]*:)?[A-Za-z0-9][A-Za-z0-9\-_]*$"
+HARDCODED_PROPERTIES = ("@id", "@type")
+
+
+def _iri_property(description: str) -> Dict[str, Any]:
+    """Builds the shared JSON Schema shape used for the @id and @type properties."""
+    return {
+        "anyOf": [
+            {"type": "string", "format": "uri"},
+            {"type": "string", "pattern": IRI_PATTERN},
+        ],
+        "description": description,
+    }
 
 
 class ConversionError(Exception):
@@ -33,42 +52,41 @@ class ConversionError(Exception):
         self.original_exception = original_exception
 
 
-def _infer_type(values: List[Optional[str]]) -> List[str]:
+def infer_type(
+    values: List[Optional[str]], mandatory: bool = False
+) -> Union[str, List[str]]:
     """
     Infers the JSON schema data type based on a list of string values.
+    Strictly validates numbers against JSON specifications, rejecting NaN/Inf.
 
     Args:
         values (List[Optional[str]]): The column values extracted from the CSV.
+        mandatory (bool): If True, the field is required and its type excludes
+            "null", returned as a bare string (e.g. "number"). If False
+            (default), the field may be absent/empty and the type allows
+            "null", returned as a list (e.g. ["number", "null"]).
 
     Returns:
-        List[str]: A list containing the inferred type and "null" (e.g., ["number", "null"]).
+        Union[str, List[str]]: The inferred type - a bare string when
+        mandatory, otherwise a [type, "null"] list.
     """
     non_nulls = [v.strip() for v in values if v is not None and v.strip() != ""]
+
     if not non_nulls:
-        return ["string", "null"]
+        inferred = "string"
+    elif all(v.lower() in ("true", "false") for v in non_nulls):
+        inferred = "boolean"
+    elif all(JSON_NUMBER_PATTERN.match(v) for v in non_nulls):
+        inferred = "number"
+    else:
+        inferred = "string"
 
-    is_bool = True
-    is_number = True
-
-    for v in non_nulls:
-        if v.lower() not in ["true", "false"]:
-            is_bool = False
-        if is_number:
-            try:
-                float(v)
-            except ValueError:
-                is_number = False
-
-    if is_bool:
-        return ["boolean", "null"]
-    if is_number:
-        return ["number", "null"]
-    return ["string", "null"]
+    return inferred if mandatory else [inferred, "null"]
 
 
 def csv_to_json_schema(
-    input_file: str,
-    output_folder: str,
+    input_file: Path,
+    output_folder: Path,
     base_url: Optional[str] = None,
     properties_mapping: Optional[Dict[str, Any]] = None,
 ) -> None:
@@ -81,8 +99,8 @@ def csv_to_json_schema(
     The resulting schema's title, filename, and `$id` fields are capitalized.
 
     Args:
-        input_file (str): Path to the input CSV file.
-        output_folder (str): Directory where the JSON schema will be saved.
+        input_file (Path): Path to the input CSV file.
+        output_folder (Path): Directory where the JSON schema will be saved.
         base_url (Optional[str]): A URL to prepend to the `$id` to create a valid IRI.
         properties_mapping (Optional[Dict[str, Any]]): Dictionary mapping column headers
             to their OO-LD metadata definitions.
@@ -91,19 +109,9 @@ def csv_to_json_schema(
         FileNotFoundError: If the input CSV file does not exist.
         ConversionError: If parsing the CSV or writing the JSON file fails.
     """
-    file_path = Path(input_file)
-
-    if not file_path.exists() or not file_path.is_file():
-        logger.error(f"Input file not found: {input_file}")
-        raise FileNotFoundError(
-            f"The specified input CSV file does not exist: {input_file}"
-        )
-
-    # Capitalize the stem for the schema title and filename
-    file_stem = file_path.stem.capitalize()
+    file_stem = input_file.stem[0].upper() + input_file.stem[1:]
     schema_filename = f"{file_stem}.schema.json"
 
-    # Construct a valid IRI for $id if base_url is provided
     if base_url:
         schema_id = f"{base_url.rstrip('/')}/{schema_filename}"
     else:
@@ -128,27 +136,12 @@ def csv_to_json_schema(
             required_fields = ["@id", "@type"]
 
             # Unconditionally hardcode @id and @type definitions
-            schema["properties"]["@id"] = {
-                "anyOf": [
-                    {"type": "string", "format": "uri"},
-                    {
-                        "type": "string",
-                        "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$",
-                    },
-                ],
-                "description": "Unique IRI identifying the documented resource.",
-            }
-
-            schema["properties"]["@type"] = {
-                "anyOf": [
-                    {"type": "string", "format": "uri"},
-                    {
-                        "type": "string",
-                        "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$",
-                    },
-                ],
-                "description": "IRI of the class the resource belongs to.",
-            }
+            schema["properties"]["@id"] = _iri_property(
+                "Unique IRI identifying the documented resource."
+            )
+            schema["properties"]["@type"] = _iri_property(
+                "IRI of the class the resource belongs to."
+            )
 
             if not headers:
                 logger.warning(
@@ -157,13 +150,19 @@ def csv_to_json_schema(
 
             for header in headers:
                 # If header is one of the hardcoded properties, prepare examples array
-                if header in ["@id", "@type"]:
+                if header in HARDCODED_PROPERTIES:
                     schema["properties"][header]["examples"] = []
                     continue
 
-                # Infer type from data unconditionally
+                # Determine mandatory status from the mapping up front, so infer_type
+                # can decide directly whether "null" belongs in the type.
+                mapping = properties_mapping.get(header) if properties_mapping else None
+                is_mandatory = bool(
+                    mapping and mapping.get("conformance") == "mandatory"
+                )
+
                 column_values = [row.get(header) for row in rows]
-                inferred_type = _infer_type(column_values)
+                inferred_type = infer_type(column_values, mandatory=is_mandatory)
 
                 prop_def: Dict[str, Any] = {
                     "type": inferred_type,
@@ -172,24 +171,12 @@ def csv_to_json_schema(
                 }
 
                 # Inject ONLY description and conformance from the mapping if present
-                if properties_mapping and header in properties_mapping:
-                    mapping = properties_mapping[header]
-
+                if mapping:
                     if "description" in mapping:
                         prop_def["description"] = mapping["description"]
 
-                    # Ensure mandatory fields are strictly non-null types
-                    if mapping.get("conformance") == "mandatory":
+                    if is_mandatory:
                         required_fields.append(header)
-                        if (
-                            isinstance(prop_def["type"], list)
-                            and "null" in prop_def["type"]
-                        ):
-                            prop_def["type"] = [
-                                t for t in prop_def["type"] if t != "null"
-                            ]
-                            if len(prop_def["type"]) == 1:
-                                prop_def["type"] = prop_def["type"][0]
 
                 schema["properties"][header] = prop_def
 
@@ -200,14 +187,11 @@ def csv_to_json_schema(
                 first_row = rows[0]
                 for header in headers:
                     val = first_row.get(header)
-                    if val is None or val.strip() == "":
-                        schema["properties"][header]["examples"].append(None)
-                    else:
-                        schema["properties"][header]["examples"].append(val.strip())
-
-            # Cleanup empty example arrays
-            for header in headers:
-                if not schema["properties"][header].get("examples"):
+                    stripped = val.strip() if val is not None else None
+                    schema["properties"][header]["examples"].append(stripped or None)
+            else:
+                # No rows means every "examples" array is still empty - drop them.
+                for header in headers:
                     del schema["properties"][header]["examples"]
 
     except csv.Error as e:
@@ -217,10 +201,10 @@ def csv_to_json_schema(
         logger.error(f"OS Error while reading {input_file}: {e}")
         raise ConversionError(f"Failed to read CSV: {e}", e)
 
-    output_path = os.path.join(output_folder, schema_filename)
+    output_path = output_folder / schema_filename
 
     try:
-        os.makedirs(output_folder, exist_ok=True)
+        output_folder.mkdir(parents=True, exist_ok=True)
         with open(output_path, mode="w", encoding="utf-8") as f:
             json.dump(schema, f, indent=2)
 
@@ -231,7 +215,7 @@ def csv_to_json_schema(
         raise ConversionError(f"Failed to write JSON: {e}", e)
 
 
-def json_schema_to_csv(input_file: str, output_folder: str) -> None:
+def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
     """
     Reads an OO-LD JSON Schema and rebuilds a CSV file using its aligned array examples.
 
@@ -240,30 +224,21 @@ def json_schema_to_csv(input_file: str, output_folder: str) -> None:
     resulting CSV file name will always be entirely lowercase.
 
     Args:
-        input_file (str): Path to the input JSON schema file.
-        output_folder (str): Directory where the CSV will be saved.
+        input_file (Path): Path to the input JSON schema file.
+        output_folder (Path): Directory where the CSV will be saved.
 
     Raises:
         FileNotFoundError: If the input JSON file does not exist.
         ValueError: If the JSON document lacks a 'properties' key.
         ConversionError: If parsing the JSON or writing the CSV file fails.
     """
-    file_path = Path(input_file)
-
-    if not file_path.exists() or not file_path.is_file():
-        logger.error(f"Input file not found: {input_file}")
-        raise FileNotFoundError(
-            f"The specified input JSON file does not exist: {input_file}"
-        )
-
-    filename_str = file_path.name
+    filename_str = input_file.name
     if filename_str.endswith(".schema.json"):
         file_stem = filename_str.replace(".schema.json", "")
     else:
-        file_stem = file_path.stem
+        file_stem = input_file.stem
 
-    # Ensure the CSV output is always lowercase
-    file_stem = file_stem.lower()
+    file_stem = file_stem[0].lower() + file_stem[1:]
     logger.info(f"Reading JSON Schema file: {input_file}")
 
     try:
@@ -292,10 +267,10 @@ def json_schema_to_csv(input_file: str, output_folder: str) -> None:
         if isinstance(examples, list):
             max_rows = max(max_rows, len(examples))
 
-    output_path = os.path.join(output_folder, f"{file_stem}.csv")
+    output_path = output_folder / f"{file_stem}.csv"
 
     try:
-        os.makedirs(output_folder, exist_ok=True)
+        output_folder.mkdir(parents=True, exist_ok=True)
         with open(output_path, mode="w", encoding="utf-8", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=headers)
             writer.writeheader()
@@ -322,8 +297,8 @@ def json_schema_to_csv(input_file: str, output_folder: str) -> None:
 
 
 def process_path(
-    input_path: str,
-    output_folder: str,
+    input_path: Union[str, Path],
+    output_folder: Union[str, Path],
     mode: str,
     base_url: Optional[str] = None,
     properties_mapping: Optional[Dict[str, Any]] = None,
@@ -332,8 +307,8 @@ def process_path(
     Processes a single file or a directory of files based on the specified mode.
 
     Args:
-        input_path (str): The path to the input file or directory.
-        output_folder (str): The directory where the output files should be saved.
+        input_path (Union[str, Path]): The path to the input file or directory.
+        output_folder (Union[str, Path]): The directory where the output files should be saved.
         mode (str): The conversion mode ('csv2json' or 'json2csv').
         base_url (Optional[str]): A base URL for valid IRI generation (csv2json only).
         properties_mapping (Optional[Dict[str, Any]]): Dictionary mapping for OO-LD
@@ -343,6 +318,7 @@ def process_path(
         FileNotFoundError: If the specified input path does not exist.
     """
     path = Path(input_path)
+    out_folder = Path(output_folder)
 
     if not path.exists():
         logger.error(f"Input path not found: {input_path}")
@@ -363,13 +339,11 @@ def process_path(
         ext = file_path.suffix.lower()
 
         if mode == "csv2json" and ext == ".csv":
-            csv_to_json_schema(
-                str(file_path), output_folder, base_url, properties_mapping
-            )
+            csv_to_json_schema(file_path, out_folder, base_url, properties_mapping)
             processed_count += 1
 
         elif mode == "json2csv" and ext == ".json":
-            json_schema_to_csv(str(file_path), output_folder)
+            json_schema_to_csv(file_path, out_folder)
             processed_count += 1
 
         else:
@@ -425,7 +399,7 @@ def main() -> None:
         try:
             with open(args.mappings, "r", encoding="utf-8") as f:
                 properties_mapping = json.load(f)
-        except Exception as e:
+        except (OSError, json.JSONDecodeError) as e:
             logger.error(f"Failed to load properties mapping from {args.mappings}: {e}")
             sys.exit(1)
 
