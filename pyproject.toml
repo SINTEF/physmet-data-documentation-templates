@@ -18,6 +18,8 @@ dependencies = [
 testing = [
     "pytest==9.1.1",
     "pytest-cov==6.0.0",
+    "jsonschema>=4.26.0",
+    "requests>=2.34.2",
 ]
 pre-commit = [
     "PhysMetDatadoc[testing]",
