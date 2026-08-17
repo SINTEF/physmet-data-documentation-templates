@@ -73,7 +73,19 @@ def to_wtpercent(
     symbols: Sequence[str],
     unit: Optional[str] = None,
 ) -> list[float]:
-    """Convert `values` from unit `unit` to 'wt%'."""
+    """Convert `values` from unit `unit` to 'wt%'.
+
+    Args:
+        values: List of composition values in units of `unit`.
+            An element starting with "bal", will be adjusted such that the
+            returned sum is 100 wt%.
+        symbols: Chemical symbols corresponding to `values`.
+        unit: Unit of `values`.
+
+    Returns:
+        Composition converted to wt%.
+
+    """
     unit = normalize_unit(unit) if unit else "wt%"
     vals = _asfloat(values, balance=100 if unit.endswith("%") else 1)
     if unit == "wt%":
@@ -82,10 +94,10 @@ def to_wtpercent(
         t = sum(v * atomic_masses[s] for v, s in zip(vals, symbols))
         return [100 * v * atomic_masses[s] / t for v, s in zip(vals, symbols)]
     if unit == "wtfrac":
-        return [0.01 * v for v in vals]
+        return [100 * v for v in vals]
     if unit == "atfrac":
         t = sum(v * atomic_masses[s] for v, s in zip(vals, symbols))
-        return [v * atomic_masses[s] / t for v, s in zip(vals, symbols)]
+        return [100 * v * atomic_masses[s] / t for v, s in zip(vals, symbols)]
     raise ValueError(f"not a normalised unit: {unit}")
 
 
@@ -94,16 +106,28 @@ def from_wtpercent(
     symbols: Sequence[str],
     unit: Optional[str] = None,
 ) -> list[float]:
-    """Convert `values` from unit 'wt%' to `unit`."""
+    """Convert `values` from unit 'wt%' to `unit`.
+
+    Args:
+        values: List of composition values in units of wt%.
+            An element starting with "bal", will be adjusted such that the
+            returned sum is 100%.
+        symbols: Chemical symbols corresponding to `values`.
+        unit: Composition unit to convert `values` to.
+
+    Returns:
+        Composition in units of `unit`.
+
+    """
     unit = normalize_unit(unit) if unit else "wt%"
-    vals = _asfloat(values, balance=100 if unit.endswith("%") else 1)
+    vals = _asfloat(values, balance=100)
     if unit == "wt%":
-        return [100 * v for v in vals]
+        return vals
     if unit == "at%":
         t = sum(v / atomic_masses[s] for v, s in zip(vals, symbols))
         return [100 * v / atomic_masses[s] / t for v, s in zip(vals, symbols)]
     if unit == "wtfrac":
-        return vals
+        return [0.01 * v for v in vals]
     if unit == "atfrac":
         t = sum(v / atomic_masses[s] for v, s in zip(vals, symbols))
         return [v / atomic_masses[s] / t for v, s in zip(vals, symbols)]
