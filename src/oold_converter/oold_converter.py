@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger("oold.converter")
 
 # Global schemas and contexts
-CONTEXT_URL = "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json"
+CONTEXT_URL = "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/context/context.json"
 META_SCHEMA = "https://oo-ld.org/latest/meta/oold-meta-schema.json"
 
 # Strict regex for a valid JSON number (RFC 8259)
