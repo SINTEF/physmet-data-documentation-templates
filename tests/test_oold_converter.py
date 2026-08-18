@@ -265,6 +265,7 @@ def test_csv_to_json_schema_oold_compliance():
     except ValidationError as e:
         raise AssertionError(f"Schema failed OO-LD validation: {e.message}")
 
+
 def test_csv_to_json_file_not_found():
     """Tests error handling for missing CSV files."""
     tmp_path = get_test_tmp_path("csv_to_json_file_not_found")
@@ -379,6 +380,43 @@ def test_process_path_missing_input():
     missing = tmp_path / "does_not_exist"
     with pytest.raises(FileNotFoundError):
         process_path(missing, tmp_path / "out", "csv2json")
+
+
+def test_process_path_exclude_files():
+    """Tests if process_path correctly skips multiple files specified by the exclude_files parameter."""
+    tmp_path = get_test_tmp_path("process_path_exclude_files")
+
+    # Create input and output directories
+    input_dir = tmp_path / "in"
+    input_dir.mkdir()
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+
+    # Create valid CSV files
+    file1 = input_dir / "keep_me.csv"
+    file2 = input_dir / "skip_me.csv"
+    file3 = input_dir / "also_skip.csv"
+    file1.write_text("col1\nval1", encoding="utf-8")
+    file2.write_text("col1\nval1", encoding="utf-8")
+    file3.write_text("col1\nval1", encoding="utf-8")
+
+    # Process the directory but exclude skip_me.csv and also_skip.csv
+    process_path(
+        input_dir, out_dir, "csv2json", exclude_files=["skip_me.csv", "also_skip.csv"]
+    )
+
+    # Check that keep_me.csv was processed
+    assert (
+        out_dir / "Keep_me.schema.json"
+    ).exists(), "The non-excluded file was not processed."
+
+    # Check that the other two were skipped
+    assert not (
+        out_dir / "Skip_me.schema.json"
+    ).exists(), "An excluded file was incorrectly processed."
+    assert not (
+        out_dir / "Also_skip.schema.json"
+    ).exists(), "An excluded file was incorrectly processed."
 
 
 def test_conversion_error_wraps_original_exception():

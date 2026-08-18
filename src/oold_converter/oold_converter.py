@@ -302,6 +302,7 @@ def process_path(
     mode: str,
     base_url: Optional[str] = None,
     properties_mapping: Optional[Dict[str, Any]] = None,
+    exclude_files: Optional[List[str]] = None,
 ) -> None:
     """
     Processes a single file or a directory of files based on the specified mode.
@@ -313,6 +314,7 @@ def process_path(
         base_url (Optional[str]): A base URL for valid IRI generation (csv2json only).
         properties_mapping (Optional[Dict[str, Any]]): Dictionary mapping for OO-LD
             properties injection (csv2json only).
+        exclude_files (Optional[List[str]]): A list of specific filenames to skip during processing.
 
     Raises:
         FileNotFoundError: If the specified input path does not exist.
@@ -337,6 +339,10 @@ def process_path(
 
     for file_path in files_to_process:
         ext = file_path.suffix.lower()
+
+        if exclude_files and file_path.name in exclude_files:
+            logger.info(f"Skipping excluded file: {file_path.name}")
+            continue
 
         if mode == "csv2json" and ext == ".csv":
             csv_to_json_schema(file_path, out_folder, base_url, properties_mapping)
@@ -391,6 +397,12 @@ def main() -> None:
         "--mappings",
         help="Path to a JSON file containing property mappings (e.g., description, range, conformance).",
     )
+    parser.add_argument(
+        "--exclude",
+        nargs="*",
+        default=[],
+        help="Specific filenames to exclude from processing (e.g. --exclude 'skip.csv' 'ignore.json').",
+    )
 
     args = parser.parse_args()
 
@@ -410,6 +422,7 @@ def main() -> None:
             args.mode,
             base_url=args.base_url,
             properties_mapping=properties_mapping,
+            exclude_files=args.exclude,
         )
     except Exception as e:
         logger.critical(f"Process failed: {e}")
