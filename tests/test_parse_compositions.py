@@ -20,7 +20,8 @@ DATADIR = Path(__file__).parent / "data" / "parse_compositions"
 
 # Create a root temporary directory for the session
 _SESSION_TMPROOT = (
-    tempfile.TemporaryDirectory()  # pylint: disable=consider-using-with
+    # pylint: disable=consider-using-with
+    tempfile.TemporaryDirectory(prefix="physmet-ddoc-")
 )
 TMPROOT = Path(_SESSION_TMPROOT.name)
 
@@ -139,9 +140,12 @@ def test_parse():
 
     # Save compositions to RDF
     context = get_context(CONTEXT_FILE)
+    prefixes = {
+        "avb": "https://www.ntnu.edu/physmet/data/avb/",
+    }
 
     ts = Triplestore(backend="rdflib")
-    jsonld = store(ts, compositions, context=context)
-    ts.serialize(tmpdir / "compositions.turtle")
+    jsonld = store(ts, compositions, context=context, prefixes=prefixes)
+    ts.serialize(tmpdir / "compositions.ttl")
 
-    assert jsonld
+    assert jsonld["@graph"] == compositions
