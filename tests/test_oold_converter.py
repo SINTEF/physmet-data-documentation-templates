@@ -271,7 +271,7 @@ def test_csv_to_json_file_not_found():
     tmp_path = get_test_tmp_path("csv_to_json_file_not_found")
     missing_file = tmp_path / "does_not_exist.csv"
 
-    with pytest.raises(ConversionError):
+    with pytest.raises(FileNotFoundError):
         csv_to_json_schema(missing_file, tmp_path)
 
 
@@ -420,11 +420,17 @@ def test_process_path_exclude_files():
 
 
 def test_conversion_error_wraps_original_exception():
-    """ConversionError should preserve the underlying exception for callers that want it."""
+    """ConversionError should preserve the underlying exception for callers using the __cause__ attribute."""
     original = ValueError("boom")
-    err = ConversionError("wrapped failure", original)
-    assert str(err) == "wrapped failure"
-    assert err.original_exception is original
+
+    try:
+        try:
+            raise original
+        except ValueError as exc:
+            raise ConversionError("wrapped failure") from exc
+    except ConversionError as err:
+        assert str(err) == "wrapped failure"
+        assert err.__cause__ is original
 
 
 # --- Standalone Execution Logic (for ipython / python execution) ---

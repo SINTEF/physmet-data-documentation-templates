@@ -40,16 +40,9 @@ def _iri_property(description: str) -> Dict[str, Any]:
 
 
 class ConversionError(Exception):
-    """Error raised when conversion between formats fails.
+    """Error raised when conversion between formats fails."""
 
-    Args:
-        message (str): The error description.
-        original_exception (Exception, optional): The caught exception causing the error.
-    """
-
-    def __init__(self, message: str, original_exception: Optional[Exception] = None):
-        super().__init__(message)
-        self.original_exception = original_exception
+    pass
 
 
 def infer_type(
@@ -109,6 +102,12 @@ def csv_to_json_schema(
         FileNotFoundError: If the input CSV file does not exist.
         ConversionError: If parsing the CSV or writing the JSON file fails.
     """
+    if not input_file.exists() or not input_file.is_file():
+        logger.error(f"Input file not found: {input_file}")
+        raise FileNotFoundError(
+            f"The specified input CSV file does not exist: {input_file}"
+        )
+
     file_stem = input_file.stem[0].upper() + input_file.stem[1:]
     schema_filename = f"{file_stem}.schema.json"
 
@@ -194,12 +193,12 @@ def csv_to_json_schema(
                 for header in headers:
                     del schema["properties"][header]["examples"]
 
-    except csv.Error as e:
-        logger.error(f"Error parsing the CSV file {input_file}: {e}")
-        raise ConversionError(f"Failed to parse CSV: {e}", e)
-    except OSError as e:
-        logger.error(f"OS Error while reading {input_file}: {e}")
-        raise ConversionError(f"Failed to read CSV: {e}", e)
+    except csv.Error as exc:
+        logger.error(f"Error parsing the CSV file {input_file}: {exc}")
+        raise ConversionError(f"Failed to parse CSV: {exc}") from exc
+    except OSError as exc:
+        logger.error(f"OS Error while reading {input_file}: {exc}")
+        raise ConversionError(f"Failed to read CSV: {exc}") from exc
 
     output_path = output_folder / schema_filename
 
@@ -210,9 +209,9 @@ def csv_to_json_schema(
 
         logger.info(f"Successfully created JSON Schema at: {output_path}")
 
-    except OSError as e:
-        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
-        raise ConversionError(f"Failed to write JSON: {e}", e)
+    except OSError as exc:
+        logger.error(f"Filesystem error while writing to {output_folder}: {exc}")
+        raise ConversionError(f"Failed to write JSON: {exc}") from exc
 
 
 def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
@@ -232,6 +231,12 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
         ValueError: If the JSON document lacks a 'properties' key.
         ConversionError: If parsing the JSON or writing the CSV file fails.
     """
+    if not input_file.exists() or not input_file.is_file():
+        logger.error(f"Input file not found: {input_file}")
+        raise FileNotFoundError(
+            f"The specified input JSON file does not exist: {input_file}"
+        )
+
     filename_str = input_file.name
     if filename_str.endswith(".schema.json"):
         file_stem = filename_str.replace(".schema.json", "")
@@ -244,12 +249,12 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
     try:
         with open(input_file, mode="r", encoding="utf-8") as f:
             schema = json.load(f)
-    except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON from {input_file}: {e}")
-        raise ConversionError(f"Failed to decode JSON: {e}", e)
-    except OSError as e:
-        logger.error(f"OS error reading JSON file {input_file}: {e}")
-        raise ConversionError(f"Failed to read JSON: {e}", e)
+    except json.JSONDecodeError as exc:
+        logger.error(f"Failed to decode JSON from {input_file}: {exc}")
+        raise ConversionError(f"Failed to decode JSON: {exc}") from exc
+    except OSError as exc:
+        logger.error(f"OS error reading JSON file {input_file}: {exc}")
+        raise ConversionError(f"Failed to read JSON: {exc}") from exc
 
     if "properties" not in schema:
         error_msg = (
@@ -288,12 +293,12 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
 
         logger.info(f"Successfully created CSV at: {output_path}")
 
-    except OSError as e:
-        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
-        raise ConversionError(f"Failed to write CSV: {e}", e)
-    except csv.Error as e:
-        logger.error(f"Error writing to the CSV file {output_path}: {e}")
-        raise ConversionError(f"Failed to write CSV fields: {e}", e)
+    except OSError as exc:
+        logger.error(f"Filesystem error while writing to {output_folder}: {exc}")
+        raise ConversionError(f"Failed to write CSV: {exc}") from exc
+    except csv.Error as exc:
+        logger.error(f"Error writing to the CSV file {output_path}: {exc}")
+        raise ConversionError(f"Failed to write CSV fields: {exc}") from exc
 
 
 def process_path(
@@ -306,6 +311,13 @@ def process_path(
 ) -> None:
     """
     Processes a single file or a directory of files based on the specified mode.
+
+    The function validates the input path and gathers all applicable files for conversion.
+    It iterates through the target files, bypassing any filenames explicitly provided in
+    the exclusion list. Depending on the selected mode, it routes valid `.csv` files to
+    the JSON Schema generator, or `.json` files to the CSV builder. Unsupported file
+    formats are safely ignored (logging a warning if a single unsupported file was targeted
+    directly), and a final summary log details the total number of successfully processed files.
 
     Args:
         input_path (Union[str, Path]): The path to the input file or directory.
