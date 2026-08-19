@@ -193,12 +193,12 @@ def csv_to_json_schema(
                 for header in headers:
                     del schema["properties"][header]["examples"]
 
-    except csv.Error as exc:
-        logger.error(f"Error parsing the CSV file {input_file}: {exc}")
-        raise ConversionError(f"Failed to parse CSV: {exc}") from exc
-    except OSError as exc:
-        logger.error(f"OS Error while reading {input_file}: {exc}")
-        raise ConversionError(f"Failed to read CSV: {exc}") from exc
+    except csv.Error as e:
+        logger.error(f"Error parsing the CSV file {input_file}: {e}")
+        raise ConversionError(f"Failed to parse CSV: {e}") from e
+    except OSError as e:
+        logger.error(f"OS Error while reading {input_file}: {e}")
+        raise ConversionError(f"Failed to read CSV: {e}") from e
 
     output_path = output_folder / schema_filename
 
@@ -209,9 +209,9 @@ def csv_to_json_schema(
 
         logger.info(f"Successfully created JSON Schema at: {output_path}")
 
-    except OSError as exc:
-        logger.error(f"Filesystem error while writing to {output_folder}: {exc}")
-        raise ConversionError(f"Failed to write JSON: {exc}") from exc
+    except OSError as e:
+        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
+        raise ConversionError(f"Failed to write JSON: {e}") from e
 
 
 def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
@@ -249,12 +249,12 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
     try:
         with open(input_file, mode="r", encoding="utf-8") as f:
             schema = json.load(f)
-    except json.JSONDecodeError as exc:
-        logger.error(f"Failed to decode JSON from {input_file}: {exc}")
-        raise ConversionError(f"Failed to decode JSON: {exc}") from exc
-    except OSError as exc:
-        logger.error(f"OS error reading JSON file {input_file}: {exc}")
-        raise ConversionError(f"Failed to read JSON: {exc}") from exc
+    except json.JSONDecodeError as e:
+        logger.error(f"Failed to decode JSON from {input_file}: {e}")
+        raise ConversionError(f"Failed to decode JSON: {e}") from e
+    except OSError as e:
+        logger.error(f"OS error reading JSON file {input_file}: {e}")
+        raise ConversionError(f"Failed to read JSON: {e}") from e
 
     if "properties" not in schema:
         error_msg = (
@@ -293,12 +293,12 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
 
         logger.info(f"Successfully created CSV at: {output_path}")
 
-    except OSError as exc:
-        logger.error(f"Filesystem error while writing to {output_folder}: {exc}")
-        raise ConversionError(f"Failed to write CSV: {exc}") from exc
-    except csv.Error as exc:
-        logger.error(f"Error writing to the CSV file {output_path}: {exc}")
-        raise ConversionError(f"Failed to write CSV fields: {exc}") from exc
+    except OSError as e:
+        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
+        raise ConversionError(f"Failed to write CSV: {e}") from e
+    except csv.Error as e:
+        logger.error(f"Error writing to the CSV file {output_path}: {e}")
+        raise ConversionError(f"Failed to write CSV fields: {e}") from e
 
 
 def process_path(
