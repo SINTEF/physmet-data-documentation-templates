@@ -206,6 +206,7 @@ def csv_to_json_schema(
         output_folder.mkdir(parents=True, exist_ok=True)
         with open(output_path, mode="w", encoding="utf-8") as f:
             json.dump(schema, f, indent=2)
+            f.write("\n")
 
         logger.info(f"Successfully created JSON Schema at: {output_path}")
 
