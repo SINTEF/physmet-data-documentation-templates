@@ -25,7 +25,11 @@ def _parse_slash_config(config, option_name):
     if not tokens:
         raise ValueError(f"{option_name} must contain at least one field")
     return [
-        token[1:-1].strip() if token.startswith("{") and token.endswith("}") else token
+        (
+            token[1:-1].strip()
+            if token.startswith("{") and token.endswith("}")
+            else token
+        )
         for token in tokens
     ]
 
@@ -45,7 +49,9 @@ def _parse_template_mappings(templates):
         if not sep or not target or not template:
             raise ValueError("--template must be on the form FIELD=TEMPLATE")
         if target in mapping and mapping[target] != template:
-            raise ValueError(f"conflicting --template definitions for field '{target}'")
+            raise ValueError(
+                f"conflicting --template definitions for field '{target}'"
+            )
         if target not in mapping:
             ordered_templates.append((target, template))
         mapping[target] = template
@@ -105,12 +111,16 @@ def load_config_file(path):
         raise ValueError(f"{path}: config file must contain a mapping")
 
     intents = {}
-    for name, value in _as_mapping(data.get("intents"), "intents", path).items():
+    for name, value in _as_mapping(
+        data.get("intents"), "intents", path
+    ).items():
         intent_data = _as_mapping(value, f"intents.{name}", path)
         intent_config = intent_data.get("config")
         intents[name] = IntentConfig(
             config=intent_config,
-            config_base=path.parent.resolve() if intent_config is not None else None,
+            config_base=(
+                path.parent.resolve() if intent_config is not None else None
+            ),
             template=dict(
                 _as_mapping(
                     intent_data.get("template"),
@@ -152,7 +162,11 @@ def merge_configs(parent, child):
         parent_intent = intents.get(name, IntentConfig())
         child_has_config = child_intent.config is not None
         intents[name] = IntentConfig(
-            config=(child_intent.config if child_has_config else parent_intent.config),
+            config=(
+                child_intent.config
+                if child_has_config
+                else parent_intent.config
+            ),
             config_base=(
                 child_intent.config_base
                 if child_has_config
@@ -262,10 +276,13 @@ def _match_prune_rule(path, rule):
 
     if "/" in pattern:
         return fnmatch.fnmatchcase(relative, pattern) or (
-            pattern.startswith("**/") and fnmatch.fnmatchcase(relative, pattern[3:])
+            pattern.startswith("**/")
+            and fnmatch.fnmatchcase(relative, pattern[3:])
         )
 
-    return any(fnmatch.fnmatchcase(part, pattern) for part in Path(relative).parts)
+    return any(
+        fnmatch.fnmatchcase(part, pattern) for part in Path(relative).parts
+    )
 
 
 def explain_prune(path, effective_config):
@@ -320,7 +337,9 @@ def _render_template(template, context):
     def replace(match):
         field_name = match.group(1)
         if field_name not in context:
-            raise ValueError(f"--template references unknown field '{field_name}'")
+            raise ValueError(
+                f"--template references unknown field '{field_name}'"
+            )
         return context[field_name]
 
     return PLACEHOLDER_PATTERN.sub(replace, template)
@@ -397,7 +416,9 @@ def find_datadocs(
 
         active_parts = parts
         if active_config and not cli_config and effective.config_base:
-            active_parts = _parts_from_base(effective.config_base, current_path)
+            active_parts = _parts_from_base(
+                effective.config_base, current_path
+            )
 
         if active_keys is not None and len(active_parts) == len(active_keys):
             if intent and not cli_config:
@@ -424,7 +445,9 @@ def find_datadocs(
             results.append(result)
 
         for child in current_path.iterdir():
-            if child.is_dir() and not (intent and should_prune(child, effective)):
+            if child.is_dir() and not (
+                intent and should_prune(child, effective)
+            ):
                 walk(child, parts + [child.name])
 
     # root corresponds to first key
@@ -448,7 +471,9 @@ def main():
         Empty values like user//inst will cause the middle directory names to
         not be stored.""",
     )
-    parser.add_argument("--intent", help="Intent section to use from treeweaver.yaml")
+    parser.add_argument(
+        "--intent", help="Intent section to use from treeweaver.yaml"
+    )
     parser.add_argument(
         "--template",
         action="append",
