@@ -10,7 +10,6 @@ The extracted prefixes can be saved as a JSON-LD context.
 import argparse
 import csv
 import json
-import os
 import warnings
 from pathlib import Path
 from typing import Optional
@@ -75,9 +74,9 @@ def write_jsonld(output: Optional[Path], prefixes: dict) -> None:
         prefixes: Dict mapping prefixes to corresponding namespaces.
     """
     context = {"@context": prefixes}
-    jsonld = json.dumps(context, indent=2, sort_keys=False) + os.linesep
+    jsonld = json.dumps(context, indent=2, sort_keys=False) + "\n"
     if output:
-        with open(output, "w", encoding="utf8") as f:
+        with open(output, "wt", encoding="utf8") as f:
             f.write(jsonld)
     else:
         print(jsonld)
