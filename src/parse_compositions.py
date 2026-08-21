@@ -147,7 +147,7 @@ def parse(filename: Path, **spec) -> list:
     """
     # pylint: disable=too-many-locals
     conf = spec if spec else {}
-    with open(filename, newline="", encoding="utf8") as csvfile:
+    with open(filename, "rt", newline="", encoding="utf8") as csvfile:
         reader = csv.reader(csvfile, **conf)
         header = [h.strip() for h in next(reader)]
 
