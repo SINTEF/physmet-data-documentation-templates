@@ -9,7 +9,7 @@ authors = [
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = ["pyyaml"]
+dependencies = ["pyyaml", "openpyxl"]
 
 [project.optional-dependencies]
 testing = [
@@ -32,10 +32,15 @@ build-backend = "hatchling.build"
 
 # Explicitly tell Hatchling where your packages live
 [tool.hatch.build.targets.wheel]
-packages = ["src/treeweaver", "src/oold_converter", "src/extract_prefixes.py"]
+packages = [
+    "src/extract_prefixes.py",
+    "src/oold_converter",
+    "src/tabular",
+    "src/treeweaver",
+]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src/treeweaver", "/src/oold_converter"]
+include = ["/src/oold_converter", "/src/tabular", "/src/treeweaver"]
 
 [tool.ruff]
 line-length = 79
@@ -48,4 +53,9 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.isort]
-known-first-party = ["treeweaver", "oold_converter", "extract_prefixes"]
+known-first-party = [
+    "extract_prefixes",
+    "oold_converter",
+    "tabular",
+    "treeweaver",
+]
