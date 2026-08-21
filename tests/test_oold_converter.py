@@ -152,7 +152,9 @@ def test_csv_to_json_schema_type_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Inference_test.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Inference_test.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
     properties = schema["properties"]
@@ -175,7 +177,9 @@ def test_csv_to_json_schema_strict_number_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
     properties = schema["properties"]
@@ -192,7 +196,9 @@ def test_csv_to_json_schema_no_rows_omits_examples():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Headers_only.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Headers_only.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
     for name, prop in schema["properties"].items():

@@ -21,7 +21,9 @@ META_SCHEMA = "https://oo-ld.org/latest/meta/oold-meta-schema.json"
 
 # Strict regex for a valid JSON number (RFC 8259)
 # Excludes NaN, Inf, -Inf, etc.
-JSON_NUMBER_PATTERN = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$")
+JSON_NUMBER_PATTERN = re.compile(
+    r"^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$"
+)
 
 
 IRI_PATTERN = r"^([A-Za-z][A-Za-z0-9\-_]*:)?[A-Za-z0-9][A-Za-z0-9\-_]*$"
@@ -63,7 +65,9 @@ def infer_type(
         Union[str, List[str]]: The inferred type - a bare string when
         mandatory, otherwise a [type, "null"] list.
     """
-    non_nulls = [v.strip() for v in values if v is not None and v.strip() != ""]
+    non_nulls = [
+        v.strip() for v in values if v is not None and v.strip() != ""
+    ]
 
     if not non_nulls:
         inferred = "string"
@@ -155,13 +159,19 @@ def csv_to_json_schema(
 
                 # Determine mandatory status from the mapping up front, so infer_type
                 # can decide directly whether "null" belongs in the type.
-                mapping = properties_mapping.get(header) if properties_mapping else None
+                mapping = (
+                    properties_mapping.get(header)
+                    if properties_mapping
+                    else None
+                )
                 is_mandatory = bool(
                     mapping and mapping.get("conformance") == "mandatory"
                 )
 
                 column_values = [row.get(header) for row in rows]
-                inferred_type = infer_type(column_values, mandatory=is_mandatory)
+                inferred_type = infer_type(
+                    column_values, mandatory=is_mandatory
+                )
 
                 prop_def: Dict[str, Any] = {
                     "type": inferred_type,
@@ -187,7 +197,9 @@ def csv_to_json_schema(
                 for header in headers:
                     val = first_row.get(header)
                     stripped = val.strip() if val is not None else None
-                    schema["properties"][header]["examples"].append(stripped or None)
+                    schema["properties"][header]["examples"].append(
+                        stripped or None
+                    )
             else:
                 # No rows means every "examples" array is still empty - drop them.
                 for header in headers:
@@ -258,9 +270,7 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
         raise ConversionError(f"Failed to read JSON: {e}") from e
 
     if "properties" not in schema:
-        error_msg = (
-            f"Invalid OO-LD Schema: '{input_file}' is missing the 'properties' key."
-        )
+        error_msg = f"Invalid OO-LD Schema: '{input_file}' is missing the 'properties' key."
         logger.error(error_msg)
         raise ValueError(error_msg)
 
@@ -358,7 +368,9 @@ def process_path(
             continue
 
         if mode == "csv2json" and ext == ".csv":
-            csv_to_json_schema(file_path, out_folder, base_url, properties_mapping)
+            csv_to_json_schema(
+                file_path, out_folder, base_url, properties_mapping
+            )
             processed_count += 1
 
         elif mode == "json2csv" and ext == ".json":
@@ -426,7 +438,9 @@ def main() -> None:
             with open(args.mappings, "r", encoding="utf-8") as f:
                 properties_mapping = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
-            logger.error(f"Failed to load properties mapping from {args.mappings}: {e}")
+            logger.error(
+                f"Failed to load properties mapping from {args.mappings}: {e}"
+            )
             sys.exit(1)
 
     try:
