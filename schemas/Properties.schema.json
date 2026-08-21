@@ -1,0 +1,105 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Properties.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/context/context.json",
+  "title": "Properties",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "Unique IRI identifying the documented resource.",
+      "examples": [
+        "avb:nominalBoron"
+      ]
+    },
+    "@type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "IRI of the class the resource belongs to.",
+      "examples": [
+        "owl:datatypeProperty"
+      ]
+    },
+    "subPropertyOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The subject is a subproperty of a property.",
+      "examples": [
+        "emmo:hasNumberValue"
+      ]
+    },
+    "prefLabel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A preferred label of the concept.",
+      "examples": [
+        "nominalBoron"
+      ]
+    },
+    "elucidation": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short enlightening explanation aimed to facilitate the user in drawing the connection (interpretation) between a OWL entity and the real world object(s) for which it stands.  It should address the real world entities using the concepts introduced by the conceptualisation.",
+      "examples": [
+        "Nominal boron content in ppm."
+      ]
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        null
+      ]
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Indicates a resource that might provide additional information about the subject resource.",
+      "examples": [
+        null
+      ]
+    },
+    "hasUnit": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "ppm"
+      ]
+    }
+  },
+  "required": [
+    "@id",
+    "@type"
+  ]
+}
