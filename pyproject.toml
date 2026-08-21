@@ -9,35 +9,33 @@ authors = [
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = [
-    "pyyaml",
-]
+dependencies = ["pyyaml"]
 
 [project.optional-dependencies]
 testing = [
     "pytest==9.1.1",
     "pytest-cov==6.0.0",
+    "jsonschema>=4.26.0",
+    "requests>=2.34.2",
 ]
-pre-commit = [
-    "PhysMetDatadoc[testing]",
-    "pre-commit==4.0.1",
-    "pylint==3.3.4",
-]
-dev = [
-    "PhysMetDatadoc[pre-commit]",
-    "virtualenvwrapper>=4.0.0",
-]
+pre-commit = ["PhysMetDatadoc[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
+dev = ["PhysMetDatadoc[pre-commit]", "virtualenvwrapper>=4.0.0"]
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
-extract-prefixes = "ddoc.extract_prefixes:main"
+oold-converter = "oold_converter.oold_converter:main"
+extract-prefixes = "extract_prefixes:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Explicitly tell Hatchling where your packages live
 [tool.hatch.build.targets.wheel]
-packages = ["src/treeweaver", "src/extract_prefixes.py"]
+packages = ["src/treeweaver", "src/oold_converter", "src/extract_prefixes.py"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/treeweaver", "/src/oold_converter"]
 
 [tool.ruff]
 line-length = 79
@@ -50,4 +48,4 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.isort]
-known-first-party = ["treeweaver"]
+known-first-party = ["treeweaver", "oold_converter", "extract_prefixes"]
