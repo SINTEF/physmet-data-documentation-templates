@@ -7,9 +7,9 @@ from io import StringIO
 from pathlib import Path
 from typing import List, Optional
 
+import jsonschema
 import pytest
 import requests
-import jsonschema
 from jsonschema.exceptions import ValidationError
 from referencing import Registry, Resource
 
@@ -17,8 +17,8 @@ from oold_converter import (
     CONTEXT_URL,
     META_SCHEMA,
     ConversionError,
-    infer_type,
     csv_to_json_schema,
+    infer_type,
     json_schema_to_csv,
     process_path,
 )
@@ -146,7 +146,8 @@ def test_csv_to_json_schema_type_inference():
     tmp_path = get_test_tmp_path("csv_to_json_schema_type_inference")
     input_csv = tmp_path / "inference_test.csv"
     input_csv.write_text(
-        "id,count,is_active,name\n1,42,true,Alice\n2,13,false,Bob", encoding="utf-8"
+        "id,count,is_active,name\n1,42,true,Alice\n2,13,false,Bob",
+        encoding="utf-8",
     )
 
     csv_to_json_schema(input_csv, tmp_path)
@@ -260,7 +261,9 @@ def test_csv_to_json_schema_oold_compliance():
     try:
         oold_meta_schema = registry.resolver().lookup(META_SCHEMA).contents
         jsonschema.validate(
-            instance=generated_schema, schema=oold_meta_schema, registry=registry
+            instance=generated_schema,
+            schema=oold_meta_schema,
+            registry=registry,
         )
     except ValidationError as e:
         raise AssertionError(f"Schema failed OO-LD validation: {e.message}")
@@ -402,7 +405,10 @@ def test_process_path_exclude_files():
 
     # Process the directory but exclude skip_me.csv and also_skip.csv
     process_path(
-        input_dir, out_dir, "csv2json", exclude_files=["skip_me.csv", "also_skip.csv"]
+        input_dir,
+        out_dir,
+        "csv2json",
+        exclude_files=["skip_me.csv", "also_skip.csv"],
     )
 
     # Check that keep_me.csv was processed

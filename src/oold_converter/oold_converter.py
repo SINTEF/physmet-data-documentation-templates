@@ -394,7 +394,8 @@ def main() -> None:
         help="The path to the input file (CSV/JSON) or directory containing them.",
     )
     parser.add_argument(
-        "output_folder", help="The directory where the output files should be saved."
+        "output_folder",
+        help="The directory where the output files should be saved.",
     )
     parser.add_argument(
         "--mode",
