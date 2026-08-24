@@ -15,13 +15,6 @@ _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
 
-def get_test_tmp_path(test_name: str) -> Path:
-    """Creates an isolated temporary directory for a specific test."""
-    p = TMP_ROOT / test_name
-    p.mkdir(exist_ok=True)
-    return p
-
-
 def provision_test_data(tmp_path: Path):
     """Helper function to populate a test's temporary directory with sample data."""
     # 1. Create a dummy CSV file
@@ -31,7 +24,7 @@ def provision_test_data(tmp_path: Path):
     # 2. Create a dummy single-sheet Excel file
     t_single = Table(name="SingleSheet", headers=["Col1", "Col2"], rows=[["A", "B"]])
     excel_single_path = tmp_path / "single_sheet.xlsx"
-    tabular.write(t_single, str(excel_single_path))
+    tabular.write(t_single, excel_single_path)
 
     # 3. Create a dummy multi-sheet Excel file
     t1 = Table(name="Sheet1", headers=["X", "Y"], rows=[[10, 20]])
@@ -40,7 +33,7 @@ def provision_test_data(tmp_path: Path):
     tables.add_table(t1)
     tables.add_table(t2)
     excel_multi_path = tmp_path / "multi_sheet.xlsx"
-    tabular.write(tables, str(excel_multi_path))
+    tabular.write(tables, excel_multi_path)
 
     return csv_path, excel_single_path, excel_multi_path
 
@@ -50,10 +43,9 @@ def provision_test_data(tmp_path: Path):
 
 def test_csv_returns_tables_collection():
     """Verify CSV files always return a Tables object for predictability."""
-    tmp_path = get_test_tmp_path("test_csv_returns_tables")
-    csv_path, _, _ = provision_test_data(tmp_path)
+    csv_path, _, _ = provision_test_data(TMP_ROOT)
 
-    result = tabular.read(str(csv_path))
+    result = tabular.read(csv_path)
 
     assert isinstance(result, Tables), "CSV parser did not return a Tables object."
     assert len(result.tables) == 1
@@ -66,10 +58,9 @@ def test_csv_returns_tables_collection():
 
 def test_excel_single_sheet_returns_tables_collection():
     """Verify single-sheet Excel files always return a Tables object."""
-    tmp_path = get_test_tmp_path("test_excel_single_sheet")
-    _, excel_single_path, _ = provision_test_data(tmp_path)
+    _, excel_single_path, _ = provision_test_data(TMP_ROOT)
 
-    result = tabular.read(str(excel_single_path))
+    result = tabular.read(excel_single_path)
 
     assert isinstance(result, Tables)
     assert len(result.tables) == 1
@@ -78,17 +69,16 @@ def test_excel_single_sheet_returns_tables_collection():
 
 def test_excel_multi_sheet_returns_tables_collection():
     """Verify multi-sheet Excel files return a populated Tables object."""
-    tmp_path = get_test_tmp_path("test_excel_multi_sheet")
-    _, _, excel_multi_path = provision_test_data(tmp_path)
+    _, _, excel_multi_path = provision_test_data(TMP_ROOT)
 
-    result = tabular.read(str(excel_multi_path))
+    result = tabular.read(excel_multi_path)
 
     assert isinstance(result, Tables)
     assert len(result.tables) == 2
     assert "Sheet1" in [t.name for t in result.tables]
 
 
-# --- Tests for Table Model Appending & Logging ---
+# --- Tests for Table Model Appending, Logging & Features ---
 
 
 def test_append_table_strict_rejection():
@@ -119,7 +109,7 @@ def test_append_table_merge_success():
 
 
 def test_append_table_logs_error():
-    """A mismatch in headers when merging=False logs a specific error[cite: 2]."""
+    """A mismatch in headers when merging=False logs a specific error."""
     t1 = Table("Target", ["A", "B"], [[1, 2]])
     t2 = Table("Source", ["A", "C"], [[3, 4]])
 
@@ -140,8 +130,7 @@ def test_append_table_logs_error():
 
 def test_csv_parser_sniff_warns_on_fail():
     """Sniffing an empty/invalid file logs a warning gracefully."""
-    tmp_path = get_test_tmp_path("test_sniff_warns")
-    bad_csv = tmp_path / "empty.csv"
+    bad_csv = TMP_ROOT / "empty.csv"
 
     # Use a genuinely empty file to absolutely guarantee a csv.Error
     bad_csv.write_text("", encoding="utf-8")
@@ -156,7 +145,6 @@ def test_csv_parser_sniff_warns_on_fail():
     logger.addHandler(handler)
 
     try:
-        # tabular.read accepts Path objects now, so we can drop the str() cast
         tabular.read(bad_csv, sniff_dialect=True)
         assert "Could not sniff dialect" in log_capture.getvalue()
     finally:
@@ -165,24 +153,136 @@ def test_csv_parser_sniff_warns_on_fail():
         logger.setLevel(old_level)
 
 
+def test_table_indexing_and_iteration():
+    """Verify that Table supports row indexing, column indexing, and iteration."""
+    t = Table("Test", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
+
+    # Row indexing
+    assert t[0] == [1, "Alice"]
+
+    # Column indexing
+    assert t["Name"] == ["Alice", "Bob"]
+
+    # Iteration
+    rows = [row for row in t]
+    assert len(rows) == 2
+    assert rows[1] == [2, "Bob"]
+
+    with pytest.raises(KeyError):
+        _ = t["UnknownColumn"]
+
+
+def test_table_append_from_file_and_write():
+    """Verify that Table can append data directly from a file and write itself to disk."""
+    csv_path, _, _ = provision_test_data(TMP_ROOT)
+
+    t = Table("Base", ["ID", "Name"], [[99, "Zero"]])
+
+    # Append from file
+    t.append(csv_path)
+
+    assert len(t.rows) == 3
+    # Note: CSV parses everything as strings
+    assert t.rows[1] == ["1", "Alice"]
+
+    # Write to file
+    out_path = TMP_ROOT / "table_output.json"
+    t.write(out_path)
+    assert out_path.exists()
+
+
+def test_table_printable():
+    """Verify that Table has appropriate __str__ and __repr__ implementations."""
+    t = Table("TestSheet", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
+
+    expected_str = (
+        "--- Table: TestSheet ---\n" "ID | Name\n" "---------\n" "1 | Alice\n" "2 | Bob"
+    )
+    assert str(t) == expected_str
+    assert repr(t) == "<Table(name='TestSheet', columns=2, rows=2)>"
+
+
+# --- Tests for Tables Model Features ---
+
+
+def test_tables_indexing_and_iteration():
+    """Verify that Tables supports indexing by int/name and iteration."""
+    ts = Tables()
+    t1 = Table("Sheet1", ["A"])
+    t2 = Table("Sheet2", ["B"])
+    ts.add_table(t1)
+    ts.add_table(t2)
+
+    # Indexing
+    assert ts[0] == t1
+    assert ts["Sheet2"] == t2
+
+    # Iteration
+    table_names = [table.name for table in ts]
+    assert table_names == ["Sheet1", "Sheet2"]
+
+    with pytest.raises(KeyError):
+        _ = ts["UnknownSheet"]
+
+
+def test_tables_append_from_file_and_write():
+    """Verify that Tables can append data from a file and write to disk dynamically."""
+    _, excel_single_path, _ = provision_test_data(TMP_ROOT)
+
+    ts = Tables()
+    ts.append(excel_single_path)
+
+    assert len(ts.tables) == 1
+    assert ts[0].name == "SingleSheet"
+
+    # Write to a format that requires splitting (CSV)
+    split_csv_path = TMP_ROOT / "output.csv"
+    ts.write(split_csv_path)
+    # The file should be saved with the table name appended
+    expected_split_file = TMP_ROOT / "output_SingleSheet.csv"
+    assert expected_split_file.exists()
+
+
+def test_tables_printable():
+    """Verify that Tables has appropriate __str__ and __repr__ implementations."""
+    ts = Tables()
+    t1 = Table("Sheet1", ["A"], [[1]])
+    t2 = Table("Sheet2", ["B"], [[2]])
+    ts.add_table(t1)
+    ts.add_table(t2)
+
+    expected_str = (
+        "--- Table: Sheet1 ---\n"
+        "A\n"
+        "-\n"
+        "1\n\n"
+        "--- Table: Sheet2 ---\n"
+        "B\n"
+        "-\n"
+        "2"
+    )
+
+    assert str(ts) == expected_str
+    assert repr(ts) == "<Tables(count=2, names=['Sheet1', 'Sheet2'])>"
+
+
 # --- Tests for Writers ---
 
 
 def test_csv_write_implicitly_merges_tables():
     """When a multi-table Tables object is passed to CSVWriter, it should merge them natively."""
-    tmp_path = get_test_tmp_path("test_csv_write_merges")
-    _, _, excel_multi_path = provision_test_data(tmp_path)
+    _, _, excel_multi_path = provision_test_data(TMP_ROOT)
 
-    out_csv = tmp_path / "merged_output.csv"
+    out_csv = TMP_ROOT / "merged_output.csv"
 
     # Read multi-sheet (Returns Tables)
-    tables = tabular.read(str(excel_multi_path))
+    tables = tabular.read(excel_multi_path)
 
-    # Write to CSV (implicitly merges during output)
-    tabular.write(tables, str(out_csv))
+    # Write to CSV via standard writer (implicitly merges during output)
+    tabular.write(tables, out_csv)
 
     # Read back to verify
-    merged_table = tabular.read(str(out_csv)).first
+    merged_table = tabular.read(out_csv).first
     assert set(merged_table.headers) == {"X", "Y", "Z"}
 
 
@@ -191,7 +291,7 @@ def test_csv_write_implicitly_merges_tables():
 if __name__ == "__main__":
     print("Running Tabular Data IO tests standalone...\n")
 
-    # Dynamically find all functions in this file starting with "test_"[cite: 2]
+    # Dynamically find all functions in this file starting with "test_"
     test_functions = [
         obj
         for name, obj in globals().items()

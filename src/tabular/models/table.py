@@ -1,5 +1,6 @@
 import logging
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Optional, Union, Iterator
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,68 @@ class Table:
         self.name = name
         self.headers = headers
         self.rows = rows if rows is not None else []
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of the Table, including headers and all rows.
+
+        Returns:
+            str: The formatted table data.
+        """
+        header_str = " | ".join(str(h) for h in self.headers)
+        separator = "-" * len(header_str) if header_str else "-" * 10
+
+        lines = [f"--- Table: {self.name} ---", header_str, separator]
+        for row in self.rows:
+            lines.append(" | ".join(str(cell) for cell in row))
+
+        return "\n".join(lines)
+
+    def __repr__(self) -> str:
+        """
+        Returns a detailed string representation of the Table for debugging.
+
+        Returns:
+            str: The unambiguous representation of the table object.
+        """
+        return f"<Table(name='{self.name}', columns={len(self.headers)}, rows={len(self.rows)})>"
+
+    def __getitem__(self, key: Union[int, str]) -> List[Any]:
+        """
+        Allows indexing into the table to get a row or a column.
+
+        Args:
+            key (Union[int, str]): An integer to get a row by index,
+                                   or a string to get a column by header name.
+
+        Returns:
+            List[Any]: The requested row or column.
+
+        Raises:
+            KeyError: If a string key is not found in the headers.
+            IndexError: If an integer key is out of bounds for the rows.
+            TypeError: If the key is neither an int nor a str.
+        """
+        if isinstance(key, int):
+            return self.rows[key]
+        elif isinstance(key, str):
+            if key not in self.headers:
+                raise KeyError(f"Column '{key}' not found in headers.")
+            idx = self.headers.index(key)
+            return [row[idx] for row in self.rows]
+        else:
+            raise TypeError(
+                "Key must be an integer (row index) or string (column name)."
+            )
+
+    def __iter__(self) -> Iterator[List[Any]]:
+        """
+        Allows iterating over the rows of the table.
+
+        Returns:
+            Iterator[List[Any]]: An iterator over the rows.
+        """
+        return iter(self.rows)
 
     def append_row(self, row: List[Any]) -> None:
         """
@@ -70,11 +133,8 @@ class Table:
             ValueError: If merge_headers is False and `other` contains columns not present
                         in this table. The operation aborts before modifying any data.
         """
-        other_headers_set = set(other.headers)
-        self_headers_set = set(self.headers)
-
         # Identify columns in the other table that do not exist in this one
-        new_headers = [h for h in other.headers if h not in self_headers_set]
+        new_headers = [h for h in other.headers if h not in self.headers]
 
         if new_headers:
             if not merge_headers:
@@ -100,6 +160,35 @@ class Table:
             # Missing subset headers from 'other' gracefully become None
             mapped_row = [row_dict.get(h, None) for h in self.headers]
             self.rows.append(mapped_row)
+
+    def append(
+        self, file_path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
+    ) -> None:
+        """
+        Reads a file and appends its tabular data directly into this table.
+
+        Args:
+            file_path (Union[str, Path]): The path to the file to read and append.
+            merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
+            **kwargs: Additional parameters to pass to the parser (e.g., sniff_dialect).
+        """
+        from tabular import read
+
+        new_tables = read(file_path, **kwargs)
+        for t in new_tables.tables:
+            self.append_table(t, merge_headers=merge_headers)
+
+    def write(self, file_path: Union[str, Path], **kwargs: Any) -> None:
+        """
+        Writes this table directly to a file.
+
+        Args:
+            file_path (Union[str, Path]): The output destination path.
+            **kwargs: Additional parameters to pass to the writer.
+        """
+        from tabular import write as tabular_write
+
+        tabular_write(self, file_path, **kwargs)
 
     def to_dict_list(self) -> List[Dict[str, Any]]:
         """

@@ -1,4 +1,5 @@
-from typing import List, Dict
+from typing import List, Dict, Union, Iterator, Any
+from pathlib import Path
 from .table import Table
 
 
@@ -10,6 +11,58 @@ class Tables:
     def __init__(self) -> None:
         """Initializes an empty Tables collection."""
         self._tables: Dict[str, Table] = {}
+
+    def __str__(self) -> str:
+        """
+        Returns a string representation of all tables in the collection.
+
+        Returns:
+            str: The formatted data for all tables.
+        """
+        if not self.tables:
+            return "Empty Tables collection"
+        return "\n\n".join(str(t) for t in self.tables)
+
+    def __repr__(self) -> str:
+        """
+        Returns a detailed string representation of the Tables collection for debugging.
+
+        Returns:
+            str: The unambiguous representation of the tables object.
+        """
+        table_names = [t.name for t in self.tables]
+        return f"<Tables(count={len(self.tables)}, names={table_names})>"
+
+    def __getitem__(self, key: Union[int, str]) -> Table:
+        """
+        Allows indexing to get a table by integer index or by name.
+
+        Args:
+            key (Union[int, str]): The integer index or string name of the table.
+
+        Returns:
+            Table: The requested table.
+
+        Raises:
+            KeyError: If a string key is not found.
+            IndexError: If an integer key is out of bounds.
+            TypeError: If the key is neither an int nor a str.
+        """
+        if isinstance(key, int):
+            return self.tables[key]
+        elif isinstance(key, str):
+            return self.get_table(key)
+        else:
+            raise TypeError("Key must be an integer (index) or string (table name).")
+
+    def __iter__(self) -> Iterator[Table]:
+        """
+        Allows iterating over the tables in the collection.
+
+        Returns:
+            Iterator[Table]: An iterator over the tables.
+        """
+        return iter(self.tables)
 
     def add_table(self, table: Table) -> None:
         """
@@ -88,3 +141,42 @@ class Tables:
                 merged_table.rows.append(merged_row)
 
         return merged_table
+
+    def append(self, file_path: Union[str, Path], **kwargs: Any) -> None:
+        """
+        Reads a file and appends its table(s) to this collection.
+
+        Args:
+            file_path (Union[str, Path]): The path to the file to read.
+            **kwargs: Additional parameters to pass to the parser.
+        """
+        from tabular import read
+
+        new_tables = read(file_path, **kwargs)
+        for t in new_tables.tables:
+            self.add_table(t)
+
+    def write(self, file_path: Union[str, Path], **kwargs: Any) -> None:
+        """
+        Writes the tables to a file.
+        If the target format is Excel ('xlsx', 'xlsm'), all tables are written
+        as sheets within the same file. Otherwise, a separate file is dynamically
+        created for each table using the table's name (e.g., 'output_Sheet1.csv').
+
+        Args:
+            file_path (Union[str, Path]): The output destination path.
+            **kwargs: Additional parameters to pass to the writer.
+        """
+        path = Path(file_path)
+        fmt = path.suffix.lstrip(".").lower()
+
+        if fmt in ["xlsx", "xlsm"]:
+            from tabular import write as tabular_write
+
+            tabular_write(self, path, **kwargs)
+        else:
+            for table in self.tables:
+                # Appends the table name to the file stem to avoid overwriting
+                # e.g., output.csv -> output_Sheet1.csv
+                table_file_path = path.parent / f"{path.stem}_{table.name}{path.suffix}"
+                table.write(table_file_path, **kwargs)
