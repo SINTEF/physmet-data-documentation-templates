@@ -1,5 +1,7 @@
 from typing import List, Dict, Union, Iterator, Any
 from pathlib import Path
+
+import tabular.io
 from .table import Table
 
 
@@ -150,9 +152,8 @@ class Tables:
             file_path (Union[str, Path]): The path to the file to read.
             **kwargs: Additional parameters to pass to the parser.
         """
-        from tabular import read
-
-        new_tables = read(file_path, **kwargs)
+        # Call the module namespace directly
+        new_tables = tabular.io.read(file_path, **kwargs)
         for t in new_tables.tables:
             self.add_table(t)
 
@@ -171,9 +172,8 @@ class Tables:
         fmt = path.suffix.lstrip(".").lower()
 
         if fmt in ["xlsx", "xlsm"]:
-            from tabular import write as tabular_write
-
-            tabular_write(self, path, **kwargs)
+            # Call the module namespace directly
+            tabular.io.write(self, path, **kwargs)
         else:
             for table in self.tables:
                 # Appends the table name to the file stem to avoid overwriting

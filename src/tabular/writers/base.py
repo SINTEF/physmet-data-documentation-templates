@@ -2,7 +2,9 @@ import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Any
-from tabular.models import Table, Tables
+
+# Import the namespace instead of strictly extracting classes
+import tabular.models
 
 logger = logging.getLogger(__name__)
 
@@ -13,29 +15,37 @@ class BaseWriter(ABC):
     """
 
     @abstractmethod
-    def write(self, data: Union[Table, Tables], file_path: Path, **kwargs: Any) -> None:
+    def write(
+        self,
+        data: Union[tabular.models.Table, tabular.models.Tables],
+        file_path: Path,
+        **kwargs: Any,
+    ) -> None:
         """
         Writes data to a physical file.
 
         Args:
-            data (Union[Table, Tables]): The dataset(s) to write.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to write.
             file_path (Path): The output file path.
             **kwargs: Format-specific parameters.
         """
         pass
 
-    def _ensure_tables(self, data: Union[Table, Tables]) -> Tables:
+    def _ensure_tables(
+        self, data: Union[tabular.models.Table, tabular.models.Tables]
+    ) -> tabular.models.Tables:
         """
         Helper method to normalize inputs to a Tables object.
 
         Args:
-            data (Union[Table, Tables]): A single table or collection of tables.
+            data (Union[tabular.models.Table, tabular.models.Tables]): A single table or collection of tables.
 
         Returns:
-            Tables: A valid Tables collection.
+            tabular.models.Tables: A valid Tables collection.
         """
-        if isinstance(data, Table):
-            collection = Tables()
+        # Because we imported the namespace, we can safely use isinstance without crashing at import time
+        if isinstance(data, tabular.models.Table):
+            collection = tabular.models.Tables()
             collection.add_table(data)
             return collection
         return data

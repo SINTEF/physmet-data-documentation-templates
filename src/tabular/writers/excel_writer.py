@@ -1,20 +1,27 @@
 import openpyxl
 from pathlib import Path
 from typing import Union, Any
-from tabular.models import Table, Tables
+
+# Import the namespace instead of strictly extracting classes
+import tabular.models
 from .base import BaseWriter
 
 
 class ExcelWriter(BaseWriter):
     """Writes tabular data to an Excel (.xlsx) workbook."""
 
-    def write(self, data: Union[Table, Tables], file_path: Path, **kwargs: Any) -> None:
+    def write(
+        self,
+        data: Union[tabular.models.Table, tabular.models.Tables],
+        file_path: Path,
+        **kwargs: Any,
+    ) -> None:
         """
         Writes data to an Excel workbook. It creates one spreadsheet per Table in
         the provided collection.
 
         Args:
-            data (Union[Table, Tables]): The dataset(s) to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
             file_path (Path): Output destination path.
             **kwargs: Reserved for future Excel-specific parameters.
         """

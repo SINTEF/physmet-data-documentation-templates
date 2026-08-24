@@ -2,6 +2,8 @@ import logging
 from typing import List, Any, Dict, Optional, Union, Iterator
 from pathlib import Path
 
+import tabular.io
+
 logger = logging.getLogger(__name__)
 
 
@@ -172,9 +174,8 @@ class Table:
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
             **kwargs: Additional parameters to pass to the parser (e.g., sniff_dialect).
         """
-        from tabular import read
-
-        new_tables = read(file_path, **kwargs)
+        # Call the module namespace directly
+        new_tables = tabular.io.read(file_path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
 
@@ -186,9 +187,8 @@ class Table:
             file_path (Union[str, Path]): The output destination path.
             **kwargs: Additional parameters to pass to the writer.
         """
-        from tabular import write as tabular_write
-
-        tabular_write(self, file_path, **kwargs)
+        # Call the module namespace directly
+        tabular.io.write(self, file_path, **kwargs)
 
     def to_dict_list(self) -> List[Dict[str, Any]]:
         """

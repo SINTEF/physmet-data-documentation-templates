@@ -2,7 +2,8 @@ import csv
 import logging
 from pathlib import Path
 from typing import Any
-from tabular.models import Table, Tables
+
+import tabular.models
 from .base import BaseParser
 
 logger = logging.getLogger(__name__)
@@ -13,7 +14,7 @@ class CSVParser(BaseParser):
 
     def parse(
         self, file_path: Path, sniff_dialect: bool = False, **kwargs: Any
-    ) -> Tables:
+    ) -> tabular.models.Tables:
         """
         Parses a CSV file into a Tables collection containing exactly one Table.
 
@@ -27,7 +28,7 @@ class CSVParser(BaseParser):
                 (defaults to 'utf-8').
 
         Returns:
-            Tables: A collection containing a single Table representing the CSV.
+            tabular.models.Tables: A collection containing a single Table representing the CSV.
 
         Raises:
             FileNotFoundError: If the specified file_path does not exist.
@@ -40,7 +41,7 @@ class CSVParser(BaseParser):
         table_name = file_path.stem
         encoding = kwargs.pop("encoding", "utf-8")
 
-        collection = Tables()
+        collection = tabular.models.Tables()
         with open(file_path, mode="r", encoding=encoding) as f:
             # --- Auto-sniffing logic ---
             if sniff_dialect:
@@ -52,6 +53,7 @@ class CSVParser(BaseParser):
                     logger.debug(f"Successfully sniffed dialect for {file_path}")
                 except csv.Error as e:
                     logger.warning(f"Could not sniff dialect for {file_path}: {e}")
+            # ---------------------------
 
             reader = csv.reader(f, **kwargs)
             try:
@@ -59,7 +61,7 @@ class CSVParser(BaseParser):
             except StopIteration:
                 headers = []
 
-            table = Table(name=table_name, headers=headers)
+            table = tabular.models.Table(name=table_name, headers=headers)
             for row in reader:
                 table.append_row(row)
 

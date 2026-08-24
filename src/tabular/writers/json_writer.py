@@ -1,20 +1,27 @@
 import json
 from pathlib import Path
 from typing import Union, Any
-from tabular.models import Table, Tables
+
+# Import the namespace instead of strictly extracting classes
+import tabular.models
 from .base import BaseWriter
 
 
 class JSONWriter(BaseWriter):
     """Writes tabular data to a JSON format."""
 
-    def write(self, data: Union[Table, Tables], file_path: Path, **kwargs: Any) -> None:
+    def write(
+        self,
+        data: Union[tabular.models.Table, tabular.models.Tables],
+        file_path: Path,
+        **kwargs: Any,
+    ) -> None:
         """
         Writes tabular data to a JSON file as an object mapping table names
         to lists of row dictionaries.
 
         Args:
-            data (Union[Table, Tables]): The dataset(s) to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
             file_path (Path): Output destination path.
             **kwargs: Standard parameters accepted by `json.dump` (e.g., indent).
                 Supports custom 'encoding' keyword argument (defaults to utf-8).

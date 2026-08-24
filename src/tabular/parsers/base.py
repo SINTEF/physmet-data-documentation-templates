@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
-from tabular.models import Tables
+
+import tabular.models
 
 
 class BaseParser(ABC):
@@ -10,7 +11,7 @@ class BaseParser(ABC):
     """
 
     @abstractmethod
-    def parse(self, file_path: Path, **kwargs: Any) -> Tables:
+    def parse(self, file_path: Path, **kwargs: Any) -> tabular.models.Tables:
         """
         Parses a file from disk into a Tables collection.
 
@@ -19,6 +20,6 @@ class BaseParser(ABC):
             **kwargs: Format-specific parameters (e.g., delimiter for CSV).
 
         Returns:
-            Tables: A collection representing the parsed dataset(s).
+            tabular.models.Tables: A collection representing the parsed dataset(s).
         """
         pass
