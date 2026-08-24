@@ -1,7 +1,10 @@
 import re
 import logging
-from typing import Any
-from .models import Table
+from typing import Any, TYPE_CHECKING
+
+# Prevent circular import at runtime, but keep type hinting for IDEs and MyPy
+if TYPE_CHECKING:
+    from .models import Table
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +14,7 @@ _US_NUM = re.compile(r"^-?(?:\d{1,3}(?:,\d{3})*|\d+)\.\d+$")
 _INT_NUM = re.compile(r"^-?\d+$")
 
 
-def infer_and_cast_types(table: Table) -> Table:
+def infer_and_cast_types(table: "Table") -> "Table":
     """
     Iterates through a Table and intelligently casts string values to native Python types.
 

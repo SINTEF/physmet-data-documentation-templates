@@ -53,7 +53,8 @@ def test_csv_returns_tables_collection():
     # Verify .first property convenience behavior
     first_table = result.first
     assert first_table.headers == ["ID", "Name"]
-    assert first_table.rows == [["1", "Alice"], ["2", "Bob"]]
+    # UPDATED: Expected row values should now be inferred to ints instead of strings
+    assert first_table.rows == [[1, "Alice"], [2, "Bob"]]
 
 
 def test_excel_single_sheet_returns_tables_collection():
@@ -116,7 +117,13 @@ def test_append_table_logs_error():
     # Manually capture logs without relying on pytest caplog fixture
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
+
+    # MUST match the module's __name__ exactly (lowercase 'table')
     logger = logging.getLogger("tabular.models.table")
+
+    # Explicitly set the log level to bypass pytest's default filtering
+    old_level = logger.level
+    logger.setLevel(logging.ERROR)
     logger.addHandler(handler)
 
     try:
@@ -126,6 +133,8 @@ def test_append_table_logs_error():
         assert "Unrecognized headers:" in log_capture.getvalue()
     finally:
         logger.removeHandler(handler)
+        # Restore the original log level
+        logger.setLevel(old_level)
 
 
 def test_csv_parser_sniff_warns_on_fail():
@@ -182,8 +191,8 @@ def test_table_append_from_file_and_write():
     t.append(csv_path)
 
     assert len(t.rows) == 3
-    # Note: CSV parses everything as strings
-    assert t.rows[1] == ["1", "Alice"]
+    # UPDATED: CSV now successfully infers types, returning an int `1`
+    assert t.rows[1] == [1, "Alice"]
 
     # Write to file
     out_path = TMP_ROOT / "table_output.json"
