@@ -1,6 +1,7 @@
 import csv
+import io
 from pathlib import Path
-from typing import Union, Any
+from typing import Union, Any, Optional
 
 # Import the namespace instead of strictly extracting classes
 import tabular.models
@@ -12,30 +13,49 @@ class CSVWriter(BaseWriter):
 
     def write(
         self,
-        data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Path,
+        data: Union["tabular.models.Table", "tabular.models.Tables"],
+        file_path: Optional[Path] = None,
         **kwargs: Any,
-    ) -> None:
+    ) -> Optional[str]:
         """
-        Writes tabular data to a CSV file. If a multiple-table collection is provided,
-        it automatically merges them into a single table prior to writing.
+        Writes tabular data to a CSV file or string. If a multiple-table collection
+        is provided, it automatically merges them into a single table prior to writing.
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset to export.
-            file_path (Path): Output destination path.
+            file_path (Optional[Path], optional): Output destination path.
+                If None, returns the CSV string.
             **kwargs: Standard parameters accepted by the `csv.writer` (e.g., delimiter).
                 Supports custom 'encoding' keyword argument (defaults to utf-8).
-        """
-        self._ensure_directory(file_path)
 
-        if isinstance(data, tabular.models.Tables):
-            # Resolve to a single dataset for CSV
-            table = data.merge_all() if len(data.tables) > 1 else data.first
-        else:
-            table = data
+        Returns:
+            Optional[str]: The CSV string if file_path is None, else None.
+        """
+        if file_path is not None:
+            self._ensure_directory(file_path)
+
+        table = (
+            data.merge_all()
+            if (isinstance(data, tabular.models.Tables) and len(data.tables) > 1)
+            else (data.first if isinstance(data, tabular.models.Tables) else data)
+        )
 
         encoding = kwargs.pop("encoding", "utf-8")
-        with open(file_path, mode="w", newline="", encoding=encoding) as f:
+
+        if file_path is None:
+            f = io.StringIO()
+        else:
+            f = open(file_path, mode="w", newline="", encoding=encoding)
+
+        try:
             writer = csv.writer(f, **kwargs)
             writer.writerow(table.headers)
             writer.writerows(table.rows)
+
+            # The isinstance check prevents type checker errors (e.g., in MyPy)
+            if file_path is None and isinstance(f, io.StringIO):
+                return f.getvalue()
+        finally:
+            if file_path is not None:
+                f.close()
+        return None

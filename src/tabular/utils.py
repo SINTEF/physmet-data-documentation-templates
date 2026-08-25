@@ -14,7 +14,7 @@ _US_NUM = re.compile(r"^-?(?:\d{1,3}(?:,\d{3})*|\d+)\.\d+$")
 _INT_NUM = re.compile(r"^-?\d+$")
 
 
-def infer_and_cast_types(table: "Table") -> "Table":
+def infer_and_cast_types(table: Table) -> Table:
     """
     Iterates through a Table and intelligently casts string values to native Python types.
 

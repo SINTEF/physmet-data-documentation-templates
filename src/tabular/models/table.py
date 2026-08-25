@@ -2,6 +2,7 @@ import logging
 from typing import List, Any, Dict, Optional, Union, Iterator
 from pathlib import Path
 
+# Safe top-level import: references the module namespace instead of specific functions
 import tabular.io
 
 logger = logging.getLogger(__name__)
@@ -13,34 +14,61 @@ class Table:
     """
 
     def __init__(
-        self, name: str, headers: List[str], rows: Optional[List[List[Any]]] = None
+        self,
+        name: Optional[str] = None,
+        headers: Optional[List[str]] = None,
+        rows: Optional[List[List[Any]]] = None,
     ):
         """
         Initializes a new Table.
 
         Args:
-            name (str): The name of the table (e.g., sheet name, file name).
-            headers (List[str]): A list of string headers representing columns.
+            name (str, optional): The name of the table (e.g., sheet name, file name).
+                Defaults to None.
+            headers (List[str], optional): A list of string headers representing columns.
+                Defaults to an empty list.
             rows (List[List[Any]], optional): A list of rows, where each row is a list
                 of values. Defaults to an empty list.
         """
         self.name = name
-        self.headers = headers
+        self.headers = headers if headers is not None else []
         self.rows = rows if rows is not None else []
 
     def __str__(self) -> str:
         """
-        Returns a string representation of the Table, including headers and all rows.
+        Returns a perfectly aligned Markdown string representation of the Table,
+        including the table name as a header, the columns, and all rows.
 
         Returns:
-            str: The formatted table data.
+            str: The formatted Markdown table data.
         """
-        header_str = " | ".join(str(h) for h in self.headers)
-        separator = "-" * len(header_str) if header_str else "-" * 10
+        if not self.headers:
+            return f"Empty Table: {self.name}"
 
-        lines = [f"--- Table: {self.name} ---", header_str, separator]
-        for row in self.rows:
-            lines.append(" | ".join(str(cell) for cell in row))
+        # Convert everything to strings and find max column widths
+        str_headers = [str(h) for h in self.headers]
+        str_rows = [[str(c) if c is not None else "" for c in row] for row in self.rows]
+
+        widths = [len(h) for h in str_headers]
+        for row in str_rows:
+            for i, cell in enumerate(row):
+                if i < len(widths) and len(cell) > widths[i]:
+                    widths[i] = len(cell)
+
+        def fmt_row(row_data: List[str]) -> str:
+            return (
+                "| "
+                + " | ".join(c.ljust(widths[i]) for i, c in enumerate(row_data))
+                + " |"
+            )
+
+        lines = []
+        if self.name:
+            lines.append(f"## {self.name}\n")
+        lines.append(fmt_row(str_headers))
+        lines.append("|-" + "-|-".join("-" * w for w in widths) + "-|")
+        for r in str_rows:
+            lines.append(fmt_row(r))
 
         return "\n".join(lines)
 
@@ -51,7 +79,8 @@ class Table:
         Returns:
             str: The unambiguous representation of the table object.
         """
-        return f"<Table(name='{self.name}', columns={len(self.headers)}, rows={len(self.rows)})>"
+        name_repr = f"'{self.name}'" if self.name else "None"
+        return f"<Table(name={name_repr}, columns={len(self.headers)}, rows={len(self.rows)})>"
 
     def __getitem__(self, key: Union[int, str]) -> List[Any]:
         """
@@ -119,7 +148,7 @@ class Table:
         for row in rows:
             self.append_row(row)
 
-    def append_table(self, other: "Table", merge_headers: bool = False) -> None:
+    def append_table(self, other: Table, merge_headers: bool = False) -> None:
         """
         Appends data from another Table object into this Table.
 
@@ -135,7 +164,6 @@ class Table:
             ValueError: If merge_headers is False and `other` contains columns not present
                         in this table. The operation aborts before modifying any data.
         """
-        # Identify columns in the other table that do not exist in this one
         new_headers = [h for h in other.headers if h not in self.headers]
 
         if new_headers:
@@ -150,20 +178,16 @@ class Table:
                 logger.info(
                     f"Expanding table '{self.name}' schema with headers: {new_headers}"
                 )
-                # Merge logic: expand current schema
                 self.headers.extend(new_headers)
-                # Pad all existing rows with None for the newly added columns
                 for row in self.rows:
                     row.extend([None] * len(new_headers))
 
-        # Append rows, aligning them to the current headers
         for other_row in other.rows:
             row_dict = dict(zip(other.headers, other_row))
-            # Missing subset headers from 'other' gracefully become None
             mapped_row = [row_dict.get(h, None) for h in self.headers]
             self.rows.append(mapped_row)
 
-    def append(
+    def append_file(
         self, file_path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
     ) -> None:
         """
@@ -174,21 +198,33 @@ class Table:
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
             **kwargs: Additional parameters to pass to the parser (e.g., sniff_dialect).
         """
-        # Call the module namespace directly
         new_tables = tabular.io.read(file_path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
 
-    def write(self, file_path: Union[str, Path], **kwargs: Any) -> None:
+    def write(
+        self,
+        file_path: Optional[Union[str, Path]] = None,
+        fmt: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Optional[str]:
         """
-        Writes this table directly to a file.
+        Writes this table directly to a file, or serializes it to a string if file_path is None.
 
         Args:
-            file_path (Union[str, Path]): The output destination path.
+            file_path (Optional[Union[str, Path]], optional): The output destination path.
+                If None, the data is serialized and returned as a string.
+            fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
+                Required if file_path is None.
             **kwargs: Additional parameters to pass to the writer.
+
+        Returns:
+            Optional[str]: The serialized string if file_path is None, else None.
+
+        Raises:
+            ValueError: If file_path is None but no format is provided.
         """
-        # Call the module namespace directly
-        tabular.io.write(self, file_path, **kwargs)
+        return tabular.io.write(self, file_path, fmt=fmt, **kwargs)
 
     def to_dict_list(self) -> List[Dict[str, Any]]:
         """

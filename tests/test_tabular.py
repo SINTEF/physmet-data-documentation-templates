@@ -118,7 +118,7 @@ def test_append_table_logs_error():
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
 
-    # MUST match the module's __name__ exactly (lowercase 'table')
+    # FIX: Ensure it is strictly lowercase to match the module __name__
     logger = logging.getLogger("tabular.models.table")
 
     # Explicitly set the log level to bypass pytest's default filtering
@@ -188,7 +188,7 @@ def test_table_append_from_file_and_write():
     t = Table("Base", ["ID", "Name"], [[99, "Zero"]])
 
     # Append from file
-    t.append(csv_path)
+    t.append_file(csv_path)
 
     assert len(t.rows) == 3
     # UPDATED: CSV now successfully infers types, returning an int `1`
@@ -201,11 +201,16 @@ def test_table_append_from_file_and_write():
 
 
 def test_table_printable():
-    """Verify that Table has appropriate __str__ and __repr__ implementations."""
+    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations."""
     t = Table("TestSheet", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
+    # FIX: Updated to match the new Markdown rendering
     expected_str = (
-        "--- Table: TestSheet ---\n" "ID | Name\n" "---------\n" "1 | Alice\n" "2 | Bob"
+        "## TestSheet\n\n"
+        "| ID | Name  |\n"
+        "|----|-------|\n"
+        "| 1  | Alice |\n"
+        "| 2  | Bob   |"
     )
     assert str(t) == expected_str
     assert repr(t) == "<Table(name='TestSheet', columns=2, rows=2)>"
@@ -253,22 +258,23 @@ def test_tables_append_from_file_and_write():
 
 
 def test_tables_printable():
-    """Verify that Tables has appropriate __str__ and __repr__ implementations."""
+    """Verify that Tables has appropriate Markdown __str__ and __repr__ implementations."""
     ts = Tables()
     t1 = Table("Sheet1", ["A"], [[1]])
     t2 = Table("Sheet2", ["B"], [[2]])
     ts.add_table(t1)
     ts.add_table(t2)
 
+    # FIX: Updated to match the new Markdown rendering for multiple tables
     expected_str = (
-        "--- Table: Sheet1 ---\n"
-        "A\n"
-        "-\n"
-        "1\n\n"
-        "--- Table: Sheet2 ---\n"
-        "B\n"
-        "-\n"
-        "2"
+        "## Sheet1\n\n"
+        "| A |\n"
+        "|---|\n"
+        "| 1 |\n\n"
+        "## Sheet2\n\n"
+        "| B |\n"
+        "|---|\n"
+        "| 2 |"
     )
 
     assert str(ts) == expected_str
@@ -295,12 +301,10 @@ def test_csv_write_implicitly_merges_tables():
     assert set(merged_table.headers) == {"X", "Y", "Z"}
 
 
-# --- Standalone Execution Logic (for ipython / python execution) ---
+# --- Standalone Execution Logic ---
 
 if __name__ == "__main__":
     print("Running Tabular Data IO tests standalone...\n")
-
-    # Dynamically find all functions in this file starting with "test_"
     test_functions = [
         obj
         for name, obj in globals().items()
@@ -323,5 +327,7 @@ if __name__ == "__main__":
     print("\n--- Test Run Summary ---")
     print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
 
+    # Environment-agnostic failure handling:
+    # This will fail standard CI/CD pipelines but won't crash interactive IPython kernels.
     if failed > 0:
-        sys.exit(1)
+        raise RuntimeError(f"Test suite failed with {failed} errors.")

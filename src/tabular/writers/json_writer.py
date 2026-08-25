@@ -35,3 +35,4 @@ class JSONWriter(BaseWriter):
 
         with open(file_path, mode="w", encoding=encoding) as f:
             json.dump(out_data, f, indent=indent, **kwargs)
+            f.write("\n")
