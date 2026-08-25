@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import Union, Any, Optional
 
-# Import the namespace instead of strictly extracting classes
 import tabular.models
 from .base import BaseWriter
 

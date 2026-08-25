@@ -3,7 +3,6 @@ import io
 from pathlib import Path
 from typing import Union, Any, Optional
 
-# Import the namespace instead of strictly extracting classes
 import tabular.models
 from .base import BaseWriter
 
@@ -52,7 +51,6 @@ class CSVWriter(BaseWriter):
             writer.writerow(table.headers)
             writer.writerows(table.rows)
 
-            # The isinstance check prevents type checker errors (e.g., in MyPy)
             if file_path is None and isinstance(f, io.StringIO):
                 return f.getvalue()
         finally:

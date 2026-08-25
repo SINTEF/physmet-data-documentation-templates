@@ -2,7 +2,6 @@ import re
 import logging
 from typing import Any, TYPE_CHECKING
 
-# Prevent circular import at runtime, but keep type hinting for IDEs and MyPy
 if TYPE_CHECKING:
     from .models import Table
 
@@ -56,7 +55,6 @@ def infer_and_cast_types(table: Table) -> Table:
 
         return val
 
-    # Apply casting to all rows
     for i, row in enumerate(table.rows):
         table.rows[i] = [parse_value(cell) for cell in row]
 

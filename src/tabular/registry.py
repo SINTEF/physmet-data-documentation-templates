@@ -1,7 +1,3 @@
-"""
-Central Format Registry
-"""
-
 import logging
 from typing import Dict, Any
 

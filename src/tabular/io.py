@@ -2,10 +2,8 @@ import logging
 from pathlib import Path
 from typing import Union, Optional, Any, TYPE_CHECKING
 
-# Import from our new central registry
 from .registry import get_parser, get_writer
 
-# This prevents circular imports at runtime, but allows linters to see the types
 if TYPE_CHECKING:
     from .models import Table, Tables
 

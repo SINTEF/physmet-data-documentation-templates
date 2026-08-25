@@ -1,8 +1,7 @@
 import json
 from pathlib import Path
-from typing import Union, Any
+from typing import Union, Any, Optional
 
-# Import the namespace instead of strictly extracting classes
 import tabular.models
 from .base import BaseWriter
 
@@ -13,9 +12,9 @@ class JSONWriter(BaseWriter):
     def write(
         self,
         data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Path,
+        file_path: Optional[Path] = None,
         **kwargs: Any,
-    ) -> None:
+    ) -> Optional[str]:
         """
         Writes tabular data to a JSON file as an object mapping table names
         to lists of row dictionaries.
@@ -29,6 +28,9 @@ class JSONWriter(BaseWriter):
         self._ensure_directory(file_path)
         collection = self._ensure_tables(data)
         out_data = {t.name: t.to_dict_list() for t in collection.tables}
+
+        if file_path is None:
+            return str(out_data)
 
         encoding = kwargs.pop("encoding", "utf-8")
         indent = kwargs.pop("indent", 4)

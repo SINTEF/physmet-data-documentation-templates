@@ -1,7 +1,6 @@
 from typing import List, Union, Iterator, Any, Optional
 from pathlib import Path
 
-# Safe top-level import
 import tabular.io
 import tabular.registry
 from .table import Table

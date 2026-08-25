@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 from typing import Any
 
-# Import the namespace instead of strictly extracting classes
 import tabular.models
 from .base import BaseParser
 

@@ -2,7 +2,6 @@ import logging
 from typing import List, Any, Dict, Optional, Union, Iterator
 from pathlib import Path
 
-# Safe top-level import: references the module namespace instead of specific functions
 import tabular.io
 
 logger = logging.getLogger(__name__)
