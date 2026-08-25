@@ -36,38 +36,23 @@
       "description": "A free-text account of the resource."
     },
     "comment": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A description of the subject resource. Use `description` instead."
     },
     "hasInput": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "hasOutput": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "hasOperator": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "performedWith": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     }
   },
