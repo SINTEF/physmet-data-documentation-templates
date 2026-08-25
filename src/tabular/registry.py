@@ -8,7 +8,6 @@ from typing import Dict, Any
 # Parsers
 from tabular.parsers.csv_parser import CSVParser
 from tabular.parsers.excel_parser import ExcelParser
-from tabular.parsers.md_parser import MDParser
 
 # Writers
 from tabular.writers.csv_writer import CSVWriter
