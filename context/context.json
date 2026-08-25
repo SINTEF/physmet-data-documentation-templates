@@ -280,10 +280,7 @@
       "@id": "oteio:hasDatamodelStorage",
       "@type": "xsd:anyURI"
     },
-    "dataValue": {
-      "@id": "emmo:EMMO_b6292331_94af_4f00_976b_ea55960c2f1c",
-      "@type": "owl:topDataProperty"
-    },
+    "dataValue": "emmo:EMMO_b6292331_94af_4f00_976b_ea55960c2f1c",
     "hasComposition": {
       "@id": "emmo:EMMO_bb260eeb_601e_47c3_b896_f99e6b0e4aee",
       "@type": "@id"
