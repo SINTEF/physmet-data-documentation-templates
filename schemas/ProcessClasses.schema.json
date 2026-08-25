@@ -1,0 +1,95 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/ProcessClasses.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/context/context.json",
+  "title": "ProcessClasses",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "Unique IRI identifying the documented resource."
+    },
+    "@type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "IRI of the class the resource belongs to."
+    },
+    "subClassOf": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "The subject is a subclass of a class."
+    },
+    "prefLabel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "A preferred label of the concept."
+    },
+    "altLabel": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "An alternative label of the concept."
+    },
+    "elucidation": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Short enlightening explanation aimed to facilitate the user in drawing the connection (interpretation) between a OWL entity and the real world object(s) for which it stands.  It should address the real world entities using the concepts introduced by the conceptualisation."
+    },
+    "note": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "seeAlso": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Indicates a resource that might provide additional information about the subject resource."
+    },
+    "hasInput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    },
+    "hasOutput": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": ""
+    }
+  },
+  "required": [
+    "@id",
+    "@type"
+  ]
+}

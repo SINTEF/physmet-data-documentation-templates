@@ -1,0 +1,7 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "invalid_schema.json",
+  "title": "Broken schema",
+  "type": "object",
+  "comment": "Notice that the 'properties' object is entirely missing here."
+}
