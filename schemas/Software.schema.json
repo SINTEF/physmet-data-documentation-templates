@@ -40,59 +40,35 @@
       "description": "A free-text account of the resource."
     },
     "comment": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A description of the subject resource. Use `description` instead."
     },
     "keyword": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A keyword or tag describing the resource."
     },
     "seeAlso": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Indicates a resource that might provide additional information about the subject resource."
     },
     "rightsHolder": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "license": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A licence under which the resource is made available."
     },
     "landingPage": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A web page that provides access to the resource and/or additional information (e.g. the distribution for a dataset)."
     },
     "version": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Version indicator (name or identifier) of a resource."
     },
     "priorRelease": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     }
   },

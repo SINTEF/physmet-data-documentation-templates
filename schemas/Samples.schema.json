@@ -52,80 +52,56 @@
       ]
     },
     "comment": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A description of the subject resource. Use `description` instead.",
       "examples": [
         null
       ]
     },
     "hasComposition": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "contactPerson": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "creator": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "An entity responsible for producing the resource.",
       "examples": [
         "pers:AndersVollBugten"
       ]
     },
     "creationDate": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Date of creation",
       "examples": [
         null
       ]
     },
     "location": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "isTemporalPartOf": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "isSpatioTemporalPartOf": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
