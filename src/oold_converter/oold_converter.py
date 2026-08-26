@@ -45,36 +45,28 @@ class ConversionError(Exception):
     pass
 
 
-def infer_type(
-    values: List[Optional[str]], mandatory: bool = False
-) -> Union[str, List[str]]:
+def infer_type(values: List[Optional[str]]) -> str:
     """
     Infers the JSON schema data type based on a list of string values.
     Strictly validates numbers against JSON specifications, rejecting NaN/Inf.
+    Always returns a bare string type (e.g., "number", "string", "boolean").
 
     Args:
         values (List[Optional[str]]): The column values extracted from the CSV.
-        mandatory (bool): If True, the field is required and its type excludes
-            "null", returned as a bare string (e.g. "number"). If False
-            (default), the field may be absent/empty and the type allows
-            "null", returned as a list (e.g. ["number", "null"]).
 
     Returns:
-        Union[str, List[str]]: The inferred type - a bare string when
-        mandatory, otherwise a [type, "null"] list.
+        str: The inferred type as a plain string.
     """
     non_nulls = [v.strip() for v in values if v is not None and v.strip() != ""]
 
     if not non_nulls:
-        inferred = "string"
-    elif all(v.lower() in ("true", "false") for v in non_nulls):
-        inferred = "boolean"
-    elif all(JSON_NUMBER_PATTERN.match(v) for v in non_nulls):
-        inferred = "number"
-    else:
-        inferred = "string"
+        return "string"
+    if all(v.lower() in ("true", "false") for v in non_nulls):
+        return "boolean"
+    if all(JSON_NUMBER_PATTERN.match(v) for v in non_nulls):
+        return "number"
 
-    return inferred if mandatory else [inferred, "null"]
+    return "string"
 
 
 def csv_to_json_schema(
@@ -153,15 +145,8 @@ def csv_to_json_schema(
                     schema["properties"][header]["examples"] = []
                     continue
 
-                # Determine mandatory status from the mapping up front, so infer_type
-                # can decide directly whether "null" belongs in the type.
-                mapping = properties_mapping.get(header) if properties_mapping else None
-                is_mandatory = bool(
-                    mapping and mapping.get("conformance") == "mandatory"
-                )
-
                 column_values = [row.get(header) for row in rows]
-                inferred_type = infer_type(column_values, mandatory=is_mandatory)
+                inferred_type = infer_type(column_values)
 
                 prop_def: Dict[str, Any] = {
                     "type": inferred_type,
@@ -170,11 +155,12 @@ def csv_to_json_schema(
                 }
 
                 # Inject ONLY description and conformance from the mapping if present
+                mapping = properties_mapping.get(header) if properties_mapping else None
                 if mapping:
                     if "description" in mapping:
                         prop_def["description"] = mapping["description"]
 
-                    if is_mandatory:
+                    if mapping.get("conformance") == "mandatory":
                         required_fields.append(header)
 
                 schema["properties"][header] = prop_def

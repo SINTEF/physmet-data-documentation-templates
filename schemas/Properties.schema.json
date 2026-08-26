@@ -38,60 +38,42 @@
       ]
     },
     "subPropertyOf": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "The subject is a subproperty of a property.",
       "examples": [
         "emmo:hasNumberValue"
       ]
     },
     "prefLabel": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A preferred label of the concept.",
       "examples": [
         "nominalBoron"
       ]
     },
     "elucidation": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Short enlightening explanation aimed to facilitate the user in drawing the connection (interpretation) between a OWL entity and the real world object(s) for which it stands.  It should address the real world entities using the concepts introduced by the conceptualisation.",
       "examples": [
         "Nominal boron content in ppm."
       ]
     },
     "note": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "seeAlso": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Indicates a resource that might provide additional information about the subject resource.",
       "examples": [
         null
       ]
     },
     "hasUnit": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "ppm"

@@ -45,50 +45,35 @@
       ]
     },
     "prefix": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "avb"
       ]
     },
     "namespace": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "https://www.ntnu.edu/physmet/data/avb/"
       ]
     },
     "email": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "affiliation": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "org:NTNU"
       ]
     },
     "sameAs": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "nnvaid:978376",

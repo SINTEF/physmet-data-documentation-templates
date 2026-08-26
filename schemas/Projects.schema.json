@@ -45,40 +45,28 @@
       ]
     },
     "prefix": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "pm"
       ]
     },
     "namespace": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "https://www.ntnu.edu/physmet/kb/"
       ]
     },
     "hasFundingAgency": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "org:NFR"
       ]
     },
     "hasGrantNumber": {
-      "type": [
-        "number",
-        "null"
-      ],
+      "type": "number",
       "description": "",
       "examples": [
         "309584"
