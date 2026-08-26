@@ -244,7 +244,7 @@ def test_tables_append_from_file_and_write():
     _, excel_single_path, _ = provision_test_data(TMP_ROOT)
 
     ts = Tables()
-    ts.append_table(excel_single_path)
+    ts.append_file(excel_single_path)
 
     assert len(ts.tables) == 1
     assert ts[0].name == "SingleSheet"

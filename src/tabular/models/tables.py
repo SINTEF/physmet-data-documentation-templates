@@ -146,7 +146,7 @@ class Tables:
 
         return merged_table
 
-    def append_table(self, path: Union[str, Path], **kwargs: Any) -> None:
+    def append_file(self, path: Union[str, Path], **kwargs: Any) -> None:
         """
         Reads a file and appends its table(s) to this collection.
 
