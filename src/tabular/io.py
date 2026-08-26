@@ -2,7 +2,7 @@ import logging
 from pathlib import Path
 from typing import Union, Optional, Any, TYPE_CHECKING
 
-from .registry import get_parser, get_writer
+from .registry import get_parser, get_writer, supports_multi_sheet
 
 if TYPE_CHECKING:
     from .models import Table, Tables
@@ -58,6 +58,10 @@ def write(
     Writes a Table or Tables object to a file, OR returns it as a formatted string
     if path is None.
 
+    If writing a multi-table collection to a path and the target format does not
+    natively support multiple sheets (e.g., CSV), this function will automatically
+    split the output, generating a separate file for each table appended with its name.
+
     Args:
         data (Union[Table, Tables]): The tabular data to write.
         path (Optional[Union[str, Path]], optional): The output destination path.
@@ -89,11 +93,27 @@ def write(
             "Could not determine format from path. Please explicitly provide 'fmt'."
         )
 
-    if path is not None:
-        logger.info(f"Writing data to '{path}' as format '{actual_fmt}'")
-    else:
-        logger.info(f"Serializing data to string as format '{actual_fmt}'")
-
     # get_writer implicitly raises ValueError if format is unregistered
     writer = get_writer(actual_fmt)
-    return writer.write(data, path, **kwargs)
+
+    if path is None or supports_multi_sheet(actual_fmt):
+        if path is not None:
+            logger.info(f"Writing data to '{path}' as format '{actual_fmt}'")
+        else:
+            logger.info(f"Serializing data to string as format '{actual_fmt}'")
+        return writer.write(data, path, **kwargs)
+
+    logger.info(
+        f"Splitting data into individual '{actual_fmt}' files at '{path.parent}'"
+    )
+
+    # Duck-typing check: if 'data' is a Tables collection, it has a 'tables' list attribute
+    if hasattr(data, "tables"):
+        for i, table in enumerate(getattr(data, "tables")):
+            suffix = getattr(table, "name") or str(i)
+            table_path = path.parent / f"{path.stem}_{suffix}{path.suffix}"
+            writer.write(table, table_path, **kwargs)
+        return None
+    else:
+        # Fallback for a solitary Table object
+        return writer.write(data, path, **kwargs)

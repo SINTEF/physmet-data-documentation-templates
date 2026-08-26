@@ -428,11 +428,11 @@ def test_conversion_error_wraps_original_exception():
     try:
         try:
             raise original
-        except ValueError as exc:
-            raise ConversionError("wrapped failure") from exc
-    except ConversionError as err:
-        assert str(err) == "wrapped failure"
-        assert err.__cause__ is original
+        except ValueError as e:
+            raise ConversionError("wrapped failure") from e
+    except ConversionError as e:
+        assert str(e) == "wrapped failure"
+        assert e.__cause__ is original
 
 
 # --- Standalone Execution Logic (for ipython / python execution) ---

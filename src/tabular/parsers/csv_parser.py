@@ -39,40 +39,55 @@ class CSVParser(BaseParser):
 
         Raises:
             FileNotFoundError: If the specified path does not exist.
+            IsADirectoryError: If the path is a directory.
+            ValueError: If the file contents cannot be decoded (encoding error) or if
+                the CSV structure is severely malformed.
         """
-        if not path.exists():
-            msg = f"CSV file not found: {path}"
-            logger.error(msg)
-            raise FileNotFoundError(msg)
+        self._validate_path(path)
 
         table_name = path.stem
         encoding = kwargs.pop("encoding", "utf-8")
 
         collection = tabular.models.Tables()
-        with open(path, mode="r", encoding=encoding) as f:
-            if sniff_dialect:
-                sample = f.read(4096)
-                f.seek(0)
+
+        try:
+            with open(path, mode="r", encoding=encoding) as f:
+                if sniff_dialect:
+                    sample = f.read(4096)
+                    f.seek(0)
+                    try:
+                        dialect = csv.Sniffer().sniff(sample)
+                        kwargs["dialect"] = dialect
+                        logger.debug(f"Successfully sniffed dialect for {path}")
+                    except csv.Error as e:
+                        logger.warning(f"Could not sniff dialect for {path}: {e}")
+
+                reader = csv.reader(f, **kwargs)
                 try:
-                    dialect = csv.Sniffer().sniff(sample)
-                    kwargs["dialect"] = dialect
-                    logger.debug(f"Successfully sniffed dialect for {path}")
-                except csv.Error as e:
-                    logger.warning(f"Could not sniff dialect for {path}: {e}")
+                    headers = next(reader)
+                except StopIteration:
+                    headers = []
 
-            reader = csv.reader(f, **kwargs)
-            try:
-                headers = next(reader)
-            except StopIteration:
-                headers = []
+                table = tabular.models.Table(name=table_name, headers=headers)
 
-            table = tabular.models.Table(name=table_name, headers=headers)
-            for row in reader:
-                table.append_row(row)
+                for row in reader:
+                    table.append_row(row)
 
-            if infer_types:
-                tabular.utils.infer_and_cast_types(table)
+                if infer_types:
+                    tabular.utils.infer_and_cast_types(table)
 
-            collection.append_table(table)
+                collection.append_table(table)
+
+        except UnicodeDecodeError as e:
+            msg = (
+                f"Encoding error reading '{path}'. Try specifying a different "
+                f"encoding (e.g., encoding='latin-1'). Details: {e}"
+            )
+            logger.error(msg)
+            raise ValueError(msg) from e
+        except csv.Error as e:
+            msg = f"Malformed CSV file '{path}'. Details: {e}"
+            logger.error(msg)
+            raise ValueError(msg) from e
 
         return collection

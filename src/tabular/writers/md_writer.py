@@ -1,8 +1,11 @@
+import logging
 from pathlib import Path
 from typing import Union, Any, Optional
 
 import tabular.models
 from .base import BaseWriter
+
+logger = logging.getLogger(__name__)
 
 
 class MDWriter(BaseWriter):
@@ -25,7 +28,12 @@ class MDWriter(BaseWriter):
 
         Returns:
             Optional[str]: The MD string if path is None, else None.
+
+        Raises:
+            IsADirectoryError: If the path provided is a directory.
+            PermissionError: If the file lacks write permissions.
         """
+        self._validate_write_path(path)
         collection = self._ensure_tables(data)
         out_str = str(collection)
 
@@ -35,8 +43,13 @@ class MDWriter(BaseWriter):
         self._ensure_directory(path)
         encoding = kwargs.pop("encoding", "utf-8")
 
-        with open(path, mode="w", encoding=encoding) as f:
-            f.write(out_str)
-            f.write("\n")
+        try:
+            with open(path, mode="w", encoding=encoding) as f:
+                f.write(out_str)
+                f.write("\n")
+        except PermissionError as e:
+            msg = f"Permission denied writing to '{path}'."
+            logger.error(msg)
+            raise PermissionError(msg) from e
 
         return None

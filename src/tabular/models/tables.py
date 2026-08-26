@@ -9,6 +9,10 @@ from .table import Table
 class Tables:
     """
     Represents an ordered collection of Table objects.
+
+    This class provides a unified interface for managing multiple datasets
+    (e.g., sheets in an Excel workbook), allowing for iteration, indexing,
+    merging, and batch I/O operations.
     """
 
     # --- Initialization ---
@@ -59,7 +63,7 @@ class Tables:
         Returns a string representation of all tables in the collection.
 
         Returns:
-            str: The formatted data for all tables.
+            str: The formatted Markdown data for all constituent tables.
         """
         if not self._tables:
             return "Empty Tables collection"
@@ -70,7 +74,7 @@ class Tables:
         Returns a detailed string representation of the Tables collection for debugging.
 
         Returns:
-            str: The unambiguous representation of the tables object.
+            str: The unambiguous representation of the tables object detailing count and names.
         """
         table_names = [t.name if t.name else str(i) for i, t in enumerate(self._tables)]
         return f"<Tables(count={len(self._tables)}, names={table_names})>"
@@ -102,7 +106,7 @@ class Tables:
         Allows iterating over the tables in the collection sequentially.
 
         Returns:
-            Iterator[Table]: An iterator over the tables.
+            Iterator[Table]: An iterator yielding each table.
         """
         return iter(self._tables)
 
@@ -158,14 +162,16 @@ class Tables:
     def merge_all(self, merged_name: str = "MergedTable") -> Table:
         """
         Merges all tables in the collection into a single, combined Table.
-        Columns present in some tables but missing in others are filled with None.
+
+        Columns present in some tables but missing in others are dynamically
+        filled with None values.
 
         Args:
             merged_name (str, optional): The name for the newly merged table.
                 Defaults to "MergedTable".
 
         Returns:
-            Table: A new Table containing all data from all tables in the collection.
+            Table: A new Table containing all row data aligned to a unified schema.
         """
         all_headers: List[str] = []
         for table in self._tables:
@@ -190,7 +196,7 @@ class Tables:
 
         Args:
             path (Union[str, Path]): The path to the file to read.
-            **kwargs: Additional parameters to pass to the parser.
+            **kwargs: Additional parameters to pass to the underlying parser.
         """
         new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
@@ -204,9 +210,10 @@ class Tables:
     ) -> Optional[str]:
         """
         Writes the tables to a file, or serializes them to a string if path is None.
-        If the target format supports multi-sheet natively (defined in the registry),
-        all tables are written together. Otherwise, a separate file is created for
-        each table using the table's name or list index.
+
+        Delegates completely to `tabular.io.write`, which handles format resolution,
+        registry validation, and automatic file splitting for formats that do not
+        support multi-sheet structures natively (e.g., CSV).
 
         Args:
             path (Optional[Union[str, Path]], optional): The output destination path.
@@ -221,27 +228,4 @@ class Tables:
         Raises:
             ValueError: If path is None but no format is provided, or if format is unsupported.
         """
-        if path is None and fmt is None:
-            raise ValueError(
-                "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None to parse as a string."
-            )
-
-        actual_fmt: str = fmt or (
-            Path(path).suffix.lstrip(".").lower() if path is not None else ""
-        )
-
-        if path is None:
-            return tabular.io.write(self, path=None, fmt=actual_fmt, **kwargs)
-
-        supports_multi = tabular.registry.supports_multi_sheet(actual_fmt)
-
-        if supports_multi:
-            return tabular.io.write(self, path, fmt=actual_fmt, **kwargs)
-        else:
-            for i, table in enumerate(self._tables):
-                suffix = table.name if table.name else str(i)
-                table_path = (
-                    Path(path).parent / f"{Path(path).stem}_{suffix}{Path(path).suffix}"
-                )
-                table.write(table_path, fmt=actual_fmt, **kwargs)
-            return None
+        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)

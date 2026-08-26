@@ -1,8 +1,11 @@
+import logging
 from pathlib import Path
 from typing import Union, Any, Optional
 
 import tabular.models
 from .base import BaseWriter
+
+logger = logging.getLogger(__name__)
 
 
 class ExcelWriter(BaseWriter):
@@ -27,24 +30,28 @@ class ExcelWriter(BaseWriter):
             None (Excel files cannot be parsed as strings in this library).
 
         Raises:
-            ValueError: If path is None, as binary formats cannot be cleanly serialized to standard strings.
+            ValueError: If path is None, as binary formats cannot be cleanly serialized to strings.
             ImportError: If openpyxl is not installed.
+            IsADirectoryError: If the path provided is a directory.
+            PermissionError: If the file is locked by another program.
         """
         try:
             import openpyxl
-        except ImportError as exc:
+        except ImportError as e:
             raise ImportError(
                 "The 'openpyxl' package is required to write Excel files. "
-                "Install it using 'pip install openpyxl' or 'pip install PhysMetDatadoc[excel]'."
-            ) from exc
+                "Install it using 'pip install openpyxl'."
+            ) from e
 
         if path is None:
             raise ValueError(
                 "Excel format is binary and cannot be generated as a string. You must provide a path."
             )
 
+        self._validate_write_path(path)
         self._ensure_directory(path)
         collection = self._ensure_tables(data)
+
         wb = openpyxl.Workbook()
 
         if "Sheet" in wb.sheetnames:
@@ -57,5 +64,11 @@ class ExcelWriter(BaseWriter):
             for row in table.rows:
                 ws.append(row)
 
-        wb.save(path)
+        try:
+            wb.save(path)
+        except PermissionError as e:
+            msg = f"Permission denied writing to '{path}'. Ensure the file is not currently open in Excel."
+            logger.error(msg)
+            raise PermissionError(msg) from e
+
         return None

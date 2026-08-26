@@ -24,22 +24,29 @@ class ExcelParser(BaseParser):
 
         Raises:
             FileNotFoundError: If the specified path does not exist.
+            IsADirectoryError: If the path is a directory.
+            ImportError: If the 'openpyxl' dependency is missing.
+            ValueError: If the file is corrupt, invalid, or unsupported by openpyxl.
         """
+        self._validate_path(path)
 
         try:
             import openpyxl
-        except ImportError as exc:
+            from openpyxl.utils.exceptions import InvalidFileException
+        except ImportError as e:
             raise ImportError(
                 "The 'openpyxl' package is required to read Excel files. "
                 "Install it using 'pip install openpyxl'."
-            ) from exc
+            ) from e
 
-        if not path.exists():
-            msg = f"Excel file not found: {path}"
+        try:
+            wb = openpyxl.load_workbook(path, data_only=True)
+        except (InvalidFileException, ValueError, Exception) as e:
+            # Catches bad zip files, corrupt metadata, and invalid formats
+            msg = f"Failed to load Excel file '{path}'. The file may be corrupt or invalid. Details: {e}"
             logger.error(msg)
-            raise FileNotFoundError(msg)
+            raise ValueError(msg) from e
 
-        wb = openpyxl.load_workbook(path, data_only=True)
         tables = tabular.models.Tables()
 
         for sheet_name in wb.sheetnames:

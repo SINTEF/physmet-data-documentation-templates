@@ -3,7 +3,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, Any, Optional
 
-# Import the namespace instead of strictly extracting classes
 import tabular.models
 
 logger = logging.getLogger(__name__)
@@ -39,7 +38,7 @@ class BaseWriter(ABC):
         self, data: Union[tabular.models.Table, tabular.models.Tables]
     ) -> tabular.models.Tables:
         """
-        Helper method to normalize inputs to a Tables object.
+        Helper method to normalize inputs to a Tables collection.
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): A single table or collection of tables.
@@ -47,7 +46,6 @@ class BaseWriter(ABC):
         Returns:
             tabular.models.Tables: A valid Tables collection.
         """
-        # Because we imported the namespace, we can safely use isinstance without crashing at import time
         if isinstance(data, tabular.models.Table):
             collection = tabular.models.Tables()
             collection.append_table(data)
@@ -64,3 +62,18 @@ class BaseWriter(ABC):
         if path and not path.parent.exists():
             logger.info(f"Creating missing directories for: {path.parent}")
             path.parent.mkdir(parents=True, exist_ok=True)
+
+    def _validate_write_path(self, path: Optional[Path]) -> None:
+        """
+        Validates the output path to ensure it is not pointing to an existing directory.
+
+        Args:
+            path (Optional[Path]): The target file path.
+
+        Raises:
+            IsADirectoryError: If the specified path is a directory.
+        """
+        if path is not None and path.is_dir():
+            msg = f"Cannot write data. Target path is a directory, not a file: '{path}'"
+            logger.error(msg)
+            raise IsADirectoryError(msg)

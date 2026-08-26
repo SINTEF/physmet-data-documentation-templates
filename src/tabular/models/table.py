@@ -9,7 +9,11 @@ logger = logging.getLogger(__name__)
 
 class Table:
     """
-    Represents a single two-dimensional dataset with optional name, headers, and rows.
+    Represents a single two-dimensional dataset.
+
+    A Table consists of an optional name, a list of string headers representing
+    the columns, and a list of rows containing the actual data. It provides
+    utilities for row-level manipulation, Markdown formatting, and I/O operations.
     """
 
     # --- Initialization ---
@@ -43,12 +47,16 @@ class Table:
         """
         Returns an aligned Markdown string representation of the Table.
 
+        The resulting string is visually aligned based on column content widths
+        and is returned strictly without a trailing newline.
+
         Returns:
             str: The formatted Markdown table data.
         """
         if not self.headers:
             return f"Empty Table: {self.name}"
 
+        # Convert everything to strings and find max column widths
         str_headers = [str(h) for h in self.headers]
         str_rows = [[str(c) if c is not None else "" for c in row] for row in self.rows]
 
@@ -82,7 +90,8 @@ class Table:
         Returns a detailed string representation of the Table for debugging.
 
         Returns:
-            str: The unambiguous representation of the table object.
+            str: The unambiguous representation of the table object detailing
+                 its name, column count, and row count.
         """
         name_repr = f"'{self.name}'" if self.name else "None"
         return f"<Table(name={name_repr}, columns={len(self.headers)}, rows={len(self.rows)})>"
@@ -120,7 +129,7 @@ class Table:
         Allows iterating over the rows of the table.
 
         Returns:
-            Iterator[List[Any]]: An iterator over the rows.
+            Iterator[List[Any]]: An iterator yielding each row sequentially.
         """
         return iter(self.rows)
 
@@ -205,7 +214,7 @@ class Table:
         Args:
             path (Union[str, Path]): The path to the file to read and append.
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
-            **kwargs: Additional parameters to pass to the parser (e.g., sniff_dialect).
+            **kwargs: Additional parameters to pass to the underlying parser (e.g., sniff_dialect).
         """
         new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
@@ -229,17 +238,19 @@ class Table:
         """
         Writes this table directly to a file, or serializes it to a string if path is None.
 
+        Delegates completely to tabular.io.write for format resolution and validation.
+
         Args:
             path (Optional[Union[str, Path]], optional): The output destination path.
                 If None, the data is serialized and returned as a string.
             fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
                 Required if path is None.
-            **kwargs: Additional parameters to pass to the writer.
+            **kwargs: Additional parameters to pass to the format writer.
 
         Returns:
             Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If path is None but no format is provided, or format isn't valid.
+            ValueError: If path is None but no format is provided, or if the format isn't registered.
         """
         return tabular.io.write(self, path=path, fmt=fmt, **kwargs)

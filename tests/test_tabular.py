@@ -58,6 +58,47 @@ def test_registry_unsupported_write():
         get_writer("unknown")
 
 
+# --- Tests for Validation & Error Handling ---
+
+
+def test_read_directory_raises_error():
+    """Verify reading a directory raises IsADirectoryError."""
+    dir_path = TMP_ROOT / "some_read_dir"
+    dir_path.mkdir(exist_ok=True)
+    with pytest.raises(
+        IsADirectoryError, match="Expected a file but found a directory"
+    ):
+        tabular.read(dir_path, fmt="csv")
+
+
+def test_write_directory_raises_error():
+    """Verify writing to a directory raises IsADirectoryError."""
+    dir_path = TMP_ROOT / "some_write_dir"
+    dir_path.mkdir(exist_ok=True)
+    t = Table("T1", ["A"], [[1]])
+    with pytest.raises(IsADirectoryError, match="Target path is a directory"):
+        tabular.write(t, dir_path, fmt="csv")
+
+
+def test_csv_encoding_error():
+    """Verify CSVParser catches UnicodeDecodeError and raises a helpful ValueError."""
+    bad_csv = TMP_ROOT / "bad_encoding.csv"
+    # Write invalid UTF-8 bytes to trigger the decode error natively
+    bad_csv.write_bytes(b"\xff\xfe\xfd")
+    with pytest.raises(ValueError, match="Encoding error reading"):
+        tabular.read(bad_csv, fmt="csv")
+
+
+def test_excel_invalid_file_error():
+    """Verify ExcelParser catches invalid file structures and raises a helpful ValueError."""
+    bad_excel = TMP_ROOT / "bad_excel.xlsx"
+    bad_excel.write_text(
+        "This is definitely not a zip or excel file.", encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="Failed to load Excel file"):
+        tabular.read(bad_excel, fmt="xlsx")
+
+
 # --- Tests for Parsers ---
 
 
@@ -231,7 +272,7 @@ def test_table_write_unsupported_format_raises_exception():
 
 
 def test_table_printable():
-    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations via md_writer."""
+    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations."""
     t = Table("TestSheet", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
     expected_str = (
@@ -435,7 +476,5 @@ if __name__ == "__main__":
     print("\n--- Test Run Summary ---")
     print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
 
-    # Environment-agnostic failure handling:
-    # This will fail standard CI/CD pipelines but won't crash interactive IPython kernels.
     if failed > 0:
         raise RuntimeError(f"Test suite failed with {failed} errors.")

@@ -1,10 +1,13 @@
 import csv
 import io
+import logging
 from pathlib import Path
 from typing import Union, Any, Optional
 
 import tabular.models
 from .base import BaseWriter
+
+logger = logging.getLogger(__name__)
 
 
 class CSVWriter(BaseWriter):
@@ -29,7 +32,13 @@ class CSVWriter(BaseWriter):
 
         Returns:
             Optional[str]: The CSV string if path is None, else None.
+
+        Raises:
+            IsADirectoryError: If the path provided is a directory.
+            PermissionError: If the file cannot be written to (e.g., open in Excel).
         """
+        self._validate_write_path(path)
+
         if path is not None:
             self._ensure_directory(path)
 
@@ -42,18 +51,21 @@ class CSVWriter(BaseWriter):
         encoding = kwargs.pop("encoding", "utf-8")
 
         if path is None:
-            f = io.StringIO()
-        else:
-            f = open(path, mode="w", newline="", encoding=encoding)
-
-        try:
-            writer = csv.writer(f, **kwargs)
-            writer.writerow(table.headers)
-            writer.writerows(table.rows)
-
-            if path is None and isinstance(f, io.StringIO):
+            # String memory writing
+            with io.StringIO() as f:
+                writer = csv.writer(f, **kwargs)
+                writer.writerow(table.headers)
+                writer.writerows(table.rows)
                 return f.getvalue()
-        finally:
-            if path is not None:
-                f.close()
-        return None
+        else:
+            # Physical file writing
+            try:
+                with open(path, mode="w", newline="", encoding=encoding) as f:
+                    writer = csv.writer(f, **kwargs)
+                    writer.writerow(table.headers)
+                    writer.writerows(table.rows)
+            except PermissionError as e:
+                msg = f"Permission denied writing to '{path}'. Ensure the file is not open in another program (like Excel)."
+                logger.error(msg)
+                raise PermissionError(msg) from e
+            return None
