@@ -9,7 +9,10 @@ authors = [
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = ["pyyaml"]
+dependencies = [
+    "pyyaml",
+    "tripper[datadoc]",
+]
 
 [project.optional-dependencies]
 testing = [
@@ -22,9 +25,10 @@ pre-commit = ["PhysMetDatadoc[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
 dev = ["PhysMetDatadoc[pre-commit]", "virtualenvwrapper>=4.0.0"]
 
 [project.scripts]
-treeweaver = "treeweaver.treeweaver:main"
-oold-converter = "oold_converter.oold_converter:main"
 extract-prefixes = "extract_prefixes:main"
+oold-converter = "oold_converter.oold_converter:main"
+parse-compositions = "parse_compositions:main"
+treeweaver = "treeweaver.treeweaver:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -32,7 +36,12 @@ build-backend = "hatchling.build"
 
 # Explicitly tell Hatchling where your packages live
 [tool.hatch.build.targets.wheel]
-packages = ["src/treeweaver", "src/oold_converter", "src/extract_prefixes.py"]
+packages = [
+    "src/extract_prefixes.py",
+    "src/parse_compositions.py",
+    "src/oold_converter",
+    "src/treeweaver",
+]
 
 [tool.hatch.build.targets.sdist]
 include = ["/src/treeweaver", "/src/oold_converter"]
