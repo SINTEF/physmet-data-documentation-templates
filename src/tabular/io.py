@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> Tables:
+def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> "Tables":
     """
     Reads a tabular file and always returns a Tables collection.
 
@@ -24,7 +24,7 @@ def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> Ta
         Tables: A collection of Table objects.
 
     Raises:
-        ValueError: If the file format is unsupported.
+        ValueError: If the file format is unsupported or cannot be determined.
         FileNotFoundError: If the specified path does not exist.
     """
     path = Path(path)
@@ -34,16 +34,22 @@ def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> Ta
         logger.error(msg)
         raise FileNotFoundError(msg)
 
-    if fmt is None:
-        fmt = path.suffix.lstrip(".")
+    actual_fmt = fmt or path.suffix.lstrip(".").lower()
 
-    logger.info(f"Reading file '{path}' as format '{fmt}'")
-    parser = get_parser(fmt)
+    if not actual_fmt:
+        raise ValueError(
+            "Could not determine format from path. Please explicitly provide 'fmt'."
+        )
+
+    logger.info(f"Reading file '{path}' as format '{actual_fmt}'")
+
+    # get_parser implicitly raises ValueError if format is unregistered
+    parser = get_parser(actual_fmt)
     return parser.parse(path, **kwargs)
 
 
 def write(
-    data: Union[Table, Tables],
+    data: Union["Table", "Tables"],
     path: Optional[Union[str, Path]] = None,
     fmt: Optional[str] = None,
     **kwargs: Any,
@@ -66,16 +72,28 @@ def write(
     Raises:
         ValueError: If the file format is unsupported, or if serializing to string without a format.
     """
+    if path is None and fmt is None:
+        raise ValueError(
+            "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None to parse as a string."
+        )
+
     if path is not None:
         path = Path(path)
-        fmt = fmt or path.suffix.lstrip(".")
-        logger.info(f"Writing data to '{path}' as format '{fmt}'")
-    else:
-        if not fmt:
-            raise ValueError(
-                "You must provide 'fmt' when returning a string (path is None)."
-            )
-        logger.info(f"Serializing data to string as format '{fmt}'")
 
-    writer = get_writer(fmt)
+    actual_fmt: str = fmt or (
+        path.suffix.lstrip(".").lower() if path is not None else ""
+    )
+
+    if not actual_fmt:
+        raise ValueError(
+            "Could not determine format from path. Please explicitly provide 'fmt'."
+        )
+
+    if path is not None:
+        logger.info(f"Writing data to '{path}' as format '{actual_fmt}'")
+    else:
+        logger.info(f"Serializing data to string as format '{actual_fmt}'")
+
+    # get_writer implicitly raises ValueError if format is unregistered
+    writer = get_writer(actual_fmt)
     return writer.write(data, path, **kwargs)

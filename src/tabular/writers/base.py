@@ -50,7 +50,7 @@ class BaseWriter(ABC):
         # Because we imported the namespace, we can safely use isinstance without crashing at import time
         if isinstance(data, tabular.models.Table):
             collection = tabular.models.Tables()
-            collection.add_table(data)
+            collection.append_table(data)
             return collection
         return data
 

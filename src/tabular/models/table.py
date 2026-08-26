@@ -1,6 +1,6 @@
 import logging
-from typing import List, Any, Dict, Optional, Union, Iterator
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import tabular.io
 
@@ -9,8 +9,10 @@ logger = logging.getLogger(__name__)
 
 class Table:
     """
-    Represents a single two-dimensional data dataset with optional name, headers and rows.
+    Represents a single two-dimensional dataset with optional name, headers, and rows.
     """
+
+    # --- Initialization ---
 
     def __init__(
         self,
@@ -31,12 +33,15 @@ class Table:
         """
         self.name = name
         self.headers = headers if headers is not None else []
-        self.rows = rows if rows is not None else []
+        self.rows: List[List[Any]] = []
+        if rows:
+            self.append_rows(rows)
+
+    # --- Dunder Methods ---
 
     def __str__(self) -> str:
         """
-        Returns an aligned Markdown string representation of the Table,
-        including the table name as a header, the columns, and all rows.
+        Returns an aligned Markdown string representation of the Table.
 
         Returns:
             str: The formatted Markdown table data.
@@ -44,7 +49,6 @@ class Table:
         if not self.headers:
             return f"Empty Table: {self.name}"
 
-        # Convert everything to strings and find max column widths
         str_headers = [str(h) for h in self.headers]
         str_rows = [[str(c) if c is not None else "" for c in row] for row in self.rows]
 
@@ -63,9 +67,11 @@ class Table:
 
         lines = []
         if self.name:
-            lines.append(f"## {self.name}\n")
+            lines.append(f"## {self.name}")
+
         lines.append(fmt_row(str_headers))
-        lines.append("|-" + "-|-".join("-" * w for w in widths) + "-|")
+        lines.append("|" + "|".join("-" * (w + 2) for w in widths) + "|")
+
         for r in str_rows:
             lines.append(fmt_row(r))
 
@@ -118,6 +124,8 @@ class Table:
         """
         return iter(self.rows)
 
+    # --- Data Manipulation ---
+
     def append_row(self, row: List[Any]) -> None:
         """
         Appends a single row to the table sequentially.
@@ -147,7 +155,7 @@ class Table:
         for row in rows:
             self.append_row(row)
 
-    def append_table(self, other: Table, merge_headers: bool = False) -> None:
+    def append_table(self, other: "Table", merge_headers: bool = False) -> None:
         """
         Appends data from another Table object into this Table.
 
@@ -186,6 +194,8 @@ class Table:
             mapped_row = [row_dict.get(h, None) for h in self.headers]
             self.rows.append(mapped_row)
 
+    # --- I/O & Export Operations ---
+
     def append_file(
         self, path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
     ) -> None:
@@ -200,6 +210,15 @@ class Table:
         new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
+
+    def to_dict_list(self) -> List[Dict[str, Any]]:
+        """
+        Converts the table into a list of dictionaries mapping headers to values.
+
+        Returns:
+            List[Dict[str, Any]]: A list where each dictionary represents one row.
+        """
+        return [dict(zip(self.headers, row)) for row in self.rows]
 
     def write(
         self,
@@ -221,15 +240,6 @@ class Table:
             Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If path is None but no format is provided.
+            ValueError: If path is None but no format is provided, or format isn't valid.
         """
-        return tabular.io.write(self, path, fmt=fmt, **kwargs)
-
-    def to_dict_list(self) -> List[Dict[str, Any]]:
-        """
-        Converts the table into a list of dictionaries mapping headers to values.
-
-        Returns:
-            List[Dict[str, Any]]: A list where each dictionary represents one row.
-        """
-        return [dict(zip(self.headers, row)) for row in self.rows]
+        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)

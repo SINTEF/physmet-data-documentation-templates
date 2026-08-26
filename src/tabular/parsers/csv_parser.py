@@ -50,7 +50,6 @@ class CSVParser(BaseParser):
 
         collection = tabular.models.Tables()
         with open(path, mode="r", encoding=encoding) as f:
-            # --- Auto-sniffing logic ---
             if sniff_dialect:
                 sample = f.read(4096)
                 f.seek(0)
@@ -60,7 +59,6 @@ class CSVParser(BaseParser):
                     logger.debug(f"Successfully sniffed dialect for {path}")
                 except csv.Error as e:
                     logger.warning(f"Could not sniff dialect for {path}: {e}")
-            # ---------------------------
 
             reader = csv.reader(f, **kwargs)
             try:
@@ -72,10 +70,9 @@ class CSVParser(BaseParser):
             for row in reader:
                 table.append_row(row)
 
-            # --- Type Inference ---
             if infer_types:
                 tabular.utils.infer_and_cast_types(table)
 
-            collection.add_table(table)
+            collection.append_table(table)
 
         return collection

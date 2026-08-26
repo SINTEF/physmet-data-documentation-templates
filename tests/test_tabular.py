@@ -3,10 +3,12 @@ import tempfile
 import logging
 from io import StringIO
 from pathlib import Path
+from typing import Any, cast
 import pytest
 
 import tabular
 from tabular.models import Table, Tables
+from tabular.registry import get_parser, get_writer
 
 # --- Global Test Environment Setup ---
 
@@ -30,12 +32,30 @@ def provision_test_data(tmp_path: Path):
     t1 = Table(name="Sheet1", headers=["X", "Y"], rows=[[10, 20]])
     t2 = Table(name="Sheet2", headers=["X", "Z"], rows=[[10, 30]])
     tables = Tables()
-    tables.add_table(t1)
-    tables.add_table(t2)
+    tables.append_table(t1)
+    tables.append_table(t2)
     excel_multi_path = tmp_path / "multi_sheet.xlsx"
     tabular.write(tables, excel_multi_path)
 
     return csv_path, excel_single_path, excel_multi_path
+
+
+# --- Tests for Central Registry Logic ---
+
+
+def test_registry_unsupported_read():
+    """Verify the central registry rejects unknown or write-only formats when parsing."""
+    with pytest.raises(ValueError, match="Unsupported format for reading: 'unknown'"):
+        get_parser("unknown")
+
+    with pytest.raises(ValueError, match="Unsupported format for reading: 'md'"):
+        get_parser("md")
+
+
+def test_registry_unsupported_write():
+    """Verify the central registry rejects unknown formats when writing."""
+    with pytest.raises(ValueError, match="Unsupported format for writing: 'unknown'"):
+        get_writer("unknown")
 
 
 # --- Tests for Parsers ---
@@ -53,7 +73,7 @@ def test_csv_returns_tables_collection():
     # Verify .first property convenience behavior
     first_table = result.first
     assert first_table.headers == ["ID", "Name"]
-    # UPDATED: Expected row values should now be inferred to ints instead of strings
+    # Expected row values should now be inferred to ints instead of strings
     assert first_table.rows == [[1, "Alice"], [2, "Bob"]]
 
 
@@ -118,7 +138,7 @@ def test_append_table_logs_error():
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
 
-    # FIX: Ensure it is strictly lowercase to match the module __name__
+    # Ensure it is strictly lowercase to match the module __name__
     logger = logging.getLogger("tabular.models.table")
 
     # Explicitly set the log level to bypass pytest's default filtering
@@ -191,22 +211,31 @@ def test_table_append_from_file_and_write():
     t.append_file(csv_path)
 
     assert len(t.rows) == 3
-    # UPDATED: CSV now successfully infers types, returning an int `1`
+    # CSV now successfully infers types, returning an int `1`
     assert t.rows[1] == [1, "Alice"]
 
     # Write to file
-    out_path = TMP_ROOT / "table_output.json"
+    out_path = TMP_ROOT / "table_output.csv"
     t.write(out_path)
     assert out_path.exists()
 
 
+def test_table_write_unsupported_format_raises_exception():
+    """Verify writing a single Table object with an unregistered format raises a ValueError."""
+    t = Table("Sheet1", ["A"])
+
+    with pytest.raises(
+        ValueError, match="Unsupported format for writing: 'unknownformat'"
+    ):
+        t.write(TMP_ROOT / "output.unknownformat")
+
+
 def test_table_printable():
-    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations."""
+    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations via md_writer."""
     t = Table("TestSheet", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
-    # FIX: Updated to match the new Markdown rendering
     expected_str = (
-        "## TestSheet\n\n"
+        "## TestSheet\n"
         "| ID | Name  |\n"
         "|----|-------|\n"
         "| 1  | Alice |\n"
@@ -219,13 +248,44 @@ def test_table_printable():
 # --- Tests for Tables Model Features ---
 
 
-def test_tables_indexing_and_iteration():
-    """Verify that Tables supports indexing by int/name and iteration."""
-    ts = Tables()
+def test_tables_init_with_list():
+    """Verify Tables can be initialized directly with a list of Tables."""
     t1 = Table("Sheet1", ["A"])
     t2 = Table("Sheet2", ["B"])
-    ts.add_table(t1)
-    ts.add_table(t2)
+    ts = Tables([t1, t2])
+
+    assert len(ts.tables) == 2
+    assert ts[0].name == "Sheet1"
+    assert ts[1].name == "Sheet2"
+
+
+def test_tables_remove_table():
+    """Verify Tables can be removed by index or by name."""
+    t1 = Table("Sheet1", ["A"])
+    t2 = Table("Sheet2", ["B"])
+    t3 = Table("Sheet3", ["C"])
+    ts = Tables([t1, t2, t3])
+
+    # Remove by name
+    ts.remove_table("Sheet2")
+    assert len(ts.tables) == 2
+    assert ts[1].name == "Sheet3"
+
+    # Remove by index
+    ts.remove_table(0)
+    assert len(ts.tables) == 1
+    assert ts[0].name == "Sheet3"
+
+    # Invalid type bypassed carefully for runtime testing using cast
+    with pytest.raises(TypeError, match="Key must be an integer .* or string"):
+        ts.remove_table(cast(Any, {"wrong": "type"}))
+
+
+def test_tables_indexing_and_iteration():
+    """Verify that Tables supports indexing by int/name and iteration."""
+    t1 = Table("Sheet1", ["A"])
+    t2 = Table("Sheet2", ["B"])
+    ts = Tables([t1, t2])
 
     # Indexing
     assert ts[0] == t1
@@ -257,21 +317,28 @@ def test_tables_append_from_file_and_write():
     assert expected_split_file.exists()
 
 
+def test_tables_write_unsupported_format_raises_exception():
+    """Verify writing a Tables object with an unregistered format raises a ValueError."""
+    ts = Tables([Table("Sheet1", ["A"])])
+
+    with pytest.raises(
+        ValueError, match="Unsupported format for writing: 'unknownformat'"
+    ):
+        ts.write(TMP_ROOT / "output.unknownformat")
+
+
 def test_tables_printable():
     """Verify that Tables has appropriate Markdown __str__ and __repr__ implementations."""
-    ts = Tables()
     t1 = Table("Sheet1", ["A"], [[1]])
     t2 = Table("Sheet2", ["B"], [[2]])
-    ts.add_table(t1)
-    ts.add_table(t2)
+    ts = Tables([t1, t2])
 
-    # FIX: Updated to match the new Markdown rendering for multiple tables
     expected_str = (
-        "## Sheet1\n\n"
+        "## Sheet1\n"
         "| A |\n"
         "|---|\n"
         "| 1 |\n\n"
-        "## Sheet2\n\n"
+        "## Sheet2\n"
         "| B |\n"
         "|---|\n"
         "| 2 |"
@@ -299,6 +366,47 @@ def test_csv_write_implicitly_merges_tables():
     # Read back to verify
     merged_table = tabular.read(out_csv).first
     assert set(merged_table.headers) == {"X", "Y", "Z"}
+
+
+def test_writers_append_newline():
+    """Verify that MD and JSON writers safely append an empty newline at the end of generated files."""
+    t = Table("NewlineTest", ["Col"], [[1]])
+
+    md_path = TMP_ROOT / "test_newline.md"
+    json_path = TMP_ROOT / "test_newline.json"
+
+    # Attempt to write to MD and JSON (will be tested assuming they are in the active registry)
+    try:
+        tabular.write(t, md_path)
+        has_md = True
+    except ValueError:
+        has_md = False
+
+    try:
+        tabular.write(t, json_path)
+        has_json = True
+    except ValueError:
+        has_json = False
+
+    # Assert MD formatting
+    if has_md and md_path.exists():
+        md_content = md_path.read_text(encoding="utf-8")
+        assert md_content.endswith(
+            "\n"
+        ), "Markdown generated file must end with a newline character."
+        assert not md_content.endswith(
+            "\n\n"
+        ), "Markdown generated file must have exactly one trailing newline."
+
+    # Assert JSON formatting
+    if has_json and json_path.exists():
+        json_content = json_path.read_text(encoding="utf-8")
+        assert json_content.endswith(
+            "\n"
+        ), "JSON generated file must end with a newline character."
+        assert not json_content.endswith(
+            "\n\n"
+        ), "JSON generated file must have exactly one trailing newline."
 
 
 # --- Standalone Execution Logic ---

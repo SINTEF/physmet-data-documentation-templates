@@ -37,4 +37,6 @@ class MDWriter(BaseWriter):
 
         with open(path, mode="w", encoding=encoding) as f:
             f.write(out_str)
+            f.write("\n")
+
         return None

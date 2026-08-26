@@ -1,4 +1,3 @@
-import openpyxl
 from pathlib import Path
 from typing import Union, Any, Optional
 
@@ -29,7 +28,16 @@ class ExcelWriter(BaseWriter):
 
         Raises:
             ValueError: If path is None, as binary formats cannot be cleanly serialized to standard strings.
+            ImportError: If openpyxl is not installed.
         """
+        try:
+            import openpyxl
+        except ImportError as exc:
+            raise ImportError(
+                "The 'openpyxl' package is required to write Excel files. "
+                "Install it using 'pip install openpyxl' or 'pip install PhysMetDatadoc[excel]'."
+            ) from exc
+
         if path is None:
             raise ValueError(
                 "Excel format is binary and cannot be generated as a string. You must provide a path."

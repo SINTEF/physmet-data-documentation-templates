@@ -1,5 +1,5 @@
-from typing import List, Union, Iterator, Any, Optional
 from pathlib import Path
+from typing import Any, Iterator, List, Optional, Union
 
 import tabular.io
 import tabular.registry
@@ -11,9 +11,48 @@ class Tables:
     Represents an ordered collection of Table objects.
     """
 
-    def __init__(self) -> None:
-        """Initializes an empty Tables collection based on a list."""
+    # --- Initialization ---
+
+    def __init__(self, tables: Optional[List[Table]] = None) -> None:
+        """
+        Initializes a Tables collection.
+
+        Args:
+            tables (List[Table], optional): A list of Table objects to initialize with.
+        """
         self._tables: List[Table] = []
+        if tables:
+            for t in tables:
+                self.append_table(t)
+
+    # --- Properties ---
+
+    @property
+    def tables(self) -> List[Table]:
+        """
+        Retrieves all tables in the collection.
+
+        Returns:
+            List[Table]: A list of all stored Table objects.
+        """
+        return self._tables
+
+    @property
+    def first(self) -> Table:
+        """
+        Convenience property to quickly retrieve the first table in the collection.
+
+        Returns:
+            Table: The first Table added to the collection.
+
+        Raises:
+            ValueError: If the collection contains no tables.
+        """
+        if not self._tables:
+            raise ValueError("The Tables collection is empty.")
+        return self._tables[0]
+
+    # --- Dunder Methods ---
 
     def __str__(self) -> str:
         """
@@ -67,14 +106,7 @@ class Tables:
         """
         return iter(self._tables)
 
-    def add_table(self, table: Table) -> None:
-        """
-        Adds a Table to the end of the collection.
-
-        Args:
-            table (Table): The table instance to add.
-        """
-        self._tables.append(table)
+    # --- Collection Manipulation ---
 
     def get_table(self, name: str) -> Table:
         """
@@ -94,30 +126,34 @@ class Tables:
                 return t
         raise KeyError(f"Table '{name}' not found.")
 
-    @property
-    def tables(self) -> List[Table]:
+    def append_table(self, table: Table) -> None:
         """
-        Retrieves all tables in the collection.
+        Appends a Table to the end of the collection.
 
-        Returns:
-            List[Table]: A list of all stored Table objects.
+        Args:
+            table (Table): The table instance to add.
         """
-        return self._tables
+        self._tables.append(table)
 
-    @property
-    def first(self) -> Table:
+    def remove_table(self, key: Union[int, str]) -> None:
         """
-        Convenience property to quickly retrieve the first table in the collection.
+        Removes a table from the collection by its index or name.
 
-        Returns:
-            Table: The first Table added to the collection.
+        Args:
+            key (Union[int, str]): The integer index or string name of the table to remove.
 
         Raises:
-            ValueError: If the collection contains no tables.
+            KeyError: If a table with the given name does not exist.
+            IndexError: If an integer key is out of bounds.
+            TypeError: If the key is neither an int nor a str.
         """
-        if not self._tables:
-            raise ValueError("The Tables collection is empty.")
-        return self._tables[0]
+        if isinstance(key, int):
+            del self._tables[key]
+        elif isinstance(key, str):
+            table_to_remove = self.get_table(key)
+            self._tables.remove(table_to_remove)
+        else:
+            raise TypeError("Key must be an integer (index) or string (table name).")
 
     def merge_all(self, merged_name: str = "MergedTable") -> Table:
         """
@@ -146,6 +182,8 @@ class Tables:
 
         return merged_table
 
+    # --- I/O & Export Operations ---
+
     def append_file(self, path: Union[str, Path], **kwargs: Any) -> None:
         """
         Reads a file and appends its table(s) to this collection.
@@ -156,7 +194,7 @@ class Tables:
         """
         new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
-            self.add_table(t)
+            self.append_table(t)
 
     def write(
         self,
@@ -181,26 +219,29 @@ class Tables:
             Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If path is None but no format is provided.
+            ValueError: If path is None but no format is provided, or if format is unsupported.
         """
         if path is None and fmt is None:
             raise ValueError(
                 "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None to parse as a string."
             )
 
+        actual_fmt: str = fmt or (
+            Path(path).suffix.lstrip(".").lower() if path is not None else ""
+        )
+
         if path is None:
-            return tabular.io.write(self, path=None, fmt=fmt, **kwargs)
+            return tabular.io.write(self, path=None, fmt=actual_fmt, **kwargs)
 
-        path = Path(path)
-        actual_fmt = fmt or path.suffix.lstrip(".").lower()
+        supports_multi = tabular.registry.supports_multi_sheet(actual_fmt)
 
-        # Check the central registry to see if the format supports multiple sheets/tables natively
-        if tabular.registry.supports_multi_sheet(actual_fmt):
+        if supports_multi:
             return tabular.io.write(self, path, fmt=actual_fmt, **kwargs)
         else:
-            # Formats requiring file splitting (e.g. CSV)
             for i, table in enumerate(self._tables):
                 suffix = table.name if table.name else str(i)
-                table_path = path.parent / f"{path.stem}_{suffix}{path.suffix}"
+                table_path = (
+                    Path(path).parent / f"{Path(path).stem}_{suffix}{Path(path).suffix}"
+                )
                 table.write(table_path, fmt=actual_fmt, **kwargs)
             return None

@@ -1,4 +1,3 @@
-import openpyxl
 import logging
 from pathlib import Path
 from typing import Any
@@ -26,6 +25,15 @@ class ExcelParser(BaseParser):
         Raises:
             FileNotFoundError: If the specified path does not exist.
         """
+
+        try:
+            import openpyxl
+        except ImportError as exc:
+            raise ImportError(
+                "The 'openpyxl' package is required to read Excel files. "
+                "Install it using 'pip install openpyxl'."
+            ) from exc
+
         if not path.exists():
             msg = f"Excel file not found: {path}"
             logger.error(msg)
@@ -39,8 +47,7 @@ class ExcelParser(BaseParser):
             data = list(sheet.values)
 
             if not data:
-                # Handle empty sheets by appending an empty table
-                tables.add_table(tabular.models.Table(name=sheet_name, headers=[]))
+                tables.append_table(tabular.models.Table(name=sheet_name, headers=[]))
                 continue
 
             headers = [str(h) if h is not None else "" for h in data[0]]
@@ -49,6 +56,6 @@ class ExcelParser(BaseParser):
             for row in data[1:]:
                 table.append_row(list(row))
 
-            tables.add_table(table)
+            tables.append_table(table)
 
         return tables
