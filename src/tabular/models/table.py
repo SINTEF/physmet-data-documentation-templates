@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class Table:
     """
-    Represents a single two-dimensional data dataset with headers and rows.
+    Represents a single two-dimensional data dataset with optional name, headers and rows.
     """
 
     def __init__(
@@ -35,7 +35,7 @@ class Table:
 
     def __str__(self) -> str:
         """
-        Returns a perfectly aligned Markdown string representation of the Table,
+        Returns an aligned Markdown string representation of the Table,
         including the table name as a header, the columns, and all rows.
 
         Returns:
@@ -187,43 +187,43 @@ class Table:
             self.rows.append(mapped_row)
 
     def append_file(
-        self, file_path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
+        self, path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
     ) -> None:
         """
         Reads a file and appends its tabular data directly into this table.
 
         Args:
-            file_path (Union[str, Path]): The path to the file to read and append.
+            path (Union[str, Path]): The path to the file to read and append.
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
             **kwargs: Additional parameters to pass to the parser (e.g., sniff_dialect).
         """
-        new_tables = tabular.io.read(file_path, **kwargs)
+        new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
 
     def write(
         self,
-        file_path: Optional[Union[str, Path]] = None,
+        path: Optional[Union[str, Path]] = None,
         fmt: Optional[str] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Writes this table directly to a file, or serializes it to a string if file_path is None.
+        Writes this table directly to a file, or serializes it to a string if path is None.
 
         Args:
-            file_path (Optional[Union[str, Path]], optional): The output destination path.
+            path (Optional[Union[str, Path]], optional): The output destination path.
                 If None, the data is serialized and returned as a string.
             fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
-                Required if file_path is None.
+                Required if path is None.
             **kwargs: Additional parameters to pass to the writer.
 
         Returns:
-            Optional[str]: The serialized string if file_path is None, else None.
+            Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If file_path is None but no format is provided.
+            ValueError: If path is None but no format is provided.
         """
-        return tabular.io.write(self, file_path, fmt=fmt, **kwargs)
+        return tabular.io.write(self, path, fmt=fmt, **kwargs)
 
     def to_dict_list(self) -> List[Dict[str, Any]]:
         """

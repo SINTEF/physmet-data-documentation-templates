@@ -12,7 +12,7 @@ class JSONWriter(BaseWriter):
     def write(
         self,
         data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Optional[Path] = None,
+        path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
@@ -21,20 +21,20 @@ class JSONWriter(BaseWriter):
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
-            file_path (Path): Output destination path.
+            path (Path): Output destination path.
             **kwargs: Standard parameters accepted by `json.dump` (e.g., indent).
                 Supports custom 'encoding' keyword argument (defaults to utf-8).
         """
-        self._ensure_directory(file_path)
+        self._ensure_directory(path)
         collection = self._ensure_tables(data)
         out_data = {t.name: t.to_dict_list() for t in collection.tables}
 
-        if file_path is None:
+        if path is None:
             return str(out_data)
 
         encoding = kwargs.pop("encoding", "utf-8")
         indent = kwargs.pop("indent", 4)
 
-        with open(file_path, mode="w", encoding=encoding) as f:
+        with open(path, mode="w", encoding=encoding) as f:
             json.dump(out_data, f, indent=indent, **kwargs)
             f.write("\n")

@@ -12,26 +12,26 @@ logger = logging.getLogger(__name__)
 class ExcelParser(BaseParser):
     """Parses Microsoft Excel (.xlsx, .xlsm) files."""
 
-    def parse(self, file_path: Path, **kwargs: Any) -> tabular.models.Tables:
+    def parse(self, path: Path, **kwargs: Any) -> tabular.models.Tables:
         """
         Parses an Excel file into a Tables collection.
 
         Args:
-            file_path (Path): The Path object pointing to the Excel file.
+            path (Path): The Path object pointing to the Excel file.
             **kwargs: Reserved for future parser-specific configurations.
 
         Returns:
             tabular.models.Tables: A collection containing one Table per sheet in the workbook.
 
         Raises:
-            FileNotFoundError: If the specified file_path does not exist.
+            FileNotFoundError: If the specified path does not exist.
         """
-        if not file_path.exists():
-            msg = f"Excel file not found: {file_path}"
+        if not path.exists():
+            msg = f"Excel file not found: {path}"
             logger.error(msg)
             raise FileNotFoundError(msg)
 
-        wb = openpyxl.load_workbook(file_path, data_only=True)
+        wb = openpyxl.load_workbook(path, data_only=True)
         tables = tabular.models.Tables()
 
         for sheet_name in wb.sheetnames:

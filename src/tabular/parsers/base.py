@@ -11,12 +11,12 @@ class BaseParser(ABC):
     """
 
     @abstractmethod
-    def parse(self, file_path: Path, **kwargs: Any) -> tabular.models.Tables:
+    def parse(self, path: Path, **kwargs: Any) -> tabular.models.Tables:
         """
         Parses a file from disk into a Tables collection.
 
         Args:
-            file_path (Path): The Path object pointing to the file to be read.
+            path (Path): The Path object pointing to the file to be read.
             **kwargs: Format-specific parameters (e.g., delimiter for CSV).
 
         Returns:

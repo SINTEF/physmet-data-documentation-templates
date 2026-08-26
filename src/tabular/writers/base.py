@@ -18,7 +18,7 @@ class BaseWriter(ABC):
     def write(
         self,
         data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Optional[Path] = None,
+        path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
@@ -26,12 +26,12 @@ class BaseWriter(ABC):
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to write.
-            file_path (Optional[Path], optional): The output file path.
+            path (Optional[Path], optional): The output file path.
                 If None, the writer should return the serialized string.
             **kwargs: Format-specific parameters.
 
         Returns:
-            Optional[str]: The serialized string if file_path is None, else None.
+            Optional[str]: The serialized string if path is None, else None.
         """
         pass
 
@@ -54,13 +54,13 @@ class BaseWriter(ABC):
             return collection
         return data
 
-    def _ensure_directory(self, file_path: Optional[Path]) -> None:
+    def _ensure_directory(self, path: Optional[Path]) -> None:
         """
         Creates parent directories if they do not exist.
 
         Args:
-            file_path (Optional[Path]): The full file path being written to.
+            path (Optional[Path]): The full file path being written to.
         """
-        if file_path and not file_path.parent.exists():
-            logger.info(f"Creating missing directories for: {file_path.parent}")
-            file_path.parent.mkdir(parents=True, exist_ok=True)
+        if path and not path.parent.exists():
+            logger.info(f"Creating missing directories for: {path.parent}")
+            path.parent.mkdir(parents=True, exist_ok=True)

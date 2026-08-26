@@ -13,7 +13,7 @@ class CSVWriter(BaseWriter):
     def write(
         self,
         data: Union["tabular.models.Table", "tabular.models.Tables"],
-        file_path: Optional[Path] = None,
+        path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
@@ -22,16 +22,16 @@ class CSVWriter(BaseWriter):
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset to export.
-            file_path (Optional[Path], optional): Output destination path.
+            path (Optional[Path], optional): Output destination path.
                 If None, returns the CSV string.
             **kwargs: Standard parameters accepted by the `csv.writer` (e.g., delimiter).
                 Supports custom 'encoding' keyword argument (defaults to utf-8).
 
         Returns:
-            Optional[str]: The CSV string if file_path is None, else None.
+            Optional[str]: The CSV string if path is None, else None.
         """
-        if file_path is not None:
-            self._ensure_directory(file_path)
+        if path is not None:
+            self._ensure_directory(path)
 
         table = (
             data.merge_all()
@@ -41,19 +41,19 @@ class CSVWriter(BaseWriter):
 
         encoding = kwargs.pop("encoding", "utf-8")
 
-        if file_path is None:
+        if path is None:
             f = io.StringIO()
         else:
-            f = open(file_path, mode="w", newline="", encoding=encoding)
+            f = open(path, mode="w", newline="", encoding=encoding)
 
         try:
             writer = csv.writer(f, **kwargs)
             writer.writerow(table.headers)
             writer.writerows(table.rows)
 
-            if file_path is None and isinstance(f, io.StringIO):
+            if path is None and isinstance(f, io.StringIO):
                 return f.getvalue()
         finally:
-            if file_path is not None:
+            if path is not None:
                 f.close()
         return None

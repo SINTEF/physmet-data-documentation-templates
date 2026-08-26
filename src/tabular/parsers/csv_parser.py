@@ -15,7 +15,7 @@ class CSVParser(BaseParser):
 
     def parse(
         self,
-        file_path: Path,
+        path: Path,
         sniff_dialect: bool = True,
         infer_types: bool = True,
         **kwargs: Any,
@@ -24,7 +24,7 @@ class CSVParser(BaseParser):
         Parses a CSV file into a Tables collection containing exactly one Table.
 
         Args:
-            file_path (Path): The Path object pointing to the CSV file.
+            path (Path): The Path object pointing to the CSV file.
             sniff_dialect (bool, optional): If True, attempts to automatically detect
                 the delimiter and quote rules using python's built-in csv.Sniffer.
                 Defaults to True.
@@ -38,18 +38,18 @@ class CSVParser(BaseParser):
             tabular.models.Tables: A collection containing a single Table representing the CSV.
 
         Raises:
-            FileNotFoundError: If the specified file_path does not exist.
+            FileNotFoundError: If the specified path does not exist.
         """
-        if not file_path.exists():
-            msg = f"CSV file not found: {file_path}"
+        if not path.exists():
+            msg = f"CSV file not found: {path}"
             logger.error(msg)
             raise FileNotFoundError(msg)
 
-        table_name = file_path.stem
+        table_name = path.stem
         encoding = kwargs.pop("encoding", "utf-8")
 
         collection = tabular.models.Tables()
-        with open(file_path, mode="r", encoding=encoding) as f:
+        with open(path, mode="r", encoding=encoding) as f:
             # --- Auto-sniffing logic ---
             if sniff_dialect:
                 sample = f.read(4096)
@@ -57,9 +57,9 @@ class CSVParser(BaseParser):
                 try:
                     dialect = csv.Sniffer().sniff(sample)
                     kwargs["dialect"] = dialect
-                    logger.debug(f"Successfully sniffed dialect for {file_path}")
+                    logger.debug(f"Successfully sniffed dialect for {path}")
                 except csv.Error as e:
-                    logger.warning(f"Could not sniff dialect for {file_path}: {e}")
+                    logger.warning(f"Could not sniff dialect for {path}: {e}")
             # ---------------------------
 
             reader = csv.reader(f, **kwargs)

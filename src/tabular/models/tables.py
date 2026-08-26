@@ -146,52 +146,52 @@ class Tables:
 
         return merged_table
 
-    def append(self, file_path: Union[str, Path], **kwargs: Any) -> None:
+    def append(self, path: Union[str, Path], **kwargs: Any) -> None:
         """
         Reads a file and appends its table(s) to this collection.
 
         Args:
-            file_path (Union[str, Path]): The path to the file to read.
+            path (Union[str, Path]): The path to the file to read.
             **kwargs: Additional parameters to pass to the parser.
         """
-        new_tables = tabular.io.read(file_path, **kwargs)
+        new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.add_table(t)
 
     def write(
         self,
-        file_path: Optional[Union[str, Path]] = None,
+        path: Optional[Union[str, Path]] = None,
         fmt: Optional[str] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Writes the tables to a file, or serializes them to a string if file_path is None.
+        Writes the tables to a file, or serializes them to a string if path is None.
         If the target format supports multi-sheet natively (defined in the registry),
         all tables are written together. Otherwise, a separate file is created for
         each table using the table's name or list index.
 
         Args:
-            file_path (Optional[Union[str, Path]], optional): The output destination path.
+            path (Optional[Union[str, Path]], optional): The output destination path.
                 If None, the collection is serialized and returned as a string.
             fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
-                Required if file_path is None.
+                Required if path is None.
             **kwargs: Additional parameters to pass to the writer.
 
         Returns:
-            Optional[str]: The serialized string if file_path is None, else None.
+            Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If file_path is None but no format is provided.
+            ValueError: If path is None but no format is provided.
         """
-        if file_path is None and fmt is None:
+        if path is None and fmt is None:
             raise ValueError(
-                "You must specify a 'fmt' (e.g., 'csv', 'json') if file_path is None to parse as a string."
+                "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None to parse as a string."
             )
 
-        if file_path is None:
-            return tabular.io.write(self, file_path=None, fmt=fmt, **kwargs)
+        if path is None:
+            return tabular.io.write(self, path=None, fmt=fmt, **kwargs)
 
-        path = Path(file_path)
+        path = Path(path)
         actual_fmt = fmt or path.suffix.lstrip(".").lower()
 
         # Check the central registry to see if the format supports multiple sheets/tables natively
@@ -201,6 +201,6 @@ class Tables:
             # Formats requiring file splitting (e.g. CSV)
             for i, table in enumerate(self._tables):
                 suffix = table.name if table.name else str(i)
-                table_file_path = path.parent / f"{path.stem}_{suffix}{path.suffix}"
-                table.write(table_file_path, fmt=actual_fmt, **kwargs)
+                table_path = path.parent / f"{path.stem}_{suffix}{path.suffix}"
+                table.write(table_path, fmt=actual_fmt, **kwargs)
             return None

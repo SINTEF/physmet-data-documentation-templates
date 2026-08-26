@@ -11,7 +11,7 @@ class MDWriter(BaseWriter):
     def write(
         self,
         data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Optional[Path] = None,
+        path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
@@ -19,22 +19,22 @@ class MDWriter(BaseWriter):
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset to export.
-            file_path (Optional[Path], optional): Output destination path.
+            path (Optional[Path], optional): Output destination path.
                 If None, returns the MD string.
             **kwargs: Supports custom 'encoding' keyword argument (defaults to utf-8).
 
         Returns:
-            Optional[str]: The MD string if file_path is None, else None.
+            Optional[str]: The MD string if path is None, else None.
         """
         collection = self._ensure_tables(data)
         out_str = str(collection)
 
-        if file_path is None:
+        if path is None:
             return out_str
 
-        self._ensure_directory(file_path)
+        self._ensure_directory(path)
         encoding = kwargs.pop("encoding", "utf-8")
 
-        with open(file_path, mode="w", encoding=encoding) as f:
+        with open(path, mode="w", encoding=encoding) as f:
             f.write(out_str)
         return None

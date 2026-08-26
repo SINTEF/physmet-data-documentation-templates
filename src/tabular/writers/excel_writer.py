@@ -12,7 +12,7 @@ class ExcelWriter(BaseWriter):
     def write(
         self,
         data: Union[tabular.models.Table, tabular.models.Tables],
-        file_path: Optional[Path] = None,
+        path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
         """
@@ -21,21 +21,21 @@ class ExcelWriter(BaseWriter):
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
-            file_path (Optional[Path], optional): Output destination path.
+            path (Optional[Path], optional): Output destination path.
             **kwargs: Reserved for future Excel-specific parameters.
 
         Returns:
             None (Excel files cannot be parsed as strings in this library).
 
         Raises:
-            ValueError: If file_path is None, as binary formats cannot be cleanly serialized to standard strings.
+            ValueError: If path is None, as binary formats cannot be cleanly serialized to standard strings.
         """
-        if file_path is None:
+        if path is None:
             raise ValueError(
-                "Excel format is binary and cannot be generated as a string. You must provide a file_path."
+                "Excel format is binary and cannot be generated as a string. You must provide a path."
             )
 
-        self._ensure_directory(file_path)
+        self._ensure_directory(path)
         collection = self._ensure_tables(data)
         wb = openpyxl.Workbook()
 
@@ -49,5 +49,5 @@ class ExcelWriter(BaseWriter):
             for row in table.rows:
                 ws.append(row)
 
-        wb.save(file_path)
+        wb.save(path)
         return None
