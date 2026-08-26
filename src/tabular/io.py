@@ -43,7 +43,6 @@ def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> "T
 
     logger.info(f"Reading file '{path}' as format '{actual_fmt}'")
 
-    # get_parser implicitly raises ValueError if format is unregistered
     parser = get_parser(actual_fmt)
     return parser.parse(path, **kwargs)
 
@@ -93,7 +92,6 @@ def write(
             "Could not determine format from path. Please explicitly provide 'fmt'."
         )
 
-    # get_writer implicitly raises ValueError if format is unregistered
     writer = get_writer(actual_fmt)
 
     if path is None or supports_multi_sheet(actual_fmt):
@@ -107,13 +105,11 @@ def write(
         f"Splitting data into individual '{actual_fmt}' files at '{path.parent}'"
     )
 
-    # Duck-typing check: if 'data' is a Tables collection, it has a 'tables' list attribute
     if hasattr(data, "tables"):
         for i, table in enumerate(getattr(data, "tables")):
             suffix = getattr(table, "name") or str(i)
             table_path = path.parent / f"{path.stem}_{suffix}{path.suffix}"
             writer.write(table, table_path, **kwargs)
         return None
-    else:
-        # Fallback for a solitary Table object
-        return writer.write(data, path, **kwargs)
+
+    return writer.write(data, path, **kwargs)

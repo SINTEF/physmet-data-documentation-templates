@@ -140,6 +140,32 @@ def test_excel_multi_sheet_returns_tables_collection():
     assert "Sheet1" in [t.name for t in result.tables]
 
 
+def test_excel_inference_and_spaces():
+    """Verify Excel files run inference and properly parse spaced numbers (like Norwegian formats)."""
+    # Create an excel file with standard and non-breaking space numbers
+    spaced_excel_path = TMP_ROOT / "spaced_numbers.xlsx"
+
+    # Norwegian formatted numbers (spaces/non-breaking spaces + commas)
+    # 1500,50 -> 1500.5
+    # 2 300,75 -> 2300.75
+    # 1\xa0000\xa0000 -> 1000000
+    t = Table(
+        name="NoLocale",
+        headers=["Val"],
+        rows=[["1500,50"], ["2 300,75"], ["1\xa0000\xa0000"]],
+    )
+    tabular.write(t, spaced_excel_path)
+
+    # Read the file back
+    result = tabular.read(spaced_excel_path)
+    table = result.first
+
+    # Assert values were cast to native floats and ints, not left as raw strings
+    assert table.rows[0] == [1500.5]
+    assert table.rows[1] == [2300.75]
+    assert table.rows[2] == [1000000]
+
+
 # --- Tests for Table Model Appending, Logging & Features ---
 
 
@@ -392,21 +418,29 @@ def test_tables_printable():
 # --- Tests for Writers ---
 
 
-def test_csv_write_implicitly_merges_tables():
-    """When a multi-table Tables object is passed to CSVWriter, it should merge them natively."""
+def test_csv_write_splits_multiple_tables():
+    """Verify that writing a multi-table collection to CSV natively splits into multiple files."""
     _, _, excel_multi_path = provision_test_data(TMP_ROOT)
 
-    out_csv = TMP_ROOT / "merged_output.csv"
+    base_out_csv = TMP_ROOT / "split_output.csv"
 
-    # Read multi-sheet (Returns Tables)
+    # Read multi-sheet (Returns Tables collection with "Sheet1" and "Sheet2")
     tables = tabular.read(excel_multi_path)
 
-    # Write to CSV via standard writer (implicitly merges during output)
-    tabular.write(tables, out_csv)
+    # Write to CSV via standard writer (io.write will see CSV doesn't support multi-sheet and split it)
+    tabular.write(tables, base_out_csv)
 
-    # Read back to verify
-    merged_table = tabular.read(out_csv).first
-    assert set(merged_table.headers) == {"X", "Y", "Z"}
+    # Verify that the two split files were created successfully
+    expected_sheet1_path = TMP_ROOT / "split_output_Sheet1.csv"
+    expected_sheet2_path = TMP_ROOT / "split_output_Sheet2.csv"
+
+    assert expected_sheet1_path.exists(), "CSV splitting failed for Sheet1"
+    assert expected_sheet2_path.exists(), "CSV splitting failed for Sheet2"
+
+    # Verify the original merged file path was NOT created
+    assert (
+        not base_out_csv.exists()
+    ), "io.write incorrectly created a merged CSV file instead of splitting."
 
 
 def test_writers_append_newline():
@@ -416,7 +450,6 @@ def test_writers_append_newline():
     md_path = TMP_ROOT / "test_newline.md"
     json_path = TMP_ROOT / "test_newline.json"
 
-    # Attempt to write to MD and JSON (will be tested assuming they are in the active registry)
     try:
         tabular.write(t, md_path)
         has_md = True
@@ -450,6 +483,18 @@ def test_writers_append_newline():
         ), "JSON generated file must have exactly one trailing newline."
 
 
+def test_json_unicode_formatting():
+    """Verify that the JSON writer strictly formats unicode (e.g. Norwegian letters) natively."""
+    t = Table("UnicodeTest", ["Header"], [["Trøndelag"]])
+
+    json_str = tabular.write(t, fmt="json")
+
+    # ensure_ascii=False guarantees that the literal 'ø' appears instead of \u00f8
+    assert "Trøndelag" in str(
+        json_str
+    ), "JSON Writer failed to preserve native unicode characters."
+
+
 # --- Standalone Execution Logic ---
 
 if __name__ == "__main__":
@@ -476,5 +521,7 @@ if __name__ == "__main__":
     print("\n--- Test Run Summary ---")
     print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
 
+    # Environment-agnostic failure handling:
+    # This will fail standard CI/CD pipelines but won't crash interactive IPython kernels.
     if failed > 0:
         raise RuntimeError(f"Test suite failed with {failed} errors.")

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 
 import tabular.models
+import tabular.utils
 from .base import BaseParser
 
 logger = logging.getLogger(__name__)
@@ -11,12 +12,16 @@ logger = logging.getLogger(__name__)
 class ExcelParser(BaseParser):
     """Parses Microsoft Excel (.xlsx, .xlsm) files."""
 
-    def parse(self, path: Path, **kwargs: Any) -> tabular.models.Tables:
+    def parse(
+        self, path: Path, infer_types: bool = True, **kwargs: Any
+    ) -> tabular.models.Tables:
         """
         Parses an Excel file into a Tables collection.
 
         Args:
             path (Path): The Path object pointing to the Excel file.
+            infer_types (bool, optional): If True, automatically infers and casts data
+                types (e.g., formatted string numbers, booleans) across all rows. Defaults to True.
             **kwargs: Reserved for future parser-specific configurations.
 
         Returns:
@@ -62,6 +67,9 @@ class ExcelParser(BaseParser):
 
             for row in data[1:]:
                 table.append_row(list(row))
+
+            if infer_types:
+                tabular.utils.infer_and_cast_types(table)
 
             tables.append_table(table)
 

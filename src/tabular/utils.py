@@ -8,18 +8,19 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Pre-compile regex for performance
-_EURO_NUM = re.compile(r"^-?(?:\d{1,3}(?:\.\d{3})*|\d+),\d+$")
-_US_NUM = re.compile(r"^-?(?:\d{1,3}(?:,\d{3})*|\d+)\.\d+$")
-_INT_NUM = re.compile(r"^-?\d+$")
+# Expanded to support standard spaces (\s) and non-breaking spaces (\xa0) as thousand separators.
+_EURO_NUM = re.compile(r"^-?(?:\d{1,3}(?:[.\s\xa0]\d{3})*|\d+),\d+$")
+_US_NUM = re.compile(r"^-?(?:\d{1,3}(?:[,\s\xa0]\d{3})*|\d+)\.\d+$")
+_INT_NUM = re.compile(r"^-?(?:\d{1,3}(?:[\s\xa0]\d{3})*|\d+)$")
 
 
-def infer_and_cast_types(table: Table) -> Table:
+def infer_and_cast_types(table: "Table") -> "Table":
     """
     Iterates through a Table and intelligently casts string values to native Python types.
 
     This function processes every cell in the table. It handles standard integers,
-    US-formatted floats (e.g., "1,900.23"), European-formatted floats (e.g., "1.900,23"),
-    booleans ("true", "false", "yes", "no"), and empty strings (converted to None).
+    US-formatted floats (e.g., "1,900.23", "1 900.23"), European-formatted floats
+    (e.g., "1.900,23", "1 900,23"), booleans, and empty strings.
     Values that do not match these patterns are left as strings.
 
     Args:
@@ -45,13 +46,16 @@ def infer_and_cast_types(table: Table) -> Table:
             return False
 
         if _EURO_NUM.match(val):
-            return float(val.replace(".", "").replace(",", "."))
+            clean_val = re.sub(r"[.\s\xa0]", "", val)
+            return float(clean_val.replace(",", "."))
 
         if _US_NUM.match(val):
-            return float(val.replace(",", ""))
+            clean_val = re.sub(r"[,\s\xa0]", "", val)
+            return float(clean_val)
 
         if _INT_NUM.match(val):
-            return int(val)
+            clean_val = re.sub(r"[\s\xa0]", "", val)
+            return int(clean_val)
 
         return val
 
