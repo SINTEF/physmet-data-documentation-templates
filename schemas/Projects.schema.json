@@ -1,0 +1,93 @@
+{
+  "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
+  "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schemas/Projects.schema.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/context/context.json",
+  "title": "Projects",
+  "type": "object",
+  "properties": {
+    "@id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "Unique IRI identifying the documented resource.",
+      "examples": [
+        "proj:physmet"
+      ]
+    },
+    "@type": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uri"
+        },
+        {
+          "type": "string",
+          "pattern": "^([A-Za-z][A-Za-z0-9\\-_]*:)?[A-Za-z0-9][A-Za-z0-9\\-_]*$"
+        }
+      ],
+      "description": "IRI of the class the resource belongs to.",
+      "examples": [
+        "foaf:Project"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "A name of the agent.",
+      "examples": [
+        "SFI PhysMet"
+      ]
+    },
+    "prefix": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "pm"
+      ]
+    },
+    "namespace": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "https://www.ntnu.edu/physmet/kb/"
+      ]
+    },
+    "hasFundingAgency": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "org:NFR"
+      ]
+    },
+    "hasGrantNumber": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "",
+      "examples": [
+        "309584"
+      ]
+    }
+  },
+  "required": [
+    "@id",
+    "@type",
+    "name"
+  ]
+}

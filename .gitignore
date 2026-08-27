@@ -1,5 +1,9 @@
+.vscode/
+__pycache__/
+.venv/
+.pytest_cache/
 tests/output/
-*__pycache__*
-output
-conf
+output/
+conf/
+.*.json
 uv.lock

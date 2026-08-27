@@ -1,6 +1,6 @@
 {
   "$schema": "https://oo-ld.org/latest/meta/oold-meta-schema.json",
-  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/context.json",
+  "@context": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/context/context.json",
   "$id": "https://raw.githubusercontent.com/SINTEF/physmet-data-documentation-templates/refs/heads/main/schema/composition-schema.json",
   "title": "Composition",
   "type": "object",
@@ -16,7 +16,7 @@
             "hasSpeciesPart": {
               "type": "string",
               "description": "Chemical species.",
-              "examples": ["emmo:aluminiumSymbol"],
+              "examples": ["emmo:aluminiumSymbol"]
             },
             "hasQuantityPart": {
               "type": "object",
@@ -29,20 +29,21 @@
                 },
                 "hasMeasurementUnit": {
                   "type": "string",
-                  "description": "IRI of physical quantity that express the single component composition."
-                  "examples": ["emmo:WeightPercent"],
-                }
+                  "description": "IRI of physical quantity that express the single component composition.",
+                  "examples": ["emmo:WeightPercent"]
+                },
                 "dataValue": {
                   "type": "float",
                   "description": "Value of single component composition expressed in terms of the physical quantity referred to by 'instanceOf'.",
-                  "examples": [0.32],
+                  "examples": [0.32]
+                }
               }
             }
           }
         }
-      }
+      },
       "required": ["hasSingleComponentComposition"]
     }
-  }
+  },
   "required": ["hasComposition"]
 }
