@@ -38,10 +38,7 @@
       ]
     },
     "identifier": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "URI or other unique identifier of the resource being described.",
       "examples": [
         "ARM200F"
@@ -62,40 +59,28 @@
       ]
     },
     "location": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "contactPerson": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "comment": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A description of the subject resource. Use `description` instead.",
       "examples": [
         null
       ]
     },
     "seeAlso": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Indicates a resource that might provide additional information about the subject resource.",
       "examples": [
         "https://www.ntnu.edu/web/temgemini/tem/-/asset_publisher/2EWM49wMslOy/content/fgjgj"

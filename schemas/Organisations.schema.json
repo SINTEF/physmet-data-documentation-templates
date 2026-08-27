@@ -45,30 +45,21 @@
       ]
     },
     "prefix": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "ec"
       ]
     },
     "namespace": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "https://commission.europa.eu/"
       ]
     },
     "sameAs": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "ror:00k4n6c32"

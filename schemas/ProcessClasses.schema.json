@@ -32,59 +32,35 @@
       "description": "IRI of the class the resource belongs to."
     },
     "subClassOf": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "The subject is a subclass of a class."
     },
     "prefLabel": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A preferred label of the concept."
     },
     "altLabel": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "An alternative label of the concept."
     },
     "elucidation": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Short enlightening explanation aimed to facilitate the user in drawing the connection (interpretation) between a OWL entity and the real world object(s) for which it stands.  It should address the real world entities using the concepts introduced by the conceptualisation."
     },
     "note": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "seeAlso": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Indicates a resource that might provide additional information about the subject resource."
     },
     "hasInput": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     },
     "hasOutput": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": ""
     }
   },

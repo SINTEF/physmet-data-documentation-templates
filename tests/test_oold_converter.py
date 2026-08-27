@@ -71,43 +71,31 @@ def get_test_tmp_path(test_name: str) -> Path:
 # --- Tests for type inference ---
 
 
-def test_infer_type_not_mandatory():
-    """When a field isn't mandatory, its type stays a [type, 'null'] list."""
+def test_infer_type():
+    """Type inference always returns a bare string type without 'null'."""
     cases = [
-        ([], ["string", "null"]),
-        ([None, "", "  "], ["string", "null"]),
-        (["true", "False", None], ["boolean", "null"]),
-        (["1", "2", "true"], ["string", "null"]),
-        (["1", None, "2.5", "-3.1e2"], ["number", "null"]),
-        (["NaN", "Infinity", "-Infinity"], ["string", "null"]),
+        ([], "string"),
+        ([None, "", "  "], "string"),
+        (["true", "False", None], "boolean"),
+        (["1", "2", "true"], "string"),
+        (["1", None, "2.5", "-3.1e2"], "number"),
+        (["NaN", "Infinity", "-Infinity"], "string"),
     ]
-    for values, expected in cases:
-        assert infer_type(values, mandatory=False) == expected
+    for raw_values, expected in cases:
+        # Re-cast to bypass Pylance's invariance rule for test cases
+        values: List[Optional[str]] = list(raw_values)
         assert infer_type(values) == expected
 
 
 def test_infer_type_blank_entries_dont_affect_type():
     """A blank/empty entry among otherwise-consistent booleans or numbers should not affect type inference."""
     cases = [
-        (["true", "", "false"], ["boolean", "null"]),
-        (["1", "", "2.5"], ["number", "null"]),
+        (["true", "", "false"], "boolean"),
+        (["1", "", "2.5"], "number"),
     ]
     for raw_values, expected in cases:
         values: List[Optional[str]] = list(raw_values)
         assert infer_type(values) == expected
-
-
-def test_infer_type_mandatory():
-    """When a field is mandatory, 'null' is excluded entirely."""
-    cases = [
-        ([], "string"),
-        (["true", "False"], "boolean"),
-        (["1", "2.5", "-3.1e2"], "number"),
-        (["1", "true"], "string"),
-        (["hello", "world"], "string"),
-    ]
-    for values, expected in cases:
-        assert infer_type(values, mandatory=True) == expected
 
 
 # --- Tests for CSV to JSON Schema ---
@@ -135,7 +123,9 @@ def test_csv_to_json_schema_content():
     assert "@type" in schema["required"]
 
     assert len(schema["properties"]["@type"]["anyOf"]) == 2
-    assert schema["properties"]["title"]["type"] == ["string", "null"]
+
+    # Asserting plain string types
+    assert schema["properties"]["title"]["type"] == "string"
     assert schema["properties"]["title"]["examples"] == ["Sample 1"]
     assert schema["properties"]["@id"]["examples"] == ["id:1"]
     assert "examples" not in schema["properties"]["@type"]
@@ -152,16 +142,14 @@ def test_csv_to_json_schema_type_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(
-        tmp_path / "Inference_test.schema.json", "r", encoding="utf-8"
-    ) as f:
+    with open(tmp_path / "Inference_test.schema.json", "r", encoding="utf-8") as f:
         schema = json.load(f)
 
     properties = schema["properties"]
-    assert properties["id"]["type"] == ["number", "null"]
-    assert properties["count"]["type"] == ["number", "null"]
-    assert properties["is_active"]["type"] == ["boolean", "null"]
-    assert properties["name"]["type"] == ["string", "null"]
+    assert properties["id"]["type"] == "number"
+    assert properties["count"]["type"] == "number"
+    assert properties["is_active"]["type"] == "boolean"
+    assert properties["name"]["type"] == "string"
 
 
 def test_csv_to_json_schema_strict_number_inference():
@@ -177,15 +165,13 @@ def test_csv_to_json_schema_strict_number_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(
-        tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8"
-    ) as f:
+    with open(tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8") as f:
         schema = json.load(f)
 
     properties = schema["properties"]
-    assert properties["valid_int"]["type"] == ["number", "null"]
-    assert properties["invalid_nan"]["type"] == ["string", "null"]
-    assert properties["invalid_inf"]["type"] == ["string", "null"]
+    assert properties["valid_int"]["type"] == "number"
+    assert properties["invalid_nan"]["type"] == "string"
+    assert properties["invalid_inf"]["type"] == "string"
 
 
 def test_csv_to_json_schema_no_rows_omits_examples():
@@ -196,9 +182,7 @@ def test_csv_to_json_schema_no_rows_omits_examples():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(
-        tmp_path / "Headers_only.schema.json", "r", encoding="utf-8"
-    ) as f:
+    with open(tmp_path / "Headers_only.schema.json", "r", encoding="utf-8") as f:
         schema = json.load(f)
 
     for name, prop in schema["properties"].items():
@@ -243,9 +227,13 @@ def test_csv_to_json_schema_properties_mapping():
         schema = json.load(f)
 
     properties = schema["properties"]
+
+    # Conformance was 'mandatory', so it should be required, but type stays purely "string"
     assert "title" in schema["required"]
     assert properties["title"]["type"] == "string"
     assert properties["title"]["description"] == "My Custom Title Description"
+
+    # Verify ignored properties
     assert "iri" not in properties["title"]
 
 
@@ -291,6 +279,8 @@ def test_json_schema_to_csv_content():
     """Tests if the schema correctly unpacks array examples into CSV rows (expecting 1 row)."""
     tmp_path = get_test_tmp_path("json_schema_to_csv_content")
     input_json = tmp_path / "Test_input.schema.json"
+
+    # Creating mock schema with pure string types
     mock_schema = {
         "$schema": META_SCHEMA,
         "$id": "Test_input.schema.json",
@@ -301,7 +291,7 @@ def test_json_schema_to_csv_content():
             "@id": {"anyOf": [], "description": "", "examples": ["id:1"]},
             "@type": {"anyOf": [], "description": "", "examples": ["type:1"]},
             "title": {
-                "type": ["string", "null"],
+                "type": "string",
                 "description": "",
                 "examples": ["Sample 1"],
             },

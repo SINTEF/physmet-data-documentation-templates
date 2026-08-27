@@ -52,120 +52,84 @@
       ]
     },
     "comment": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A description of the subject resource. Use `description` instead.",
       "examples": [
         null
       ]
     },
     "keyword": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A keyword or tag describing the resource.",
       "examples": [
         "EDS"
       ]
     },
     "rightsHolder": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "org:NTNU"
       ]
     },
     "license": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "A licence under which the resource is made available.",
       "examples": [
         null
       ]
     },
     "creator": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "An entity responsible for producing the resource.",
       "examples": [
         "pers:AndreasVollBugten"
       ]
     },
     "contactPerson": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "pers:MarisaDiSabatino"
       ]
     },
     "seeAlso": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Indicates a resource that might provide additional information about the subject resource.",
       "examples": [
         null
       ]
     },
     "releaseDate": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "The date of formal issuance (e.g., publication) of the resource.",
       "examples": [
         null
       ]
     },
     "version": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "Version indicator (name or identifier) of a resource.",
       "examples": [
         null
       ]
     },
     "priorRelease": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         null
       ]
     },
     "processedFrom": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "avb:JM11"
       ]
     },
     "distribution.downloadURL": {
-      "type": [
-        "string",
-        "null"
-      ],
+      "type": "string",
       "description": "",
       "examples": [
         "https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%203%20Sustainable%20and%20high-performance%20material%20development/Andreas%20Voll%20Bugten%20data/JM11/SEM/EDS?csf=1&web=1&e=8vpJwN"
