@@ -12,32 +12,14 @@ from tabular.registry import get_parser, get_writer
 
 # --- Global Test Environment Setup ---
 
-# Create a root temporary directory for the session
+# The session temporary directory is kept strictly for WRITING test outputs.
 _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
-
-def provision_test_data(tmp_path: Path):
-    """Helper function to populate a test's temporary directory with sample data."""
-    # 1. Create a dummy CSV file
-    csv_path = tmp_path / "single_table.csv"
-    csv_path.write_text("ID,Name\n1,Alice\n2,Bob", encoding="utf-8")
-
-    # 2. Create a dummy single-sheet Excel file
-    t_single = Table(name="SingleSheet", headers=["Col1", "Col2"], rows=[["A", "B"]])
-    excel_single_path = tmp_path / "single_sheet.xlsx"
-    tabular.write(t_single, excel_single_path)
-
-    # 3. Create a dummy multi-sheet Excel file
-    t1 = Table(name="Sheet1", headers=["X", "Y"], rows=[[10, 20]])
-    t2 = Table(name="Sheet2", headers=["X", "Z"], rows=[[10, 30]])
-    tables = Tables()
-    tables.append_table(t1)
-    tables.append_table(t2)
-    excel_multi_path = tmp_path / "multi_sheet.xlsx"
-    tabular.write(tables, excel_multi_path)
-
-    return csv_path, excel_single_path, excel_multi_path
+# Hardcoded paths to the new unified persistent test data
+DATA_DIR = Path("./tests/data/tabular")
+FILE_CSV = DATA_DIR / "complex_data.csv"
+FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 
 
 # --- Tests for Central Registry Logic ---
@@ -63,21 +45,17 @@ def test_registry_unsupported_write():
 
 def test_read_directory_raises_error():
     """Verify reading a directory raises IsADirectoryError."""
-    dir_path = TMP_ROOT / "some_read_dir"
-    dir_path.mkdir(exist_ok=True)
     with pytest.raises(
         IsADirectoryError, match="Expected a file but found a directory"
     ):
-        tabular.read(dir_path, fmt="csv")
+        tabular.read(DATA_DIR, fmt="csv")
 
 
 def test_write_directory_raises_error():
     """Verify writing to a directory raises IsADirectoryError."""
-    dir_path = TMP_ROOT / "some_write_dir"
-    dir_path.mkdir(exist_ok=True)
     t = Table("T1", ["A"], [[1]])
     with pytest.raises(IsADirectoryError, match="Target path is a directory"):
-        tabular.write(t, dir_path, fmt="csv")
+        tabular.write(t, DATA_DIR, fmt="csv")
 
 
 def test_csv_encoding_error():
@@ -99,71 +77,119 @@ def test_excel_invalid_file_error():
         tabular.read(bad_excel, fmt="xlsx")
 
 
-# --- Tests for Parsers ---
+# --- Tests for Parsers using Unified Real Files ---
 
 
 def test_csv_returns_tables_collection():
-    """Verify CSV files always return a Tables object for predictability."""
-    csv_path, _, _ = provision_test_data(TMP_ROOT)
-
-    result = tabular.read(csv_path)
+    """Verify standard CSV files successfully parse and infer complex types with Unicode."""
+    result = tabular.read(FILE_CSV)
 
     assert isinstance(result, Tables), "CSV parser did not return a Tables object."
     assert len(result.tables) == 1
 
-    # Verify .first property convenience behavior
-    first_table = result.first
-    assert first_table.headers == ["ID", "Name"]
-    # Expected row values should now be inferred to ints instead of strings
-    assert first_table.rows == [[1, "Alice"], [2, "Bob"]]
+    table = result.first
+    # Ensure the headers match our cleaned up column names + Dates
+    assert table.headers == [
+        "ID",
+        "Navn",
+        "Temp (°C)",
+        "US Format",
+        "Euro Format",
+        "Spaced Format",
+        "NBSP Format",
+        "Date 1 (dd/mm/yyyy)",
+        "Date 2 (dd.mm.yyyy)",
+        "Date 3 (yyyy-mm-dd)",
+    ]
+
+    # Assert values were cast to native floats, spaces stripped, and strings kept
+    # Row 0 values: 1500.5
+    assert table.rows[0] == [
+        1,
+        "Bjørn Ærø",
+        25.5,
+        1500.5,
+        1500.5,
+        1500.5,
+        1500.5,
+        "12/05/2026",
+        "12.05.2026",
+        "2026-05-12",
+    ]
+    # Row 1 values: -400.25
+    assert table.rows[1] == [
+        2,
+        "Tāne Māori",
+        -4.0,
+        -400.25,
+        -400.25,
+        -400.25,
+        -400.25,
+        "14/05/2026",
+        "14.05.2026",
+        "2026-05-14",
+    ]
 
 
-def test_excel_single_sheet_returns_tables_collection():
-    """Verify single-sheet Excel files always return a Tables object."""
-    _, excel_single_path, _ = provision_test_data(TMP_ROOT)
-
-    result = tabular.read(excel_single_path)
-
-    assert isinstance(result, Tables)
-    assert len(result.tables) == 1
-    assert result.first.name == "SingleSheet"
-
-
-def test_excel_multi_sheet_returns_tables_collection():
-    """Verify multi-sheet Excel files return a populated Tables object."""
-    _, _, excel_multi_path = provision_test_data(TMP_ROOT)
-
-    result = tabular.read(excel_multi_path)
+def test_excel_multi_sheet_and_inference():
+    """Verify Excel files return multiple sheets and run type inference on complex formats."""
+    result = tabular.read(FILE_EXCEL)
 
     assert isinstance(result, Tables)
     assert len(result.tables) == 2
-    assert "Sheet1" in [t.name for t in result.tables]
 
+    sheet_names = [t.name for t in result.tables]
+    assert "Mixed Formats" in sheet_names
+    assert "Simple Data" in sheet_names
 
-def test_excel_inference_and_spaces():
-    """Verify Excel files run inference and properly parse spaced numbers (like Norwegian formats)."""
-    # Create an excel file with standard and non-breaking space numbers
-    spaced_excel_path = TMP_ROOT / "spaced_numbers.xlsx"
+    mixed_table = result.get_table("Mixed Formats")
+    assert mixed_table.headers == [
+        "ID",
+        "Navn",
+        "Temp (°C)",
+        "US Format",
+        "Euro Format",
+        "Spaced Format",
+        "NBSP Format",
+        "Date 1 (dd/mm/yyyy)",
+        "Date 2 (dd.mm.yyyy)",
+        "Date 3 (yyyy-mm-dd)",
+    ]
 
-    # Norwegian formatted numbers (spaces/non-breaking spaces + commas)
-    # 1500,50 -> 1500.5
-    # 2 300,75 -> 2300.75
-    # 1\xa0000\xa0000 -> 1000000
-    t = Table(
-        name="NoLocale",
-        headers=["Val"],
-        rows=[["1500,50"], ["2 300,75"], ["1\xa0000\xa0000"]],
-    )
-    tabular.write(t, spaced_excel_path)
+    # Row 2 values: 1,000,000.00
+    assert mixed_table.rows[2] == [
+        3,
+        "Jörg Müller",
+        100.0,
+        1000000.0,
+        1000000.0,
+        1000000.0,
+        1000000.0,
+        "20/05/2026",
+        "20.05.2026",
+        "2026-05-20",
+    ]
 
-    # Read the file back
-    result = tabular.read(spaced_excel_path)
-    table = result.first
+    # Test the 'Simple Data' sheet to ensure booleans, big ints, and strings inferred properly
+    simple_table = result.get_table("Simple Data")
 
-    # Assert values were cast to native floats and ints, not left as raw strings
-    assert table.rows[0] == [1500.5]
-    assert table.rows[1] == [2300.75]
-    assert table.rows[2] == [1000000]
+    assert simple_table.headers == [
+        "Project ID",
+        "Client",
+        "Start Date",
+        "Budget (NOK)",
+        "Approved",
+    ]
+
+    # Assert inference transformed strings to integers and 'Yes' to True
+    assert simple_table.rows[0] == [
+        1001,
+        "Trondheim Municipality",
+        "27.08.2026",
+        8500000,
+        True,
+    ]
+    assert simple_table.rows[1] == [1002, "Oslo Kommune", "15.09.2026", 12450000, False]
 
 
 # --- Tests for Table Model Appending, Logging & Features ---
@@ -177,7 +203,6 @@ def test_append_table_strict_rejection():
     with pytest.raises(ValueError, match="Unrecognized headers: \\['C'\\]"):
         t1.append_table(t2, merge_headers=False)
 
-    # Ensure atomic behavior: no data was corrupted due to failure
     assert len(t1.rows) == 1
     assert t1.headers == ["A", "B"]
 
@@ -190,9 +215,7 @@ def test_append_table_merge_success():
     t1.append_table(t2, merge_headers=True)
 
     assert set(t1.headers) == {"A", "B", "C"}
-    # Original row padded with None for new 'C' column
     assert t1.rows[0] == [1, 2, None]
-    # Appended row padded with None for existing 'B' column
     assert t1.rows[1] == [3, None, 4]
 
 
@@ -201,14 +224,10 @@ def test_append_table_logs_error():
     t1 = Table("Target", ["A", "B"], [[1, 2]])
     t2 = Table("Source", ["A", "C"], [[3, 4]])
 
-    # Manually capture logs without relying on pytest caplog fixture
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
 
-    # Ensure it is strictly lowercase to match the module __name__
     logger = logging.getLogger("tabular.models.table")
-
-    # Explicitly set the log level to bypass pytest's default filtering
     old_level = logger.level
     logger.setLevel(logging.ERROR)
     logger.addHandler(handler)
@@ -220,22 +239,18 @@ def test_append_table_logs_error():
         assert "Unrecognized headers:" in log_capture.getvalue()
     finally:
         logger.removeHandler(handler)
-        # Restore the original log level
         logger.setLevel(old_level)
 
 
 def test_csv_parser_sniff_warns_on_fail():
     """Sniffing an empty/invalid file logs a warning gracefully."""
     bad_csv = TMP_ROOT / "empty.csv"
-
-    # Use a genuinely empty file to absolutely guarantee a csv.Error
     bad_csv.write_text("", encoding="utf-8")
 
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
 
     logger = logging.getLogger("tabular.parsers.csv_parser")
-    # Explicitly set the log level for this test to bypass pytest's default filtering
     old_level = logger.level
     logger.setLevel(logging.WARNING)
     logger.addHandler(handler)
@@ -245,7 +260,6 @@ def test_csv_parser_sniff_warns_on_fail():
         assert "Could not sniff dialect" in log_capture.getvalue()
     finally:
         logger.removeHandler(handler)
-        # Restore the original log level to avoid leaking state to other tests
         logger.setLevel(old_level)
 
 
@@ -253,13 +267,9 @@ def test_table_indexing_and_iteration():
     """Verify that Table supports row indexing, column indexing, and iteration."""
     t = Table("Test", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
-    # Row indexing
     assert t[0] == [1, "Alice"]
-
-    # Column indexing
     assert t["Name"] == ["Alice", "Bob"]
 
-    # Iteration
     rows = [row for row in t]
     assert len(rows) == 2
     assert rows[1] == [2, "Bob"]
@@ -270,18 +280,16 @@ def test_table_indexing_and_iteration():
 
 def test_table_append_from_file_and_write():
     """Verify that Table can append data directly from a file and write itself to disk."""
-    csv_path, _, _ = provision_test_data(TMP_ROOT)
+    t = Table("Base", ["ID", "Navn", "Temp (°C)"], [[99, "Zero", 0.0]])
 
-    t = Table("Base", ["ID", "Name"], [[99, "Zero"]])
+    # Append directly from the real physical CSV file
+    t.append_file(FILE_CSV, merge_headers=True)
 
-    # Append from file
-    t.append_file(csv_path)
+    assert len(t.rows) == 4
+    # Ensure types were mapped correctly during append
+    assert t.rows[1][:3] == [1, "Bjørn Ærø", 25.5]
 
-    assert len(t.rows) == 3
-    # CSV now successfully infers types, returning an int `1`
-    assert t.rows[1] == [1, "Alice"]
-
-    # Write to file
+    # Write to a temporary file
     out_path = TMP_ROOT / "table_output.csv"
     t.write(out_path)
     assert out_path.exists()
@@ -333,17 +341,14 @@ def test_tables_remove_table():
     t3 = Table("Sheet3", ["C"])
     ts = Tables([t1, t2, t3])
 
-    # Remove by name
     ts.remove_table("Sheet2")
     assert len(ts.tables) == 2
     assert ts[1].name == "Sheet3"
 
-    # Remove by index
     ts.remove_table(0)
     assert len(ts.tables) == 1
     assert ts[0].name == "Sheet3"
 
-    # Invalid type bypassed carefully for runtime testing using cast
     with pytest.raises(TypeError, match="Key must be an integer .* or string"):
         ts.remove_table(cast(Any, {"wrong": "type"}))
 
@@ -354,11 +359,9 @@ def test_tables_indexing_and_iteration():
     t2 = Table("Sheet2", ["B"])
     ts = Tables([t1, t2])
 
-    # Indexing
     assert ts[0] == t1
     assert ts["Sheet2"] == t2
 
-    # Iteration
     table_names = [table.name for table in ts]
     assert table_names == ["Sheet1", "Sheet2"]
 
@@ -368,19 +371,18 @@ def test_tables_indexing_and_iteration():
 
 def test_tables_append_from_file_and_write():
     """Verify that Tables can append data from a file and write to disk dynamically."""
-    _, excel_single_path, _ = provision_test_data(TMP_ROOT)
-
     ts = Tables()
-    ts.append_file(excel_single_path)
+    ts.append_file(FILE_CSV)
 
     assert len(ts.tables) == 1
-    assert ts[0].name == "SingleSheet"
+    assert ts[0].name == "complex_data"
 
     # Write to a format that requires splitting (CSV)
     split_csv_path = TMP_ROOT / "output.csv"
     ts.write(split_csv_path)
+
     # The file should be saved with the table name appended
-    expected_split_file = TMP_ROOT / "output_SingleSheet.csv"
+    expected_split_file = TMP_ROOT / "output_complex_data.csv"
     assert expected_split_file.exists()
 
 
@@ -420,22 +422,20 @@ def test_tables_printable():
 
 def test_csv_write_splits_multiple_tables():
     """Verify that writing a multi-table collection to CSV natively splits into multiple files."""
-    _, _, excel_multi_path = provision_test_data(TMP_ROOT)
-
     base_out_csv = TMP_ROOT / "split_output.csv"
 
-    # Read multi-sheet (Returns Tables collection with "Sheet1" and "Sheet2")
-    tables = tabular.read(excel_multi_path)
+    # Read the master multi-sheet file
+    tables = tabular.read(FILE_EXCEL)
 
     # Write to CSV via standard writer (io.write will see CSV doesn't support multi-sheet and split it)
     tabular.write(tables, base_out_csv)
 
-    # Verify that the two split files were created successfully
-    expected_sheet1_path = TMP_ROOT / "split_output_Sheet1.csv"
-    expected_sheet2_path = TMP_ROOT / "split_output_Sheet2.csv"
+    # Verify that the split files were created successfully using the sheet names
+    expected_sheet1_path = TMP_ROOT / "split_output_Mixed Formats.csv"
+    expected_sheet2_path = TMP_ROOT / "split_output_Simple Data.csv"
 
-    assert expected_sheet1_path.exists(), "CSV splitting failed for Sheet1"
-    assert expected_sheet2_path.exists(), "CSV splitting failed for Sheet2"
+    assert expected_sheet1_path.exists(), "CSV splitting failed for Mixed Formats"
+    assert expected_sheet2_path.exists(), "CSV splitting failed for Simple Data"
 
     # Verify the original merged file path was NOT created
     assert (
@@ -484,15 +484,19 @@ def test_writers_append_newline():
 
 
 def test_json_unicode_formatting():
-    """Verify that the JSON writer strictly formats unicode (e.g. Norwegian letters) natively."""
-    t = Table("UnicodeTest", ["Header"], [["Trøndelag"]])
+    """Verify that the JSON writer strictly formats unicode natively."""
+    tables = tabular.read(FILE_EXCEL)
 
-    json_str = tabular.write(t, fmt="json")
+    json_str = tabular.write(tables, fmt="json")
 
-    # ensure_ascii=False guarantees that the literal 'ø' appears instead of \u00f8
-    assert "Trøndelag" in str(
+    # ensure_ascii=False guarantees that literal unicode characters are kept intact
+    assert "Bjørn Ærø" in str(
         json_str
-    ), "JSON Writer failed to preserve native unicode characters."
+    ), "JSON Writer failed to preserve 'ø' and 'Æ' characters."
+    assert "Tāne Māori" in str(
+        json_str
+    ), "JSON Writer failed to preserve 'ā' and 'ō' characters."
+    assert "°C" in str(json_str), "JSON Writer failed to preserve the '°' unit symbol."
 
 
 # --- Standalone Execution Logic ---
@@ -521,7 +525,5 @@ if __name__ == "__main__":
     print("\n--- Test Run Summary ---")
     print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
 
-    # Environment-agnostic failure handling:
-    # This will fail standard CI/CD pipelines but won't crash interactive IPython kernels.
     if failed > 0:
         raise RuntimeError(f"Test suite failed with {failed} errors.")
