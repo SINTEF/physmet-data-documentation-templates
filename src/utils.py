@@ -4,6 +4,8 @@ from typing import Any
 
 from tripper import Namespace, Triplestore
 
+EMMO_VERSION = "1.0.4"
+
 atomic_names = {
     "X": "Vacancy",
     "H": "Hydrogen",
@@ -259,8 +261,9 @@ def get_emmo() -> Triplestore:
     if "emmo" in _cache:
         return _cache["emmo"]
     ts = Triplestore("rdflib")
-    ts.parse("https://w3id.org/emmo/1.0.4#")
-    ts.parse("https://w3id.org/emmo/1.0.4/disciplines/units/otherunits-abox")
+    baseurl = f"https://w3id.org/emmo/{EMMO_VERSION}"
+    ts.parse(f"{baseurl}#", format="turtle")
+    ts.parse(f"{baseurl}/disciplines/units/otherunits-abox", format="turtle")
     _cache["emmo"] = ts
     return ts
 
@@ -268,7 +271,7 @@ def get_emmo() -> Triplestore:
 EMMO = Namespace(
     "https://w3id.org/emmo#",
     label_annotations=True,
-    triplestore=get_emmo,
+    triplestore=get_emmo(),
     check=True,
 )
 
