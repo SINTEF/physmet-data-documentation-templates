@@ -16,10 +16,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+excel = ["openpyxl"]
 testing = [
     "pytest==9.1.1",
     "pytest-cov==6.0.0",
     "requests>=2.34.2",
+    "PhysMetDatadoc[excel]",
 ]
 pre-commit = ["PhysMetDatadoc[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
 dev = ["PhysMetDatadoc[pre-commit]", "virtualenvwrapper>=4.0.0"]
@@ -40,11 +42,12 @@ packages = [
     "src/extract_prefixes.py",
     "src/parse_compositions.py",
     "src/oold_converter",
+    "src/tabular",
     "src/treeweaver",
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["/src/treeweaver", "/src/oold_converter"]
+include = ["/src/oold_converter", "/src/tabular", "/src/treeweaver"]
 
 [tool.ruff]
 line-length = 79
@@ -57,4 +60,9 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ruff.lint.isort]
-known-first-party = ["treeweaver", "oold_converter", "extract_prefixes"]
+known-first-party = [
+    "extract_prefixes",
+    "oold_converter",
+    "tabular",
+    "treeweaver",
+]

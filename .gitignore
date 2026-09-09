@@ -1,7 +1,7 @@
+.venv/
 .vscode/
 __pycache__/
-.venv/
-.pytest_cache/
+*_cache/
 tests/output/
 output/
 conf/
