@@ -336,26 +336,26 @@ def process_path(
 
     processed_count = 0
 
-    for file_path in files_to_process:
-        ext = file_path.suffix.lower()
+    for path in files_to_process:
+        ext = path.suffix.lower()
 
-        if exclude_files and file_path.name in exclude_files:
-            logger.info(f"Skipping excluded file: {file_path.name}")
+        if exclude_files and path.name in exclude_files:
+            logger.info(f"Skipping excluded file: {path.name}")
             continue
 
         if mode == "csv2json" and ext == ".csv":
-            csv_to_json_schema(file_path, out_folder, base_url, properties_mapping)
+            csv_to_json_schema(path, out_folder, base_url, properties_mapping)
             processed_count += 1
 
         elif mode == "json2csv" and ext == ".json":
-            json_schema_to_csv(file_path, out_folder)
+            json_schema_to_csv(path, out_folder)
             processed_count += 1
 
         else:
             if path.is_file():
                 # Only warn if the user explicitly provided a single file that we can't process
                 logger.warning(
-                    f"File '{file_path.name}' unsupported for mode '{mode}'. Skipped."
+                    f"File '{path.name}' unsupported for mode '{mode}'. Skipped."
                 )
 
     if processed_count == 0:
