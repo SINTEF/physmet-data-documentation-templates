@@ -6,6 +6,7 @@ special handling.
 
 import argparse
 import csv
+import warnings
 from pathlib import Path
 from typing import Optional, Sequence, Union
 
@@ -163,9 +164,11 @@ def parse(filename: Path, **spec) -> list:
         unitname = None
         for i in icomp:
             h = header[i]
-            u = normalize_unit(
-                h.split("[")[1].rstrip("]") if "[" in h else "wt%"
-            )
+            if "[" in h:
+                u = normalize_unit(h.split("[")[1].rstrip("]"))
+            else:
+                warnings.warn(f"No unit provided for '{h}', assuming wt%")
+                u = normalize_unit("wt%")
             if unitname is None:
                 unitname = u
             elif u != unitname:
