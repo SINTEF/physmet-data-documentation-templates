@@ -1,15 +1,15 @@
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Parsers
-from tabular.parsers.csv_parser import CSVParser
-from tabular.parsers.excel_parser import ExcelParser
+from .parsers.csv_parser import CSVParser
+from .parsers.excel_parser import ExcelParser
 
 # Writers
-from tabular.writers.csv_writer import CSVWriter
-from tabular.writers.excel_writer import ExcelWriter
-from tabular.writers.json_writer import JSONWriter
-from tabular.writers.md_writer import MDWriter
+from .writers.csv_writer import CSVWriter
+from .writers.excel_writer import ExcelWriter
+from .writers.json_writer import JSONWriter
+from .writers.md_writer import MDWriter
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,16 @@ logger = logging.getLogger(__name__)
 # To add a new format, simply add a new key here.
 FORMAT_REGISTRY: Dict[str, Dict[str, Any]] = {
     "csv": {"parser": CSVParser, "writer": CSVWriter, "multi_sheet": False},
-    "xlsx": {"parser": ExcelParser, "writer": ExcelWriter, "multi_sheet": True},
-    "xlsm": {"parser": ExcelParser, "writer": ExcelWriter, "multi_sheet": True},
+    "xlsx": {
+        "parser": ExcelParser,
+        "writer": ExcelWriter,
+        "multi_sheet": True,
+    },
+    "xlsm": {
+        "parser": ExcelParser,
+        "writer": ExcelWriter,
+        "multi_sheet": True,
+    },
     "md": {"parser": None, "writer": MDWriter, "multi_sheet": True},
     "json": {"parser": None, "writer": JSONWriter, "multi_sheet": True},
 }
