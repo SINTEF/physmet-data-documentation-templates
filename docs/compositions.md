@@ -17,3 +17,7 @@ An example table may look like this:
   - weight fraction: wtfrac, wt-fraction, weight-fraction
   - atom fraction: atfrac, at-fraction, atom-fraction
 * A composition value starting with "bal" means that the value in this cell is adjusted such that the total composition is 100%.
+
+When parsed, it will produce an RDF representation looking like the following:
+
+![RDF representation](figs/compositions-rdf.png)

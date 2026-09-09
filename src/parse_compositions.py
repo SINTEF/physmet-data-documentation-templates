@@ -171,7 +171,7 @@ def parse(filename: Path, **spec) -> list:
             elif u != unitname:
                 raise ValueError("All compositions must have the same unit")
         # quantity, unit = get_unit(unitname)
-        quantity, unit = EMMO.MassFraction, EMMO.MassPercent
+        quantity, unit = EMMO.MassFraction, EMMO.WeightPercent
 
         compositions = []
         for row in reader:

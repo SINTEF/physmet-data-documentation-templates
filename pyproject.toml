@@ -12,13 +12,13 @@ requires-python = ">=3.12"
 dependencies = [
     "pyyaml",
     "tripper[datadoc]",
+    "jsonschema>=4.26.0",
 ]
 
 [project.optional-dependencies]
 testing = [
     "pytest==9.1.1",
     "pytest-cov==6.0.0",
-    "jsonschema>=4.26.0",
     "requests>=2.34.2",
 ]
 pre-commit = ["PhysMetDatadoc[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
