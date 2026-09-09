@@ -99,6 +99,7 @@ repos:
         entry: pylint
         args:
           - --rcfile=pyproject.toml
+          - --disable=fixme
         language: python
         types: [python]
         require_serial: true
@@ -109,8 +110,8 @@ repos:
         name: pylint - tests
         entry: pylint
         args:
-          - "--rcfile=pyproject.toml"
-          - "--disable=import-outside-toplevel,redefined-outer-name"
+          - --rcfile=pyproject.toml
+          - --disable=import-outside-toplevel,redefined-outer-name,fixme
         language: python
         types: [python]
         require_serial: true

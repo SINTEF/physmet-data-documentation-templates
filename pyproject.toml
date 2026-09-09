@@ -9,14 +9,17 @@ authors = [
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = ["pyyaml"]
+dependencies = [
+    "pyyaml",
+    "tripper[datadoc] @ git@github.com:EMMC-ASBL/tripper.git@master",
+    "jsonschema>=4.26.0",
+]
 
 [project.optional-dependencies]
 excel = ["openpyxl"]
 testing = [
     "pytest==9.1.1",
     "pytest-cov==6.0.0",
-    "jsonschema>=4.26.0",
     "requests>=2.34.2",
     "PhysMetDatadoc[excel]",
 ]
@@ -24,9 +27,10 @@ pre-commit = ["PhysMetDatadoc[testing]", "pre-commit==4.0.1", "pylint==3.3.4"]
 dev = ["PhysMetDatadoc[pre-commit]", "virtualenvwrapper>=4.0.0"]
 
 [project.scripts]
-treeweaver = "treeweaver.treeweaver:main"
-oold-converter = "oold_converter.oold_converter:main"
 extract-prefixes = "extract_prefixes:main"
+oold-converter = "oold_converter.oold_converter:main"
+parse-compositions = "parse_compositions:main"
+treeweaver = "treeweaver.treeweaver:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -36,6 +40,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/extract_prefixes.py",
+    "src/parse_compositions.py",
     "src/oold_converter",
     "src/tabular",
     "src/treeweaver",
