@@ -1,9 +1,10 @@
 import json
 import logging
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
+
 from .base import BaseWriter
 
 logger = logging.getLogger(__name__)
@@ -18,17 +19,18 @@ class JSONWriter(BaseWriter):
         path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
-        """
-        Writes tabular data to a JSON file as an object mapping table names
+        """Writes tabular data to a JSON file as an object mapping table names
         to lists of row dictionaries.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The
+                dataset(s) to export.
             path (Optional[Path], optional): Output destination path.
                 If None, returns the valid JSON string.
-            **kwargs: Standard parameters accepted by `json.dump` (e.g., indent).
-                Supports custom 'encoding' keyword argument (defaults to utf-8) and
-                'ensure_ascii' (defaults to False to properly format unicode characters).
+            **kwargs: Standard parameters accepted by `json.dump` (e.g.,
+                indent). Supports custom 'encoding' keyword argument
+                (defaults to utf-8) and 'ensure_ascii' (defaults to
+                False to properly format unicode characters).
 
         Returns:
             Optional[str]: The JSON string if path is None, else None.
@@ -36,6 +38,7 @@ class JSONWriter(BaseWriter):
         Raises:
             IsADirectoryError: If the path provided is a directory.
             PermissionError: If the file lacks write permissions.
+
         """
         self._validate_write_path(path)
         collection = self._ensure_tables(data)
@@ -60,7 +63,11 @@ class JSONWriter(BaseWriter):
         try:
             with open(path, mode="w", encoding=encoding) as f:
                 json.dump(
-                    out_data, f, indent=indent, ensure_ascii=ensure_ascii, **kwargs
+                    out_data,
+                    f,
+                    indent=indent,
+                    ensure_ascii=ensure_ascii,
+                    **kwargs,
                 )
                 f.write("\n")
         except PermissionError as e:
