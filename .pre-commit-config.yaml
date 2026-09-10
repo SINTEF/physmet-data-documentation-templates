@@ -111,6 +111,7 @@ repos:
         args:
           - "--rcfile=pyproject.toml"
           - "--disable=import-outside-toplevel,redefined-outer-name"
+          - "--max-line-length=79"
         language: python
         types: [python]
         require_serial: true
