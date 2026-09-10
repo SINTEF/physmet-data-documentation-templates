@@ -1,0 +1,15 @@
+key,value,options,comment
+_prefix,arp,,"Prefix for dataset individuals"
+_baseurl,"https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%205%20Data,%20sharing%20and%20digital%20platforms/Datasets/Armel?d=wceb079311ac64d1f9ffc3d3831086cc2&csf=1&web=1&e=RtZcOq",,"Base URL to this file (for SharePoint, select 'Copy link' and paste as-is)"
+@id,${_prefix}:${_path},,default
+@type,emmo:Dataset;dcat:Dataset,sep=;&append=true,
+title,${_path},,default
+description,,,
+comment,,,
+keyword,,,
+rightsHolder,org:NTNU,,
+license,,,"Please add"
+creator,pers:ArmelPerrotin,,
+contactPerson,pers:MarisaDiSabatino,,
+releaseDate,${_mtime},,
+distribution.downloadURL,${_pathurl},,default

@@ -1,9 +1,10 @@
+import logging
 import sys
 import tempfile
-import logging
 from io import StringIO
 from pathlib import Path
 from typing import Any, cast
+
 import pytest
 
 import tabular
@@ -17,7 +18,7 @@ _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
 # Hardcoded paths to the new unified persistent test data
-DATA_DIR = Path("./tests/data/tabular")
+DATA_DIR = Path(__file__).resolve().parent / "data" / "tabular"
 FILE_CSV = DATA_DIR / "complex_data.csv"
 FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 
@@ -27,16 +28,22 @@ FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 
 def test_registry_unsupported_read():
     """Verify the central registry rejects unknown or write-only formats when parsing."""
-    with pytest.raises(ValueError, match="Unsupported format for reading: 'unknown'"):
+    with pytest.raises(
+        ValueError, match="Unsupported format for reading: 'unknown'"
+    ):
         get_parser("unknown")
 
-    with pytest.raises(ValueError, match="Unsupported format for reading: 'md'"):
+    with pytest.raises(
+        ValueError, match="Unsupported format for reading: 'md'"
+    ):
         get_parser("md")
 
 
 def test_registry_unsupported_write():
     """Verify the central registry rejects unknown formats when writing."""
-    with pytest.raises(ValueError, match="Unsupported format for writing: 'unknown'"):
+    with pytest.raises(
+        ValueError, match="Unsupported format for writing: 'unknown'"
+    ):
         get_writer("unknown")
 
 
@@ -84,7 +91,9 @@ def test_csv_returns_tables_collection():
     """Verify standard CSV files successfully parse and infer complex types with Unicode."""
     result = tabular.read(FILE_CSV)
 
-    assert isinstance(result, Tables), "CSV parser did not return a Tables object."
+    assert isinstance(
+        result, Tables
+    ), "CSV parser did not return a Tables object."
     assert len(result.tables) == 1
 
     table = result.first
@@ -189,7 +198,13 @@ def test_excel_multi_sheet_and_inference():
         8500000,
         True,
     ]
-    assert simple_table.rows[1] == [1002, "Oslo Kommune", "15.09.2026", 12450000, False]
+    assert simple_table.rows[1] == [
+        1002,
+        "Oslo Kommune",
+        "15.09.2026",
+        12450000,
+        False,
+    ]
 
 
 # --- Tests for Table Model Appending, Logging & Features ---
@@ -434,8 +449,12 @@ def test_csv_write_splits_multiple_tables():
     expected_sheet1_path = TMP_ROOT / "split_output_Mixed Formats.csv"
     expected_sheet2_path = TMP_ROOT / "split_output_Simple Data.csv"
 
-    assert expected_sheet1_path.exists(), "CSV splitting failed for Mixed Formats"
-    assert expected_sheet2_path.exists(), "CSV splitting failed for Simple Data"
+    assert (
+        expected_sheet1_path.exists()
+    ), "CSV splitting failed for Mixed Formats"
+    assert (
+        expected_sheet2_path.exists()
+    ), "CSV splitting failed for Simple Data"
 
     # Verify the original merged file path was NOT created
     assert (
@@ -496,7 +515,9 @@ def test_json_unicode_formatting():
     assert "Tāne Māori" in str(
         json_str
     ), "JSON Writer failed to preserve 'ā' and 'ō' characters."
-    assert "°C" in str(json_str), "JSON Writer failed to preserve the '°' unit symbol."
+    assert "°C" in str(
+        json_str
+    ), "JSON Writer failed to preserve the '°' unit symbol."
 
 
 # --- Standalone Execution Logic ---
