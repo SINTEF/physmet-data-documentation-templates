@@ -2,7 +2,8 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-import tabular.io
+# Leads to circular imports
+# from ..io import read, write
 
 logger = logging.getLogger(__name__)
 
@@ -58,7 +59,9 @@ class Table:
 
         # Convert everything to strings and find max column widths
         str_headers = [str(h) for h in self.headers]
-        str_rows = [[str(c) if c is not None else "" for c in row] for row in self.rows]
+        str_rows = [
+            [str(c) if c is not None else "" for c in row] for row in self.rows
+        ]
 
         widths = [len(h) for h in str_headers]
         for row in str_rows:
@@ -69,7 +72,9 @@ class Table:
         def fmt_row(row_data: List[str]) -> str:
             return (
                 "| "
-                + " | ".join(c.ljust(widths[i]) for i, c in enumerate(row_data))
+                + " | ".join(
+                    c.ljust(widths[i]) for i, c in enumerate(row_data)
+                )
                 + " |"
             )
 
@@ -164,7 +169,9 @@ class Table:
         for row in rows:
             self.append_row(row)
 
-    def append_table(self, other: "Table", merge_headers: bool = False) -> None:
+    def append_table(
+        self, other: "Table", merge_headers: bool = False
+    ) -> None:
         """
         Appends data from another Table object into this Table.
 
@@ -206,7 +213,10 @@ class Table:
     # --- I/O & Export Operations ---
 
     def append_file(
-        self, path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
+        self,
+        path: Union[str, Path],
+        merge_headers: bool = False,
+        **kwargs: Any,
     ) -> None:
         """
         Reads a file and appends its tabular data directly into this table.
@@ -216,7 +226,9 @@ class Table:
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
             **kwargs: Additional parameters to pass to the underlying parser (e.g., sniff_dialect).
         """
-        new_tables = tabular.io.read(path, **kwargs)
+        from tabular.io import read  # Imported here to break circular imports
+
+        new_tables = read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
 
@@ -253,4 +265,6 @@ class Table:
         Raises:
             ValueError: If path is None but no format is provided, or if the format isn't registered.
         """
-        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)
+        from tabular.io import write  # Imported here to break circular imports
+
+        return write(self, path=path, fmt=fmt, **kwargs)
