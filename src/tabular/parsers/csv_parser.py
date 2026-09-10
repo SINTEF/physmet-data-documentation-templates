@@ -5,6 +5,7 @@ from typing import Any
 
 import tabular.models
 import tabular.utils
+
 from .base import BaseParser
 
 logger = logging.getLogger(__name__)
@@ -21,27 +22,31 @@ class CSVParser(BaseParser):
         **kwargs: Any,
     ) -> tabular.models.Tables:
         """
-        Parses a CSV file into a Tables collection containing exactly one Table.
+        Parses a CSV file into a Tables collection containing exactly one
+        Table.
 
         Args:
             path (Path): The Path object pointing to the CSV file.
-            sniff_dialect (bool, optional): If True, attempts to automatically detect
-                the delimiter and quote rules using python's built-in csv.Sniffer.
+            sniff_dialect (bool, optional): If True, attempts to automatically
+                detect the delimiter and quote rules using python's built-in
+                csv.Sniffer. Defaults to True.
+            infer_types (bool, optional): If True, automatically infers and
+                casts data types (e.g., numbers, booleans) across all rows.
                 Defaults to True.
-            infer_types (bool, optional): If True, automatically infers and casts data
-                types (e.g., numbers, booleans) across all rows. Defaults to True.
-            **kwargs: Standard parameters accepted by the `csv.reader` (e.g., delimiter,
-                quotechar, dialect). Supports custom 'encoding' keyword argument
-                (defaults to 'utf-8').
+            **kwargs: Standard parameters accepted by the `csv.reader` (e.g.,
+                delimiter, quotechar, dialect). Supports custom 'encoding'
+                keyword argument (defaults to 'utf-8').
 
         Returns:
-            tabular.models.Tables: A collection containing a single Table representing the CSV.
+            tabular.models.Tables: A collection containing a single Table
+                representing the CSV.
 
         Raises:
             FileNotFoundError: If the specified path does not exist.
             IsADirectoryError: If the path is a directory.
-            ValueError: If the file contents cannot be decoded (encoding error) or if
-                the CSV structure is severely malformed.
+            ValueError: If the file contents cannot be decoded (encoding error)
+                or if the CSV structure is severely malformed.
+
         """
         self._validate_path(path)
 
@@ -58,9 +63,13 @@ class CSVParser(BaseParser):
                     try:
                         dialect = csv.Sniffer().sniff(sample)
                         kwargs["dialect"] = dialect
-                        logger.debug(f"Successfully sniffed dialect for {path}")
+                        logger.debug(
+                            f"Successfully sniffed dialect for {path}"
+                        )
                     except csv.Error as e:
-                        logger.warning(f"Could not sniff dialect for {path}: {e}")
+                        logger.warning(
+                            f"Could not sniff dialect for {path}: {e}"
+                        )
 
                 reader = csv.reader(f, **kwargs)
                 try:

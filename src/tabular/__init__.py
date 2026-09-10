@@ -10,8 +10,8 @@ behavior regardless of whether the source file contains one or many datasets.
 
 import logging
 
-from .models import Table, Tables
 from .io import read, write
+from .models import Table, Tables
 from .utils import infer_and_cast_types
 
 logger = logging.getLogger(__name__)

@@ -1,8 +1,9 @@
 import logging
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
+
 from .base import BaseWriter
 
 logger = logging.getLogger(__name__)
@@ -18,11 +19,12 @@ class ExcelWriter(BaseWriter):
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Writes data to an Excel workbook. It creates one spreadsheet per Table in
-        the provided collection.
+        Writes data to an Excel workbook. It creates one spreadsheet per Table
+        in the provided collection.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The
+                dataset(s) to export.
             path (Optional[Path], optional): Output destination path.
             **kwargs: Reserved for future Excel-specific parameters.
 
@@ -30,7 +32,8 @@ class ExcelWriter(BaseWriter):
             None (Excel files cannot be parsed as strings in this library).
 
         Raises:
-            ValueError: If path is None, as binary formats cannot be cleanly serialized to strings.
+            ValueError: If path is None, as binary formats cannot be cleanly
+                serialized to strings.
             ImportError: If openpyxl is not installed.
             IsADirectoryError: If the path provided is a directory.
             PermissionError: If the file is locked by another program.
@@ -45,7 +48,8 @@ class ExcelWriter(BaseWriter):
 
         if path is None:
             raise ValueError(
-                "Excel format is binary and cannot be generated as a string. You must provide a path."
+                "Excel format is binary and cannot be generated as a string. "
+                "You must provide a path."
             )
 
         self._validate_write_path(path)
@@ -67,7 +71,10 @@ class ExcelWriter(BaseWriter):
         try:
             wb.save(path)
         except PermissionError as e:
-            msg = f"Permission denied writing to '{path}'. Ensure the file is not currently open in Excel."
+            msg = (
+                f"Permission denied writing to '{path}'. Ensure the file is "
+                "not currently open in Excel."
+            )
             logger.error(msg)
             raise PermissionError(msg) from e
 
