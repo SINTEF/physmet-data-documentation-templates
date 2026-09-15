@@ -1,0 +1,15 @@
+key,value,options,comment
+prefix,arp,,"Prefix for dataset individuals"
+url,,,"URL to this file (for SharePoint, select 'Copy link' and paste as-is)"
+@id,$prefix:${@filename},,default
+@type,emmo:Dataset;dcat:Dataset,append,
+title,${@filename},,default
+description,,,
+comment,,,
+keyword,,,
+rightsHolder,org:NTNU,,
+license,,,"Please add"
+creator,pers:ArmelPerrotin,,
+contactPerson,pers:MarisaDiSabatino,,
+releaseDate,${@mtime},,
+distribution.downloadURL,${@fileurl},,default

@@ -1,0 +1,96 @@
+# Default variable
+environment:
+  prefix: "arp"
+
+  rightsHolder: "org:NTNU"
+  license: "TBD"  # XXX - define a license
+
+  contactPoint: "pers:MarisaDiSabatino"
+  creator: "pers:ArmelPerrotin"        # Creator of sample or dataset
+  operator: "pers:ArmelPerrotin"       # Operator of an instrument
+
+  # URL to the root folder of your data
+  baseURL: "https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%205%20Data,%20sharing%20and%20digital%20platforms/Datasets/Armel"
+
+  # Empty defaults - will be ignored if not set by a pattern
+  hasComposition: ""
+  isDatumOf: ""
+  processedFrom: ""
+  location: ""
+  isTemporalPartOf: ""
+  isSpatioTemporalPartOf: ""
+  downloadURL: ""
+
+# Patterns matching
+# Variables will assigned
+patterns:
+- "Armel/characterizations/GDmass/{sampleId}":
+    sample:
+      sampleId: "{sampleId}"
+    dataset:
+      datasetId: "DGMS-{sampleId}"
+
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name}.docx":
+    sample:
+      sampleId: "{sampleId}"
+    dataset:
+      datasetId: "EDS-{sampleId}"
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name}.docx":
+    dataset:
+      datasetId: "EDS-{sampleId}-{name}"
+      isDatumOf: "EDS-{sampleId}"
+      downloadURL: "{baseURL}/{escapedpath}"
+- "Armel/characterizations/SEM/ELKEM {name} {date}":
+    sample:
+      sampleId: "ELKEM-{name}-{date}"
+    dataset:
+      datasetId: "SEM-ELKEM-{name}-{date}"
+
+
+# The different types of data to document
+# You probably don't need to modify these
+entities:
+  sample:
+    "@id": "{prefix}:{sampleId}"
+    "@type": cameo:Sample
+    title: "{sampleId}"
+    description: ""
+    comment: ""
+    hasComposition: "{hasComposition}"
+    contactPoint: "{contactPoint}"
+    creator: "{creator}"
+    creationDate: "{ctime}"
+    location: "{location}"
+    isTemporalPartOf: "{isTemporalPartOf}"
+    isSpatioTemporalPartOf: "{isSpatioTemporalPartOf}"
+
+  dataset:
+    "@id": "{prefix}:{datasetId}"
+    "@type": ["emmo:Dataset", "dcat:Dataset"]
+    title: "{datasetId}"
+    description: ""
+    comment: ""
+    keyword: ""
+    rightsHolder: "{rightsHolder}"
+    license: "{license}"
+    contactPoint: "{contactPoint}"
+    creator: "{creator}"
+    seeAlso: ""
+    releaseDate: "{ctime}"
+    version: ""
+    priorVersion: ""
+    processedFrom: "{processedFrom}"
+    distribution.downloadURL: "{downloadURL}"
+    distribution.accessURL: "{baseURL}/{escapedpath}"
+    isDatumOf: "{isDatumOf}"
+
+  measurement:
+    "@id": "avb:{measurementId}"
+    "@type": emmo:Measurement
+    title: "{measurementId}"
+    description: ""
+    comment: ""
+    hasInput: "{sampleId}"
+    hasOutput: "{datasetId}"
+    hasOperator: "{operator}"
+    performedWith: "{equipmentId}"

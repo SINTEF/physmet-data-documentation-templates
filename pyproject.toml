@@ -9,7 +9,10 @@ authors = [
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = ["pyyaml"]
+dependencies = [
+    "pyyaml",
+    "parse",
+]
 
 [project.optional-dependencies]
 excel = ["openpyxl"]
