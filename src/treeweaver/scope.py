@@ -1,6 +1,54 @@
-"""Scope for variable substitutions.
+"""Support wildcard substitutions of values in the info.yaml file.
+
+In the info.yaml file, one can write
+
+```yaml
+
+# Keywords starting with underscore will not be included in the
+# generated documentation.
+_prefix = "abc"                            # Prefix for my data namespace
+_baseurl = "https://..."                   # URL to data root folder
+
+# These keywords will be included in the generates documentation.
+title: "${_name}"                          # expands to file name
+rightsHolder: "org:SINTEF"
+releaseDate: "${_ctime}"                   # expands to creation time
+distribution.downloadURL: "${_pathurl}"    # expands to URL
+description "Description of ${title}..."   # expands title to what is set above
+
+```
+
+Any defined keyword in the current scope can be referred to in a variable
+substitution. The following calculated variables can also be used:
+
+- **_path**: Relative path from root data directory (the directory with the
+      info.yaml file defining `base_url`).
+- **_name**: Final component of path.
+- **_ctime**: Creation time (ISO format).
+- **_mtime**: Modification time (ISO format).
+- **_pathurl**: URL that can be used for `distribution.downloadURL`.
+- **_parent**: IRI of the parent folder.
 
 
+Example usage from Python:
+
+```python
+from pathlib import Path
+
+from tripper import Triplestore
+from tripper.datadoc import store
+from treeweaver import Scope
+
+
+datadir = Path("path/to/root/of/datadir")
+
+s = Scope.frominfo(datadir / "info.yaml")
+doc = s.document(datadir)  # TODO: Too be called from within treeweaver...
+
+ts = Triplestore(backend="rdflib")
+store(ts, doc, context=datadir / "context.json")
+
+```
 
 
 Options:
@@ -12,7 +60,6 @@ Options:
         [default=true]
   - recursive: Whether the value and options will be applied recursively to
         subfolders. [default=true]
-
 
 """
 
