@@ -131,7 +131,7 @@ atomic_names = {
 # Atomic masses from Meija et al (2016) doi:10.1515/pac-2015-0305
 # Ordered according to atomic number.
 atomic_masses = {
-    "X": 1.0,
+    "X": 0.0,
     "H": 1.008,
     "He": 4.002602,
     "Li": 6.94,
