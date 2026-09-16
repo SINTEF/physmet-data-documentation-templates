@@ -24,34 +24,50 @@ environment:
 # Patterns matching
 # Variables will assigned
 patterns:
-- "Armel/characterizations/GDmass/{sampleId}/{filename:underscored}":
+- "Armel/characterizations/GDmass/{sampleId}/{name:underscored}.{ext}":
     sample:
       sampleId: "{sampleId}"
     dataset:
-      #datasetId: "DGMS-{sampleId}-{filename}"
-      datasetId: "DGMS-{sampleId}"
+      datasetId: "data-GDMS-{sampleId}-{name}"
       processedFrom: "{prefix}:{sampleId}"
+    measurement:
+      measurementId: "GDMS-{sampleId}-{name}"
+      datasetId: "data-GDMS-{sampleId}-{name}"
+      equipmentId: "equip:GDMS"  # TODO: add this to equipment list
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
     sample:
       sampleId: "{sampleId}"
     dataset:
-      datasetId: "EDS-{sampleId}"
+      datasetId: "data-EDS-{sampleId}"
       processedFrom: "{prefix}:{sampleId}"
+    measurement:
+      measurementId: "EDS-{sampleId}"
+      datasetId: "data-EDS-{sampleId}"
+      equipmentId: "emlab-equip:SemA"  # TODO: check
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
     dataset:
-      datasetId: "EDS-{sampleId}-{name}"
+      datasetId: "data-EDS-{sampleId}-{name}"
       processedFrom: "{prefix}:{sampleId}"
-      isDatumOf: "{prefix}:EDS-{sampleId}"
+      isDatumOf: "{prefix}:data-EDS-{sampleId}"
       downloadURL: "{baseURL}/{escapedpath}"
+    measurement:
+      measurementId: "EDS-{sampleId}-{name}"
+      datasetId: "data-EDS-{sampleId}-{name}"
+      equipmentId: "emlab-equip:SemA"  # TODO: check
 
-- "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}":
+- "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
     sample:
       sampleId: "ELKEM-{name}-{date}"
     dataset:
-      datasetId: "SEM-ELKEM-{name}-{date}/{filename}"
+      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
       processedFrom: "{prefix}:ELKEM-{name}-{date}"
+    measurement:
+      measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
+      sampleId: "ELKEM-{name}-{date}"
+      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+      equipmentId: "emlab-equip:SemA"  # TODO: check
 
 
 # List of file patterns to exclude from documentation
@@ -104,7 +120,7 @@ entities:
     title: "{measurementId}"
     description: ""
     comment: ""
-    hasInput: "{sampleId}"
-    hasOutput: "{datasetId}"
+    hasInput: "{prefix}:{sampleId}"
+    hasOutput: "{prefix}:{datasetId}"
     hasOperator: "{operator}"
     performedWith: "{equipmentId}"

@@ -2,6 +2,7 @@
 
 # pylint: disable=too-few-public-methods
 
+import re
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
@@ -28,11 +29,17 @@ def escaped(string: str):
     return string.replace(" ", "%20")
 
 
+def xstrip(string: str):
+    """Strip file extension and replace blanks with underscore."""
+    return re.sub(r"\.\w+$", "", string).replace(" ", "_")
+
+
 underscored.pattern = "[^/]+"  # type: ignore[attr-defined]
 escaped.pattern = "[^/]+"  # type: ignore[attr-defined]
 parse_formatters = {
     "underscored": underscored,
     "escaped": escaped,
+    "xstrip": xstrip,
 }
 
 
