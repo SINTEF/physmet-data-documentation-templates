@@ -31,8 +31,7 @@ class Entity:
 
     def substitute(self, env: dict) -> dict:
         """Return a JSON-LD dict documenting an individual by
-        performing with Perform wildcard substitution of the `templates`
-        attribute.
+        performing wildcard substitution of the `templates` attribute.
 
         """
         doc = {}
@@ -166,7 +165,18 @@ class Treeweaver:
         return dict(docs)
 
     def totables(self, rootdir: PathType) -> Tables:
-        """ """
+        """Create table documentation of directory tree.
+
+        Processes all entities from the documented directory tree and
+        converts them into a Tables collection for export or further
+        processing.
+
+        Arguments:
+            rootdir: Root directory of the directory tree to document.
+
+        Returns:
+            A Tables object containing one table per entity type.
+        """
         tables = Tables()
         for entity, docs in self.document(rootdir).items():
             table = totable(docs, name=entity)
@@ -180,13 +190,41 @@ class Treeweaver:
         fmt: Optional[str] = None,
         **kwargs,
     ) -> None:
-        """ """
+        """Document a directory tree and save created tables to file.
+
+        Documents a directory tree and writes the results to a file
+        in the specified format (or inferred from the file extension).
+
+        Arguments:
+            rootdir: Root directory of the directory tree to document.
+            path: Output file path. Format is inferred from the file extension
+                unless explicitly provided via `fmt`.
+            fmt: Optional explicit format specifier (e.g., 'csv', 'xlsx',
+                'json'). If not provided, format is inferred from the `path`
+                extension.
+            **kwargs: Additional keyword arguments passed to the Tables.write()
+                method.
+        """
         tables = self.totables(rootdir)
         tables.write(path, fmt=fmt, **kwargs)
 
 
 def totable(dicts: list, name: Optional[str] = None) -> Table:
-    """ """
+    """Convert a list of dictionaries to a Table.
+
+    Transforms a flat list of dictionaries into a Table object with
+    consistent column ordering. Missing values in dictionaries are
+    represented as None in their corresponding cells.
+
+    Arguments:
+        dicts: List of dictionaries to convert. All values should be
+            JSON-compatible (str, int, float, bool, None, list, dict).
+        name: Optional name for the resulting table. Defaults to None.
+
+    Returns:
+        A Table object with headers from all unique keys across the input
+        dictionaries, and rows in the order of the input list.
+    """
     headers: dict = {}  # use dict instead of set to keep ordering
     dicts = list(dicts)  # in case dicts is a iterator
     rows = []

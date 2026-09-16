@@ -66,7 +66,7 @@ entities:
 
   dataset:
     "@id": "{prefix}:{datasetId}"
-    "@type": ["emmo:Dataset", "dcat:Dataset"]
+    "@type": "emmo:Dataset"
     title: "{datasetId}"
     description: ""
     comment: ""
