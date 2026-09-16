@@ -1,11 +1,16 @@
 """An updated treeweaver implementation."""
 
+# pylint: disable=too-few-public-methods
+
+from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Optional, Union
 
 import parse
 import yaml
+
+from tabular import Table, Tables
 
 PathType = Union[Path, str]
 ValueType = Union[str, list, dict, bool, int, float, None]  # Entity values
@@ -19,8 +24,6 @@ class Entity:
         templates: Dict mapping keywords to template strings.
 
     """
-
-    # pylint: disable=too-few-public-methods
 
     def __init__(self, name: str, templates: dict[str, str]) -> None:
         self.name = name
@@ -56,8 +59,6 @@ class Pattern:
 
     """
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(
         self, pattern: str, entities: dict, env_updates: dict
     ) -> None:
@@ -65,7 +66,7 @@ class Pattern:
         self.entities = {name: Entity(name, t) for name, t in entities.items()}
         self.env_updates = env_updates
 
-    def document(self, path: PathType, env: dict) -> list:
+    def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
 
         Arguments:
@@ -73,16 +74,13 @@ class Pattern:
             env: Base environment for substitutions.
 
         Returns:
-            A list of JSON-LD documents if `path` matches this pattern.
-            Otherwise an empty list is returned.
+            A dict mapping entity names to JSON-LD documents.
+            If `path` doesn't matche the pattern an empty dict is returned.
         """
-        docs = []
+        docs = {}
         if r := self.pattern.parse(str(path)):
             e = env.copy()
             e.update(r.named)
-            e.update(
-                {k: substitute(v, e) for k, v in self.env_updates.items() if v}
-            )
             p = Path(e.get("rootdir", ".")) / path
             if p.exists():
                 ctime = datetime.fromtimestamp(p.stat().st_ctime).isoformat()
@@ -96,8 +94,11 @@ class Pattern:
             e.setdefault("ctime", ctime)
             e.setdefault("mtime", mtime)
             e.setdefault("pattern", self.pattern.format)
-            for entity in self.entities.values():
-                docs.append(entity.substitute(e))
+            e.update(
+                {k: substitute(v, e) for k, v in self.env_updates.items() if v}
+            )
+            for name, entity in self.entities.items():
+                docs[name] = entity.substitute(e)
         return docs
 
 
@@ -112,9 +113,9 @@ class Treeweaver:
         self.env: dict = {}
         self.entities: dict = {}
         self.patterns: list = []
-        self.rootdir = Path(rootdir) if rootdir else Path(configfile).parent
+        newroot = Path(rootdir) if rootdir else Path(configfile).parent
+        self.env["rootdir"] = str(newroot)
         self.parse_conf(configfile)
-        self.env["rootdir"] = str(self.rootdir)
 
     def parse_conf(self, yamlfile: PathType) -> None:
         """Parses a treeweaver YAML configuration and updating the
@@ -131,21 +132,73 @@ class Treeweaver:
                     entities[entity] = self.entities.get(entity, {}).copy()
                     self.patterns.append(Pattern(pattern, entities, env))
 
-    def document(self, path: PathType) -> list:
+    def document_path(self, path: PathType) -> dict:
         """Document a directory or file path.
 
         Arguments:
             path: Directory or file path to document.
-            env: Base environment for substitutions.
 
         Returns:
-            A list of JSON-LD documents if `path` matches this pattern.
-            Otherwise an empty list is returned.
+            A dict mapping entity names to JSON-LD documents.
         """
-        doc = []
+        docs = defaultdict(list)
         for pattern in self.patterns:
-            doc.extend(pattern.document(path, self.env))
-        return doc
+            for k, v in pattern.document(path, self.env).items():
+                docs[k].append(v)
+        return dict(docs)
+
+    def document(self, rootdir: PathType) -> dict:
+        """Document a directory tree.
+
+        Arguments:
+            rootdir: Root directory of directory tree to document.
+
+        Returns:
+            A dict mapping entity names to JSON-LD documents.
+        """
+        root = Path(rootdir).resolve()
+        docs = defaultdict(list)
+        self.env["rootdir"] = root
+        for path in root.rglob("*"):
+            relpath = path.relative_to(root)
+            for k, v in self.document_path(relpath).items():
+                docs[k].extend(v)
+        return dict(docs)
+
+    def totables(self, rootdir: PathType) -> Tables:
+        """ """
+        tables = Tables()
+        for entity, docs in self.document(rootdir).items():
+            table = totable(docs, name=entity)
+            tables.append_table(table)
+        return tables
+
+    def savedoc(
+        self,
+        rootdir: PathType,
+        path: PathType,
+        fmt: Optional[str] = None,
+        **kwargs,
+    ) -> None:
+        """ """
+        tables = self.totables(rootdir)
+        tables.write(path, fmt=fmt, **kwargs)
+
+
+def totable(dicts: list, name: Optional[str] = None) -> Table:
+    """ """
+    headers: dict = {}  # use dict instead of set to keep ordering
+    dicts = list(dicts)  # in case dicts is a iterator
+    rows = []
+    for d in dicts:
+        for k in d.keys():
+            headers[k] = None
+    for d in dicts:
+        row = []
+        for header in headers:
+            row.append(d.get(header))
+        rows.append(row)
+    return Table(name=name, headers=list(headers.keys()), rows=rows)
 
 
 def substitute(template: ValueType, env: dict) -> ValueType:
