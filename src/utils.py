@@ -279,8 +279,3 @@ EMMO = Namespace(
 def get_species_iri(symbol: str) -> str:
     """Return the EMMO IRI corresponding to chemical symbol `symbol`."""
     return EMMO[f"{atomic_names[symbol]}Symbol"]
-
-
-# def get_unit_iri(unit: str) -> str:
-#    """Return the EMMO IRI corresponding to unit `unit`."""
-#
