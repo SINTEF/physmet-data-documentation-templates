@@ -16,6 +16,26 @@ PathType = Union[Path, str]
 ValueType = Union[str, list, dict, bool, int, float, None]  # Entity values
 
 
+# Parse formatters
+def underscored(string: str):
+    """Parse formatter that converts blanks to underscore."""
+    return string.replace(" ", "_")
+
+
+def escaped(string: str):
+    """Parse formatter that converts blanks to %-encoded."""
+    # Alternatively we could use urllib.parse.quote()
+    return string.replace(" ", "%20")
+
+
+underscored.pattern = "[^/]+"  # type: ignore[attr-defined]
+escaped.pattern = "[^/]+"  # type: ignore[attr-defined]
+parse_formatters = {
+    "underscored": underscored,
+    "escaped": escaped,
+}
+
+
 class Entity:
     """An entity to be documented.
 
@@ -61,7 +81,7 @@ class Pattern:
     def __init__(
         self, pattern: str, entities: dict, env_updates: dict
     ) -> None:
-        self.pattern = parse.compile(pattern)
+        self.pattern = parse.compile(pattern, extra_types=parse_formatters)
         self.entities = {name: Entity(name, t) for name, t in entities.items()}
         self.env_updates = env_updates
 
@@ -112,6 +132,7 @@ class Treeweaver:
         self.env: dict = {}
         self.entities: dict = {}
         self.patterns: list = []
+        self.exclude: list = []
         newroot = Path(rootdir) if rootdir else Path(configfile).parent
         self.env["rootdir"] = str(newroot)
         self.parse_conf(configfile)
@@ -123,6 +144,7 @@ class Treeweaver:
             d = yaml.safe_load(f)
             self.env.update(d.get("environment", {}))
             self.entities.update(d.get("entities", {}))
+            self.exclude.extend(d.get("exclude", ()))
             self.patterns = []
             for p in d.get("patterns", ()):
                 pattern, updates = next(iter(p.items()))
@@ -159,9 +181,14 @@ class Treeweaver:
         docs = defaultdict(list)
         self.env["rootdir"] = root
         for path in root.rglob("*"):
-            relpath = path.relative_to(root)
-            for k, v in self.document_path(relpath).items():
-                docs[k].extend(v)
+            skip = False
+            for exclude_pattern in self.exclude:
+                if path.match(exclude_pattern):
+                    skip = True
+            if not skip:
+                relpath = path.relative_to(root)
+                for k, v in self.document_path(relpath).items():
+                    docs[k].extend(v)
         return dict(docs)
 
     def totables(self, rootdir: PathType) -> Tables:
@@ -209,7 +236,11 @@ class Treeweaver:
         tables.write(path, fmt=fmt, **kwargs)
 
 
-def totable(dicts: list, name: Optional[str] = None) -> Table:
+def totable(
+    dicts: list,
+    name: Optional[str] = None,
+    unique_header: Optional[str] = "@id",
+) -> Table:
     """Convert a list of dictionaries to a Table.
 
     Transforms a flat list of dictionaries into a Table object with
@@ -220,6 +251,9 @@ def totable(dicts: list, name: Optional[str] = None) -> Table:
         dicts: List of dictionaries to convert. All values should be
             JSON-compatible (str, int, float, bool, None, list, dict).
         name: Optional name for the resulting table. Defaults to None.
+        unique_header: If given and there are more than one row whos
+            value in the column with header equal to `unique_header`,
+            then only the first of these rows will be included in the table.
 
     Returns:
         A Table object with headers from all unique keys across the input
@@ -228,10 +262,18 @@ def totable(dicts: list, name: Optional[str] = None) -> Table:
     headers: dict = {}  # use dict instead of set to keep ordering
     dicts = list(dicts)  # in case dicts is a iterator
     rows = []
+
     for d in dicts:
         for k in d.keys():
             headers[k] = None
+
+    unique_values = set()
     for d in dicts:
+        if unique_header and unique_header in d:
+            unique_value = d[unique_header]
+            if unique_value in unique_values:
+                continue
+            unique_values.add(unique_value)
         row = []
         for header in headers:
             row.append(d.get(header))

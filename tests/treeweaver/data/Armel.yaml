@@ -24,28 +24,41 @@ environment:
 # Patterns matching
 # Variables will assigned
 patterns:
-- "Armel/characterizations/GDmass/{sampleId}":
+- "Armel/characterizations/GDmass/{sampleId}/{filename:underscored}":
     sample:
       sampleId: "{sampleId}"
     dataset:
+      #datasetId: "DGMS-{sampleId}-{filename}"
       datasetId: "DGMS-{sampleId}"
+      processedFrom: "{prefix}:{sampleId}"
 
-- "Armel/characterizations/SEM/EDS/{sampleId}- {name}.docx":
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
     sample:
       sampleId: "{sampleId}"
     dataset:
       datasetId: "EDS-{sampleId}"
-- "Armel/characterizations/SEM/EDS/{sampleId}- {name}.docx":
+      processedFrom: "{prefix}:{sampleId}"
+
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
     dataset:
       datasetId: "EDS-{sampleId}-{name}"
-      isDatumOf: "EDS-{sampleId}"
+      processedFrom: "{prefix}:{sampleId}"
+      isDatumOf: "{prefix}:EDS-{sampleId}"
       downloadURL: "{baseURL}/{escapedpath}"
-- "Armel/characterizations/SEM/ELKEM {name} {date}":
+
+- "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}":
     sample:
       sampleId: "ELKEM-{name}-{date}"
     dataset:
-      datasetId: "SEM-ELKEM-{name}-{date}"
+      datasetId: "SEM-ELKEM-{name}-{date}/{filename}"
+      processedFrom: "{prefix}:ELKEM-{name}-{date}"
 
+
+# List of file patterns to exclude from documentation
+exclude:
+- ".*"
+- "~*"
+- "*~"
 
 # The different types of data to document
 # You probably don't need to modify these
@@ -59,13 +72,14 @@ entities:
     hasComposition: "{hasComposition}"
     contactPoint: "{contactPoint}"
     creator: "{creator}"
-    creationDate: "{ctime}"
+    #creationDate: "{ctime}"
     location: "{location}"
     isTemporalPartOf: "{isTemporalPartOf}"
     isSpatioTemporalPartOf: "{isSpatioTemporalPartOf}"
 
   dataset:
     "@id": "{prefix}:{datasetId}"
+    #"@type": ["emmo:Dataset", "dcat:Dataset"]
     "@type": "emmo:Dataset"
     title: "{datasetId}"
     description: ""
@@ -80,9 +94,9 @@ entities:
     version: ""
     priorVersion: ""
     processedFrom: "{processedFrom}"
+    isDatumOf: "{isDatumOf}"
     distribution.downloadURL: "{downloadURL}"
     distribution.accessURL: "{baseURL}/{escapedpath}"
-    isDatumOf: "{isDatumOf}"
 
   measurement:
     "@id": "avb:{measurementId}"

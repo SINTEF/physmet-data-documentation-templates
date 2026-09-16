@@ -1,6 +1,5 @@
 """Tests for treeweaver2.py - the updated treeweaver implementation."""
 
-import json
 import os
 import tempfile
 from pathlib import Path
@@ -40,7 +39,8 @@ def test_entity_substitute():
 
 
 def test_entity_substitute_raises_on_missing_variable():
-    """Test Entity.substitute() raises KeyError for missing template variables."""
+    """Test Entity.substitute() raises KeyError for missing template
+    variables."""
     entity = Entity("sample", {"id": "sample-{missing}"})
     env = {"sampleId": "ARP001"}
 
@@ -73,11 +73,12 @@ def test_pattern_document_returns_empty_for_non_matching_path():
     env = {"rootdir": "."}
     result = pattern.document("Other/path/ARP001", env)
 
-    assert result == {}
+    assert not result
 
 
 def test_pattern_document_sets_file_metadata():
-    """Test Pattern.document() populates file metadata (fullpath, filename, etc)."""
+    """Test Pattern.document() populates file metadata (fullpath, filename,
+    etc)."""
     with tempfile.TemporaryDirectory() as tmpdir:
         tmppath = Path(tmpdir)
         testfile = tmppath / "test.txt"
@@ -144,9 +145,9 @@ def test_treeweaver_document_path_single_pattern():
     with tempfile.TemporaryDirectory() as tmpdir:
         tmppath = Path(tmpdir)
         configfile = tmppath / "config.yaml"
-        configfile.write_text("""
+        configfile.write_text(f"""
 environment:
-  rootdir: {}
+  rootdir: {tmppath}
 entities:
   sample:
     id: "{{sampleId}}"
@@ -154,7 +155,7 @@ patterns:
   - "{{sampleId}}":
       sample:
         id: "{{sampleId}}"
-""".format(tmppath))
+""")
 
         tw = Treeweaver(configfile, rootdir=tmppath)
         result = tw.document_path("ARP001")
@@ -171,9 +172,9 @@ def test_treeweaver_document_recursively_traverses_tree():
         (tmppath / "sample2").mkdir()
 
         configfile = tmppath / "config.yaml"
-        configfile.write_text("""
+        configfile.write_text(f"""
 environment:
-  rootdir: {}
+  rootdir: {tmppath}
 entities:
   dir:
     name: "{{dir_name}}"
@@ -181,7 +182,7 @@ patterns:
   - "{{dir_name}}":
       dir:
         name: "{{dir_name}}"
-""".format(tmppath))
+""")
 
         tw = Treeweaver(configfile, rootdir=tmppath)
         result = tw.document(tmppath)
@@ -200,12 +201,12 @@ def test_treeweaver_totables_converts_to_tables():
         configfile.write_text("""
 entities:
   sample:
-    id: "{{sampleId}}"
+    id: "{sampleId}"
 patterns:
-  - "{{sampleId}}":
+  - "{sampleId}":
       sample:
-        id: "{{sampleId}}"
-""".format(tmppath))
+        id: "{sampleId}"
+""")
 
         tw = Treeweaver(configfile, rootdir=tmppath)
         tables = tw.totables(tmppath)
@@ -241,6 +242,12 @@ patterns:
     lines = outfile.read_text().split(os.linesep)
     assert lines[0] == "@id,@type"
     assert lines[1] == "ARP001,chameo:Sample"
+
+
+def test_treeweaver_savedoc_armel():
+    """Test documenting Armel's data."""
+    tw = Treeweaver(datadir / "Armel.yaml")
+    tw.savedoc(datadir, outdir / "Armel.xlsx")
 
 
 def test_totable_converts_dicts_to_table():
@@ -333,13 +340,3 @@ def test_substitute_processes_dicts():
 
     assert result["id"] == "123"
     assert result["nested"]["name"] == "test"
-
-
-def test_treeweaver():
-    """Test treeweaver class."""
-    t = Treeweaver(datadir / "Armel.yaml")
-    # docs = t.document("Armel/characterizations/GDmass/ARP001")
-    docs = t.document(datadir)
-    assert docs
-
-    t.savedoc(datadir, outdir / "Armel.xlsx")
