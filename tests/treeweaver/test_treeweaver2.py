@@ -244,6 +244,12 @@ patterns:
     assert lines[1] == "ARP001,chameo:Sample"
 
 
+def test_treeweaver_savedoc_andreas():
+    """Test documenting Andreas's data."""
+    tw = Treeweaver(datadir / "Andreas.yaml")
+    tw.savedoc(datadir, outdir / "Andreas.xlsx")
+
+
 def test_treeweaver_savedoc_armel():
     """Test documenting Armel's data."""
     tw = Treeweaver(datadir / "Armel.yaml")

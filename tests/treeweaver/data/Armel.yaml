@@ -75,6 +75,7 @@ exclude:
 - ".*"
 - "~*"
 - "*~"
+- "README*"
 
 # The different types of data to document
 # You probably don't need to modify these
