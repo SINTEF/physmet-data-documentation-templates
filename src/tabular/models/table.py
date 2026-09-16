@@ -58,9 +58,7 @@ class Table:
 
         # Convert everything to strings and find max column widths
         str_headers = [str(h) for h in self.headers]
-        str_rows = [
-            [str(c) if c is not None else "" for c in row] for row in self.rows
-        ]
+        str_rows = [[str(c) if c is not None else "" for c in row] for row in self.rows]
 
         widths = [len(h) for h in str_headers]
         for row in str_rows:
@@ -71,9 +69,7 @@ class Table:
         def fmt_row(row_data: List[str]) -> str:
             return (
                 "| "
-                + " | ".join(
-                    c.ljust(widths[i]) for i, c in enumerate(row_data)
-                )
+                + " | ".join(c.ljust(widths[i]) for i, c in enumerate(row_data))
                 + " |"
             )
 
@@ -168,9 +164,7 @@ class Table:
         for row in rows:
             self.append_row(row)
 
-    def append_table(
-        self, other: "Table", merge_headers: bool = False
-    ) -> None:
+    def append_table(self, other: "Table", merge_headers: bool = False) -> None:
         """
         Appends data from another Table object into this Table.
 
@@ -212,10 +206,7 @@ class Table:
     # --- I/O & Export Operations ---
 
     def append_file(
-        self,
-        path: Union[str, Path],
-        merge_headers: bool = False,
-        **kwargs: Any,
+        self, path: Union[str, Path], merge_headers: bool = False, **kwargs: Any
     ) -> None:
         """
         Reads a file and appends its tabular data directly into this table.

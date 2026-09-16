@@ -2,7 +2,6 @@ from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
 import tabular.io
-
 from .table import Table
 
 
@@ -76,9 +75,7 @@ class Tables:
         Returns:
             str: The unambiguous representation of the tables object detailing count and names.
         """
-        table_names = [
-            t.name if t.name else str(i) for i, t in enumerate(self._tables)
-        ]
+        table_names = [t.name if t.name else str(i) for i, t in enumerate(self._tables)]
         return f"<Tables(count={len(self._tables)}, names={table_names})>"
 
     def __getitem__(self, key: Union[int, str]) -> Table:
@@ -101,9 +98,7 @@ class Tables:
         elif isinstance(key, str):
             return self.get_table(key)
         else:
-            raise TypeError(
-                "Key must be an integer (index) or string (table name)."
-            )
+            raise TypeError("Key must be an integer (index) or string (table name).")
 
     def __iter__(self) -> Iterator[Table]:
         """
@@ -161,9 +156,7 @@ class Tables:
             table_to_remove = self.get_table(key)
             self._tables.remove(table_to_remove)
         else:
-            raise TypeError(
-                "Key must be an integer (index) or string (table name)."
-            )
+            raise TypeError("Key must be an integer (index) or string (table name).")
 
     def merge_all(self, merged_name: str = "MergedTable") -> Table:
         """
