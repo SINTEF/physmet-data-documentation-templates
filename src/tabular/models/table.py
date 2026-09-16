@@ -2,8 +2,7 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
 
-# Leads to circular imports
-# from ..io import read, write
+import tabular.io
 
 logger = logging.getLogger(__name__)
 
@@ -226,9 +225,7 @@ class Table:
             merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
             **kwargs: Additional parameters to pass to the underlying parser (e.g., sniff_dialect).
         """
-        from tabular.io import read  # Imported here to break circular imports
-
-        new_tables = read(path, **kwargs)
+        new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t, merge_headers=merge_headers)
 
@@ -265,6 +262,4 @@ class Table:
         Raises:
             ValueError: If path is None but no format is provided, or if the format isn't registered.
         """
-        from tabular.io import write  # Imported here to break circular imports
-
-        return write(self, path=path, fmt=fmt, **kwargs)
+        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)

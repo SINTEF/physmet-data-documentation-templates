@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-from ..models.tables import Tables
+import tabular.models
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class BaseParser(ABC):
     """
 
     @abstractmethod
-    def parse(self, path: Path, **kwargs: Any) -> Tables:
+    def parse(self, path: Path, **kwargs: Any) -> tabular.models.Tables:
         """
         Parses a file from disk into a Tables collection.
 

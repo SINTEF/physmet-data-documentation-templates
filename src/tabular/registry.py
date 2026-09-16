@@ -2,14 +2,14 @@ import logging
 from typing import Any, Dict
 
 # Parsers
-from .parsers.csv_parser import CSVParser
-from .parsers.excel_parser import ExcelParser
+from tabular.parsers.csv_parser import CSVParser
+from tabular.parsers.excel_parser import ExcelParser
 
 # Writers
-from .writers.csv_writer import CSVWriter
-from .writers.excel_writer import ExcelWriter
-from .writers.json_writer import JSONWriter
-from .writers.md_writer import MDWriter
+from tabular.writers.csv_writer import CSVWriter
+from tabular.writers.excel_writer import ExcelWriter
+from tabular.writers.json_writer import JSONWriter
+from tabular.writers.md_writer import MDWriter
 
 logger = logging.getLogger(__name__)
 

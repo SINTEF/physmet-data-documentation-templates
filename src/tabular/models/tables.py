@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
-# Leads to circular imports
-# from ..io import read, write
+import tabular.io
+
 from .table import Table
 
 
@@ -204,9 +204,7 @@ class Tables:
             path (Union[str, Path]): The path to the file to read.
             **kwargs: Additional parameters to pass to the underlying parser.
         """
-        from tabular.io import read  # Imported here to break circular imports
-
-        new_tables = read(path, **kwargs)
+        new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t)
 
@@ -236,6 +234,4 @@ class Tables:
         Raises:
             ValueError: If path is None but no format is provided, or if format is unsupported.
         """
-        from tabular.io import write  # Imported here to break circular imports
-
-        return write(self, path=path, fmt=fmt, **kwargs)
+        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)
