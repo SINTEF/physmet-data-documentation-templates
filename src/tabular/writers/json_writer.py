@@ -21,17 +21,18 @@ class JSONWriter(BaseWriter):
         path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
-        """
-        Writes tabular data to a JSON file as an object mapping table names
+        """Writes tabular data to a JSON file as an object mapping table names
         to lists of row dictionaries.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The
+                dataset(s) to export.
             path (Optional[Path], optional): Output destination path.
                 If None, returns the valid JSON string.
-            **kwargs: Standard parameters accepted by `json.dump` (e.g., indent).
-                Supports custom 'encoding' keyword argument (defaults to utf-8) and
-                'ensure_ascii' (defaults to False to properly format unicode characters).
+            **kwargs: Standard parameters accepted by `json.dump` (e.g.,
+                indent). Supports custom 'encoding' keyword argument
+                (defaults to utf-8) and 'ensure_ascii' (defaults to
+                False to properly format unicode characters).
 
         Returns:
             Optional[str]: The JSON string if path is None, else None.
@@ -39,6 +40,7 @@ class JSONWriter(BaseWriter):
         Raises:
             IsADirectoryError: If the path provided is a directory.
             PermissionError: If the file lacks write permissions.
+
         """
         self._validate_write_path(path)
         collection = self._ensure_tables(data)

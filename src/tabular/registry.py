@@ -72,13 +72,15 @@ def get_writer(fmt: str) -> Any:
 
 def supports_multi_sheet(fmt: str) -> bool:
     """
-    Checks if a format natively supports multiple tables (sheets) in a single file.
+    Checks if a format natively supports multiple tables (sheets) in a single
+    file.
 
     Args:
         fmt (str): The file format extension.
 
     Returns:
-        bool: True if the format supports multiple tables natively, False otherwise.
+        bool: True if the format supports multiple tables natively, False
+            otherwise.
     """
     entry = FORMAT_REGISTRY.get(fmt.lower())
     if not entry:
