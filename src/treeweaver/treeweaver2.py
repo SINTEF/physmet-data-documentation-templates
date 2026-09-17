@@ -44,8 +44,8 @@ parse_formatters = {
 }
 
 
-class PatternTemplate:
-    """Represents a template variable substitutions within a pattern section.
+class Template:
+    """Represents a template.
 
     Arguments:
         name: Name of the template (ex "dataset").
@@ -59,8 +59,14 @@ class PatternTemplate:
         self.template = template
 
     def substitute(self, env: dict) -> dict:
-        """Return a JSON-LD dict documenting an individual by
-        performing wildcard substitution of the `template` attribute.
+        """Return a JSON-LD dict documenting a resource by
+        substituting variables given in `env`.
+
+        Arguments:
+            env: Dict mapping variable names to values.
+
+        Returns:
+            Dict representing a JSON-LD documentation of a resource.
 
         """
         doc = {}
@@ -94,7 +100,7 @@ class Pattern:
     ) -> None:
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
         self.pattern_template = {
-            name: PatternTemplate(name, t) for name, t in templates.items()
+            name: Template(name, t) for name, t in templates.items()
         }
         self.env_updates = env_updates
 

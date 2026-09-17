@@ -9,7 +9,7 @@ import pytest
 from tabular import Table, Tables
 from treeweaver.treeweaver2 import (
     Pattern,
-    PatternTemplate,
+    Template,
     Treeweaver,
     substitute,
     totable,
@@ -20,10 +20,10 @@ outdir = datadir / "output"
 outdir.mkdir(parents=True, exist_ok=True)
 
 
-def test_pattern_template_substitute():
-    """Test PatternTemplate.substitute() performs template substitution
+def test_template_substitute():
+    """Test Template.substitute() performs template substitution
     correctly."""
-    template = PatternTemplate(
+    template = Template(
         "sample",
         {
             "id": "sample-{sampleId}",
@@ -39,10 +39,10 @@ def test_pattern_template_substitute():
     assert "comment" not in result  # Empty templates are excluded
 
 
-def test_pattern_template_substitute_raises_on_missing_variable():
-    """Test PatternTemplate.substitute() raises KeyError for missing template
+def test_template_substitute_raises_on_missing_variable():
+    """Test Template.substitute() raises KeyError for missing template
     variables."""
-    template = PatternTemplate("sample", {"id": "sample-{missing}"})
+    template = Template("sample", {"id": "sample-{missing}"})
     env = {"sampleId": "ARP001"}
 
     with pytest.raises(KeyError):
