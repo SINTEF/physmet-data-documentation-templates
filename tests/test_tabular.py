@@ -18,7 +18,7 @@ _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
 # Hardcoded paths to the new unified persistent test data
-DATA_DIR = Path("./tests/data/tabular")
+DATA_DIR = Path(__file__).resolve().parent / "data" / "tabular"
 FILE_CSV = DATA_DIR / "complex_data.csv"
 FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 

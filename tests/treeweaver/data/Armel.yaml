@@ -1,0 +1,124 @@
+# Default variable
+environment:
+  prefix: "arp"
+
+  rightsHolder: "org:NTNU"
+  license: "TBD"  # XXX - define a license
+
+  contactPoint: "pers:MarisaDiSabatino"
+  creator: "pers:ArmelPerrotin"        # Creator of sample or dataset
+  operator: "pers:ArmelPerrotin"       # Operator of an instrument
+
+  # URL to the root folder of your data
+  baseURL: "https://studntnu.sharepoint.com/:f:/r/sites/o365_SFIPhysMet/Shared%20Documents/Reseach%20Areas,%20RA%20(Open%20channel)/RA%205%20Data,%20sharing%20and%20digital%20platforms/Datasets/Armel"
+
+  # Empty defaults - will be ignored if not set by a pattern
+  hasComposition: ""
+  isDatumOf: ""
+  processedFrom: ""
+  location: ""
+  isTemporalPartOf: ""
+  isSpatioTemporalPartOf: ""
+  downloadURL: ""
+
+
+# Patterns matching
+# Variables will assigned
+patterns:
+- "Armel/characterizations/GDmass/{sampleId}/{name:underscored}.{ext}":
+    sample:
+      sampleId: "{sampleId}"
+    dataset:
+      datasetId: "data-GDMS-{sampleId}-{name}"
+      processedFrom: "{prefix}:{sampleId}"
+    measurement:
+      measurementId: "GDMS-{sampleId}-{name}"
+      datasetId: "data-GDMS-{sampleId}-{name}"
+      equipmentId: "equip:GDMS"  # TODO: add this to equipment list
+
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
+    sample:
+      sampleId: "{sampleId}"
+    dataset:
+      datasetId: "data-EDS-{sampleId}"
+      processedFrom: "{prefix}:{sampleId}"
+    measurement:
+      measurementId: "EDS-{sampleId}"
+      datasetId: "data-EDS-{sampleId}"
+      equipmentId: "emlab-equip:SemA"  # TODO: check
+
+- "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
+    dataset:
+      datasetId: "data-EDS-{sampleId}-{name}"
+      processedFrom: "{prefix}:{sampleId}"
+      isDatumOf: "{prefix}:data-EDS-{sampleId}"
+      downloadURL: "{baseURL}/{escapedpath}"
+
+- "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
+    sample:
+      sampleId: "ELKEM-{name}-{date}"
+    dataset:
+      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+      processedFrom: "{prefix}:ELKEM-{name}-{date}"
+    measurement:
+      measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
+      sampleId: "ELKEM-{name}-{date}"
+      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+      equipmentId: "emlab-equip:SemA"  # TODO: check
+
+
+# List of file patterns to exclude from documentation
+exclude:
+- ".*"
+- "~*"
+- "*~"
+- "README*"
+
+# The different types of data to document
+# You probably don't need to modify these
+entities:
+  sample:
+    "@id": "{prefix}:{sampleId}"
+    "@type": cameo:Sample
+    title: "{sampleId}"
+    description: ""
+    comment: ""
+    hasComposition: "{hasComposition}"
+    contactPoint: "{contactPoint}"
+    creator: "{creator}"
+    #creationDate: "{ctime}"
+    location: "{location}"
+    isTemporalPartOf: "{isTemporalPartOf}"
+    isSpatioTemporalPartOf: "{isSpatioTemporalPartOf}"
+
+  dataset:
+    "@id": "{prefix}:{datasetId}"
+    #"@type": ["emmo:Dataset", "dcat:Dataset"]
+    "@type": "emmo:Dataset"
+    title: "{datasetId}"
+    description: ""
+    comment: ""
+    keyword: ""
+    rightsHolder: "{rightsHolder}"
+    license: "{license}"
+    contactPoint: "{contactPoint}"
+    creator: "{creator}"
+    seeAlso: ""
+    releaseDate: "{ctime}"
+    version: ""
+    priorVersion: ""
+    processedFrom: "{processedFrom}"
+    isDatumOf: "{isDatumOf}"
+    distribution.downloadURL: "{downloadURL}"
+    distribution.accessURL: "{baseURL}/{escapedpath}"
+
+  measurement:
+    "@id": "avb:{measurementId}"
+    "@type": emmo:Measurement
+    title: "{measurementId}"
+    description: ""
+    comment: ""
+    hasInput: "{prefix}:{sampleId}"
+    hasOutput: "{prefix}:{datasetId}"
+    hasOperator: "{operator}"
+    performedWith: "{equipmentId}"
