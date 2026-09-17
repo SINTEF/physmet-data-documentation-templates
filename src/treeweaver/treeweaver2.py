@@ -45,12 +45,12 @@ parse_formatters = {
 
 
 class Template:
-    """Represents a template.
+    """Represents a template for a JSON-LD representation of a resource.
 
     Arguments:
         name: Name of the template (ex "dataset").
         template: Dict mapping variable names to stencil strings (using the
-            Format Specification Mini-Language).
+            Python Format Specification Mini-Language).
 
     """
 
@@ -91,18 +91,17 @@ class Pattern:
         pattern: Wildcard pattern a directory or file path.
         templates: Dict mapping template names (defined for the given pattern)
             to corresponding template dicts (from the templates section).
-        env_updates: Updates to the environment.
+        vardefs: Dict defining variable definitions for updating the
+            environment.
 
     """
 
-    def __init__(
-        self, pattern: str, templates: dict, env_updates: dict
-    ) -> None:
+    def __init__(self, pattern: str, templates: dict, vardefs: dict) -> None:
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
         self.pattern_template = {
             name: Template(name, t) for name, t in templates.items()
         }
-        self.env_updates = env_updates
+        self.vardefs = vardefs
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -133,7 +132,7 @@ class Pattern:
             e.setdefault("mtime", mtime)
             e.setdefault("pattern", self.pattern.format)
             e.update(
-                {k: substitute(v, e) for k, v in self.env_updates.items() if v}
+                {k: substitute(v, e) for k, v in self.vardefs.items() if v}
             )
             for name, skencil in self.pattern_template.items():
                 docs[name] = skencil.substitute(e)
