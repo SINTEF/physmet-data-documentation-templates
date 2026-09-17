@@ -336,6 +336,10 @@ def main():
     )
     args = parser.parse_args()
 
+    # configfile = args.configfile if args.configfile else args.rootdir / ""
+    # if not args.configfile:
+    #     config
+
     tw = Treeweaver(args.configfile)
     tw.savedoc(rootdir=args.rootdir, path=args.output, format=args.format)
 
