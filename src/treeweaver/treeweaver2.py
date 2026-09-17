@@ -2,6 +2,7 @@
 
 # pylint: disable=too-few-public-methods
 
+import argparse
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -297,3 +298,47 @@ def substitute(template: ValueType, env: dict) -> ValueType:
     if isinstance(template, dict):
         return {k: substitute(v, env) for k, v in template.items()}
     return template.format(**env) if template else None
+
+
+def main():
+    """Main function for the command-line interface."""
+    parser = argparse.ArgumentParser(
+        description="Discover datadoc entries from a structured directory."
+    )
+    parser.add_argument(
+        "rootdir",
+        help="Root directory of the file structure to be documented.",
+    )
+    parser.add_argument(
+        "--configfile",
+        "-c",
+        help=(
+            "Configuration YAML file. Default is `treeweaver.yaml` in "
+            "`rootdir`."
+        ),
+    )
+    parser.add_argument(
+        "--format",
+        "-f",
+        help=(
+            "Output format. Any format supported by tabular.\n"
+            "Single-file formats: xlsx, json\n"
+            "Multi-file formats: csv"
+        ),
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        help=(
+            "Output. Should be a file path for single-file formats and "
+            "a directory for multi-file formats."
+        ),
+    )
+    args = parser.parse_args()
+
+    tw = Treeweaver(args.configfile)
+    tw.savedoc(rootdir=args.rootdir, path=args.output, format=args.format)
+
+
+if __name__ == "__main__":
+    main()

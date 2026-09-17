@@ -25,16 +25,16 @@ environment:
 # Patterns matching
 # Variables will be assigned
 patterns:
-- "{sample:.4}/{instrument}/{technique}/{exp:underscored}":
+- "{sample:.4}/{instrument}/{technique}/{experiment:underscored}":
     sample:
       sampleId: "{sample}"
     dataset:
-      datasetId: "data-{sample}-{technique}-{exp}"
+      datasetId: "data-{sample}-{technique}-{experiment}"
       processedFrom: "{prefix}:{sample}"
     measurement:
-      measurementId: "{sample}-{technique}-{exp}"
+      measurementId: "{sample}-{technique}-{experiment}"
       sampleId: "{sample}"
-      datasetId: "data-{sample}-{technique}-{exp}"
+      datasetId: "data-{sample}-{technique}-{experiment}"
       equipmentId: "{prefix}:{instrument}"  # TODO: map this to equipment list
 
 

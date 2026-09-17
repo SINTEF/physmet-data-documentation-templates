@@ -28,6 +28,7 @@ dev = ["PhysMetDatadoc[pre-commit]", "virtualenvwrapper>=4.0.0"]
 
 [project.scripts]
 treeweaver = "treeweaver.treeweaver:main"
+treeweaver2 = "treeweaver.treeweaver2:main"
 oold-converter = "oold_converter.oold_converter:main"
 extract-prefixes = "extract_prefixes:main"
 

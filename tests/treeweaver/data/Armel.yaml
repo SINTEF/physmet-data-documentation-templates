@@ -21,6 +21,7 @@ environment:
   isSpatioTemporalPartOf: ""
   downloadURL: ""
 
+
 # Patterns matching
 # Variables will assigned
 patterns:
@@ -52,10 +53,6 @@ patterns:
       processedFrom: "{prefix}:{sampleId}"
       isDatumOf: "{prefix}:data-EDS-{sampleId}"
       downloadURL: "{baseURL}/{escapedpath}"
-    measurement:
-      measurementId: "EDS-{sampleId}-{name}"
-      datasetId: "data-EDS-{sampleId}-{name}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
 
 - "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
     sample:
