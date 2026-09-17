@@ -39,7 +39,8 @@ def read(
 
     if not actual_fmt:
         raise ValueError(
-            "Could not determine format from path. Please explicitly provide 'fmt'."
+            "Could not determine format from path. "
+            "Please explicitly provide 'fmt'."
         )
 
     logger.info("Reading file '%s' as format '%s'", file_path, actual_fmt)
@@ -58,7 +59,8 @@ def write(
 
     Args:
         data (Union[Table, Tables]): The dataset to write.
-        path (Optional[Union[str, Path]]): Destination path. If None, returns string.
+        path (Optional[Union[str, Path]]): Destination path.
+            If None, returns string.
         fmt (Optional[str]): Format identifier (e.g., 'csv', 'json').
         **kwargs: Additional parameters passed to writer.
 
@@ -69,7 +71,8 @@ def write(
 
     if out_path is None and fmt is None:
         raise ValueError(
-            "You must specify 'fmt' (e.g., 'csv', 'json') when path is None."
+            "You must specify 'fmt' (e.g., 'csv', 'json') "
+            "when path is None."
         )
 
     actual_fmt = fmt or (
@@ -83,18 +86,22 @@ def write(
             isinstance(data, tabular.models.tables.Tables)
             and len(data.tables) > 1
         ):
-            logger.info(
-                "Splitting data into individual '%s' files at '%s'",
-                actual_fmt,
-                out_path.parent,
+            target_dir = (
+                out_path.with_suffix("") if out_path.suffix else out_path
             )
-            base_stem = out_path.stem
-            ext = out_path.suffix
-            parent = out_path.parent
+
+            logger.info(
+                "Splitting data into individual '%s' files in directory '%s'",
+                actual_fmt,
+                target_dir,
+            )
+
+            target_dir.mkdir(parents=True, exist_ok=True)
+            ext = f".{actual_fmt}"
 
             for table in data.tables:
                 table_name = table.name or "sheet"
-                split_path = parent / f"{base_stem}_{table_name}{ext}"
+                split_path = target_dir / f"{table_name}{ext}"
                 writer.write(table, split_path, **kwargs)
             return None
 
