@@ -1,3 +1,5 @@
+"""Format registry for parsers and writers."""
+
 import logging
 from typing import Any, Dict
 
