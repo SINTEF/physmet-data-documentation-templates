@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
-import tabular.io
+# Leads to circular imports
+# from ..io import read, write
 from .table import Table
 
 
@@ -75,7 +76,9 @@ class Tables:
         Returns:
             str: The unambiguous representation of the tables object detailing count and names.
         """
-        table_names = [t.name if t.name else str(i) for i, t in enumerate(self._tables)]
+        table_names = [
+            t.name if t.name else str(i) for i, t in enumerate(self._tables)
+        ]
         return f"<Tables(count={len(self._tables)}, names={table_names})>"
 
     def __getitem__(self, key: Union[int, str]) -> Table:
@@ -98,7 +101,9 @@ class Tables:
         elif isinstance(key, str):
             return self.get_table(key)
         else:
-            raise TypeError("Key must be an integer (index) or string (table name).")
+            raise TypeError(
+                "Key must be an integer (index) or string (table name)."
+            )
 
     def __iter__(self) -> Iterator[Table]:
         """
@@ -156,7 +161,9 @@ class Tables:
             table_to_remove = self.get_table(key)
             self._tables.remove(table_to_remove)
         else:
-            raise TypeError("Key must be an integer (index) or string (table name).")
+            raise TypeError(
+                "Key must be an integer (index) or string (table name)."
+            )
 
     def merge_all(self, merged_name: str = "MergedTable") -> Table:
         """
@@ -197,7 +204,9 @@ class Tables:
             path (Union[str, Path]): The path to the file to read.
             **kwargs: Additional parameters to pass to the underlying parser.
         """
-        new_tables = tabular.io.read(path, **kwargs)
+        from tabular.io import read  # Imported here to break circular imports
+
+        new_tables = read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t)
 
@@ -227,4 +236,6 @@ class Tables:
         Raises:
             ValueError: If path is None but no format is provided, or if format is unsupported.
         """
-        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)
+        from tabular.io import write  # Imported here to break circular imports
+
+        return write(self, path=path, fmt=fmt, **kwargs)
