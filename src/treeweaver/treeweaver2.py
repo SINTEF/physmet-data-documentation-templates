@@ -15,7 +15,7 @@ import yaml
 from tabular import Table, Tables
 
 PathType = Union[Path, str]
-ValueType = Union[str, list, dict, bool, int, float, None]  # Entity values
+ValueType = Union[str, list, dict, bool, int, float, None]  # template values
 
 
 # Parse formatters
@@ -44,34 +44,42 @@ parse_formatters = {
 }
 
 
-class Entity:
-    """An entity to be documented.
+class Template:
+    """Represents a template for a JSON-LD representation of a resource.
 
     Arguments:
-        name: Name of the entity, e.g. dataset.
-        templates: Dict mapping keywords to template strings.
+        name: Name of the template (ex "dataset").
+        template: Dict mapping variable names to stencil strings (using the
+            Python Format Specification Mini-Language).
 
     """
 
-    def __init__(self, name: str, templates: dict[str, str]) -> None:
+    def __init__(self, name: str, template: dict[str, str]) -> None:
         self.name = name
-        self.templates = templates
+        self.template = template
 
     def substitute(self, env: dict) -> dict:
-        """Return a JSON-LD dict documenting an individual by
-        performing wildcard substitution of the `templates` attribute.
+        """Return a JSON-LD dict documenting a resource by
+        substituting variables given in `env`.
+
+        Arguments:
+            env: Dict mapping variable names to values.
+
+        Returns:
+            Dict representing a JSON-LD documentation of a resource.
 
         """
         doc = {}
-        for keyword, template in self.templates.items():
+        for keyword, template in self.template.items():
             if template:
                 try:
                     if s := substitute(template, env):
                         doc[keyword] = s
                 except KeyError as exc:
                     raise KeyError(  # pylint: disable=raise-missing-from
-                        f"Variable '{exc}' in template for '{keyword}' is not "
-                        f"assigned in pattern for entity: '{self.name}'"
+                        f"Variable '{exc}' in stencil substitution for "
+                        f"'{keyword}' is not assigned in pattern for "
+                        f"template: '{self.name}'"
                     )
         return doc
 
@@ -81,17 +89,19 @@ class Pattern:
 
     Arguments:
         pattern: Wildcard pattern a directory or file path.
-        entities: Dict mapping entity names to Entity instances.
-        env_updates: Updates to the environment.
+        templates: Dict mapping template names (defined for the given pattern)
+            to corresponding template dicts (from the templates section).
+        vardefs: Dict defining variable definitions for updating the
+            environment.
 
     """
 
-    def __init__(
-        self, pattern: str, entities: dict, env_updates: dict
-    ) -> None:
+    def __init__(self, pattern: str, templates: dict, vardefs: dict) -> None:
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
-        self.entities = {name: Entity(name, t) for name, t in entities.items()}
-        self.env_updates = env_updates
+        self.pattern_template = {
+            name: Template(name, t) for name, t in templates.items()
+        }
+        self.vardefs = vardefs
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -101,7 +111,7 @@ class Pattern:
             env: Base environment for substitutions.
 
         Returns:
-            A dict mapping entity names to JSON-LD documents.
+            A dict mapping template names to JSON-LD documents.
             If `path` doesn't matche the pattern an empty dict is returned.
         """
         docs = {}
@@ -122,10 +132,10 @@ class Pattern:
             e.setdefault("mtime", mtime)
             e.setdefault("pattern", self.pattern.format)
             e.update(
-                {k: substitute(v, e) for k, v in self.env_updates.items() if v}
+                {k: substitute(v, e) for k, v in self.vardefs.items() if v}
             )
-            for name, entity in self.entities.items():
-                docs[name] = entity.substitute(e)
+            for name, skencil in self.pattern_template.items():
+                docs[name] = skencil.substitute(e)
         return docs
 
 
@@ -138,7 +148,7 @@ class Treeweaver:
         rootdir: Optional[PathType] = None,
     ) -> None:
         self.env: dict = {}
-        self.entities: dict = {}
+        self.templates: dict = {}
         self.patterns: list = []
         self.exclude: list = []
         newroot = Path(rootdir) if rootdir else Path(configfile).parent
@@ -147,19 +157,19 @@ class Treeweaver:
 
     def parse_conf(self, yamlfile: PathType) -> None:
         """Parses a treeweaver YAML configuration and updating the
-        environment and entities, while replacing the patterns."""
+        environment and templates, while replacing the patterns."""
         with open(yamlfile, "r", encoding="utf-8") as f:
             d = yaml.safe_load(f)
             self.env.update(d.get("environment", {}))
-            self.entities.update(d.get("entities", {}))
+            self.templates.update(d.get("templates", {}))
             self.exclude.extend(d.get("exclude", ()))
             self.patterns = []
             for p in d.get("patterns", ()):
                 pattern, updates = next(iter(p.items()))
-                for entity, env in updates.items():
-                    entities = {}
-                    entities[entity] = self.entities.get(entity, {}).copy()
-                    self.patterns.append(Pattern(pattern, entities, env))
+                for name, env in updates.get("vardefs", {}).items():
+                    templates = {}
+                    templates[name] = self.templates.get(name, {})
+                    self.patterns.append(Pattern(pattern, templates, env))
 
     def document_path(self, path: PathType) -> dict:
         """Document a directory or file path.
@@ -168,7 +178,7 @@ class Treeweaver:
             path: Directory or file path to document.
 
         Returns:
-            A dict mapping entity names to JSON-LD documents.
+            A dict mapping template names to JSON-LD documents.
         """
         docs = defaultdict(list)
         for pattern in self.patterns:
@@ -183,7 +193,7 @@ class Treeweaver:
             rootdir: Root directory of directory tree to document.
 
         Returns:
-            A dict mapping entity names to JSON-LD documents.
+            A dict mapping template names to JSON-LD documents.
         """
         root = Path(rootdir).resolve()
         docs = defaultdict(list)
@@ -202,7 +212,7 @@ class Treeweaver:
     def totables(self, rootdir: PathType) -> Tables:
         """Create table documentation of directory tree.
 
-        Processes all entities from the documented directory tree and
+        Processes all templates from the documented directory tree and
         converts them into a Tables collection for export or further
         processing.
 
@@ -210,11 +220,11 @@ class Treeweaver:
             rootdir: Root directory of the directory tree to document.
 
         Returns:
-            A Tables object containing one table per entity type.
+            A Tables object containing one table per template type.
         """
         tables = Tables()
-        for entity, docs in self.document(rootdir).items():
-            table = totable(docs, name=entity)
+        for template, docs in self.document(rootdir).items():
+            table = totable(docs, name=template)
             tables.append_table(table)
         return tables
 

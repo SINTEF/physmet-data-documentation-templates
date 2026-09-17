@@ -8,8 +8,8 @@ import pytest
 
 from tabular import Table, Tables
 from treeweaver.treeweaver2 import (
-    Entity,
     Pattern,
+    Template,
     Treeweaver,
     substitute,
     totable,
@@ -20,9 +20,10 @@ outdir = datadir / "output"
 outdir.mkdir(parents=True, exist_ok=True)
 
 
-def test_entity_substitute():
-    """Test Entity.substitute() performs template substitution correctly."""
-    entity = Entity(
+def test_template_substitute():
+    """Test Template.substitute() performs template substitution
+    correctly."""
+    template = Template(
         "sample",
         {
             "id": "sample-{sampleId}",
@@ -31,21 +32,21 @@ def test_entity_substitute():
         },
     )
     env = {"sampleId": "ARP001"}
-    result = entity.substitute(env)
+    result = template.substitute(env)
 
     assert result["id"] == "sample-ARP001"
     assert result["title"] == "ARP001"
     assert "comment" not in result  # Empty templates are excluded
 
 
-def test_entity_substitute_raises_on_missing_variable():
-    """Test Entity.substitute() raises KeyError for missing template
+def test_template_substitute_raises_on_missing_variable():
+    """Test Template.substitute() raises KeyError for missing template
     variables."""
-    entity = Entity("sample", {"id": "sample-{missing}"})
+    template = Template("sample", {"id": "sample-{missing}"})
     env = {"sampleId": "ARP001"}
 
     with pytest.raises(KeyError):
-        entity.substitute(env)
+        template.substitute(env)
 
 
 def test_pattern_document_matches_path():
@@ -103,31 +104,32 @@ def test_treeweaver_init_loads_config():
         configfile.write_text("""
 environment:
   prefix: "arp"
-entities:
+templates:
   sample:
     id: "{sampleId}"
 patterns:
   - "Armel/{sampleId}":
-      sample:
-        id: "{sampleId}"
+      vardefs:
+        sample:
+          id: "{sampleId}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
 
         assert tw.env["prefix"] == "arp"
-        assert "sample" in tw.entities
+        assert "sample" in tw.templates
         assert len(tw.patterns) > 0
 
 
-def test_treeweaver_parse_conf_updates_entities():
-    """Test Treeweaver.parse_conf() correctly parses and updates entities."""
+def test_treeweaver_parse_conf_updates_templates():
+    """Test Treeweaver.parse_conf() correctly parses and updates templates."""
     with tempfile.TemporaryDirectory() as tmpdir:
         tmppath = Path(tmpdir)
         configfile = tmppath / "config.yaml"
         configfile.write_text("""
 environment:
   prefix: "test"
-entities:
+templates:
   sample:
     title: "{sampleId}"
     type: "Sample"
@@ -136,8 +138,8 @@ patterns: []
 
         tw = Treeweaver(configfile, rootdir=tmppath)
 
-        assert "sample" in tw.entities
-        assert tw.entities["sample"]["title"] == "{sampleId}"
+        assert "sample" in tw.templates
+        assert tw.templates["sample"]["title"] == "{sampleId}"
 
 
 def test_treeweaver_document_path_single_pattern():
@@ -148,13 +150,14 @@ def test_treeweaver_document_path_single_pattern():
         configfile.write_text(f"""
 environment:
   rootdir: {tmppath}
-entities:
+templates:
   sample:
     id: "{{sampleId}}"
 patterns:
   - "{{sampleId}}":
-      sample:
-        id: "{{sampleId}}"
+      vardefs:
+        sample:
+          id: "{{sampleId}}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -175,13 +178,14 @@ def test_treeweaver_document_recursively_traverses_tree():
         configfile.write_text(f"""
 environment:
   rootdir: {tmppath}
-entities:
+templates:
   dir:
     name: "{{dir_name}}"
 patterns:
   - "{{dir_name}}":
-      dir:
-        name: "{{dir_name}}"
+      vardefs:
+        dir:
+          name: "{{dir_name}}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -199,13 +203,14 @@ def test_treeweaver_totables_converts_to_tables():
 
         configfile = tmppath / "config.yaml"
         configfile.write_text("""
-entities:
+templates:
   sample:
     id: "{sampleId}"
 patterns:
   - "{sampleId}":
-      sample:
-        id: "{sampleId}"
+      vardefs:
+        sample:
+          id: "{sampleId}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -222,7 +227,7 @@ def test_treeweaver_savedoc_writes_file():
     (rootdir / "ARP001").mkdir(parents=True, exist_ok=True)
     configfile = testdir / "config.yaml"
     configfile.write_text("""
-entities:
+templates:
   sample:
     "@id": "{sampleId}"
     "@type": chameo:Sample

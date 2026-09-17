@@ -26,45 +26,49 @@ environment:
 # Variables will assigned
 patterns:
 - "Armel/characterizations/GDmass/{sampleId}/{name:underscored}.{ext}":
-    sample:
-      sampleId: "{sampleId}"
-    dataset:
-      datasetId: "data-GDMS-{sampleId}-{name}"
-      processedFrom: "{prefix}:{sampleId}"
-    measurement:
-      measurementId: "GDMS-{sampleId}-{name}"
-      datasetId: "data-GDMS-{sampleId}-{name}"
-      equipmentId: "equip:GDMS"  # TODO: add this to equipment list
+    vardefs:
+      sample:
+        sampleId: "{sampleId}"
+      dataset:
+        datasetId: "data-GDMS-{sampleId}-{name}"
+        processedFrom: "{prefix}:{sampleId}"
+      measurement:
+        measurementId: "GDMS-{sampleId}-{name}"
+        datasetId: "data-GDMS-{sampleId}-{name}"
+        equipmentId: "equip:GDMS"  # TODO: add this to equipment list
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
-    sample:
-      sampleId: "{sampleId}"
-    dataset:
-      datasetId: "data-EDS-{sampleId}"
-      processedFrom: "{prefix}:{sampleId}"
-    measurement:
-      measurementId: "EDS-{sampleId}"
-      datasetId: "data-EDS-{sampleId}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
+    vardefs:
+      sample:
+        sampleId: "{sampleId}"
+      dataset:
+        datasetId: "data-EDS-{sampleId}"
+        processedFrom: "{prefix}:{sampleId}"
+      measurement:
+        measurementId: "EDS-{sampleId}"
+        datasetId: "data-EDS-{sampleId}"
+        equipmentId: "emlab-equip:SemA"  # TODO: check
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
-    dataset:
-      datasetId: "data-EDS-{sampleId}-{name}"
-      processedFrom: "{prefix}:{sampleId}"
-      isDatumOf: "{prefix}:data-EDS-{sampleId}"
-      downloadURL: "{baseURL}/{escapedpath}"
+    vardefs:
+      dataset:
+        datasetId: "data-EDS-{sampleId}-{name}"
+        processedFrom: "{prefix}:{sampleId}"
+        isDatumOf: "{prefix}:data-EDS-{sampleId}"
+        downloadURL: "{baseURL}/{escapedpath}"
 
 - "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
-    sample:
-      sampleId: "ELKEM-{name}-{date}"
-    dataset:
-      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
-      processedFrom: "{prefix}:ELKEM-{name}-{date}"
-    measurement:
-      measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
-      sampleId: "ELKEM-{name}-{date}"
-      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
+    vardefs:
+      sample:
+        sampleId: "ELKEM-{name}-{date}"
+      dataset:
+        datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+        processedFrom: "{prefix}:ELKEM-{name}-{date}"
+      measurement:
+        measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
+        sampleId: "ELKEM-{name}-{date}"
+        datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+        equipmentId: "emlab-equip:SemA"  # TODO: check
 
 
 # List of file patterns to exclude from documentation
@@ -76,7 +80,7 @@ exclude:
 
 # The different types of data to document
 # You probably don't need to modify these
-entities:
+templates:
   sample:
     "@id": "{prefix}:{sampleId}"
     "@type": cameo:Sample
