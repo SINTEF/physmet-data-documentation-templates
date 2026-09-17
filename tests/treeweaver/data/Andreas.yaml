@@ -26,16 +26,17 @@ environment:
 # Variables will be assigned
 patterns:
 - "{sample:.4}/{instrument}/{technique}/{experiment:underscored}":
-    sample:
-      sampleId: "{sample}"
-    dataset:
-      datasetId: "data-{sample}-{technique}-{experiment}"
-      processedFrom: "{prefix}:{sample}"
-    measurement:
-      measurementId: "{sample}-{technique}-{experiment}"
-      sampleId: "{sample}"
-      datasetId: "data-{sample}-{technique}-{experiment}"
-      equipmentId: "{prefix}:{instrument}"  # TODO: map this to equipment list
+    vardefs:
+      sample:
+        sampleId: "{sample}"
+      dataset:
+        datasetId: "data-{sample}-{technique}-{experiment}"
+        processedFrom: "{prefix}:{sample}"
+      measurement:
+        measurementId: "{sample}-{technique}-{experiment}"
+        sampleId: "{sample}"
+        datasetId: "data-{sample}-{technique}-{experiment}"
+        equipmentId: "{prefix}:{instrument}"  # TODO: map this to equipment list
 
 
 
@@ -48,7 +49,7 @@ exclude:
 
 # The different types of data to document
 # You probably don't need to modify these
-entities:
+templates:
   sample:
     "@id": "{prefix}:{sampleId}"
     "@type": cameo:Sample
