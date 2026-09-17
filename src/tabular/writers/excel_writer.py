@@ -1,11 +1,26 @@
+"""Excel writer implementation."""
+
+import importlib
 import logging
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
+
 from .base import BaseWriter
 
 logger = logging.getLogger(__name__)
+
+
+def _load_openpyxl() -> Any:
+    """Safely retrieves openpyxl module if installed."""
+    try:
+        return importlib.import_module("openpyxl")
+    except ImportError:
+        return None
+
+
+_OPENPYXL = _load_openpyxl()
 
 
 class ExcelWriter(BaseWriter):
@@ -18,41 +33,43 @@ class ExcelWriter(BaseWriter):
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Writes data to an Excel workbook. It creates one spreadsheet per Table in
-        the provided collection.
+        Writes tabular data to a Microsoft Excel (.xlsx) workbook.
+
+        If a Tables collection is provided, each Table is written to its own
+        individual sheet within the workbook.
 
         Args:
             data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to export.
-            path (Optional[Path], optional): Output destination path.
-            **kwargs: Reserved for future Excel-specific parameters.
+            path (Optional[Path], optional): Output destination path. Must be provided
+                because Excel files are binary and cannot be returned as strings.
+            **kwargs: Additional format-specific parameters.
 
         Returns:
-            None (Excel files cannot be parsed as strings in this library).
+            Optional[str]: Always returns None, as Excel is a binary format.
 
         Raises:
-            ValueError: If path is None, as binary formats cannot be cleanly serialized to strings.
-            ImportError: If openpyxl is not installed.
+            ImportError: If the required 'openpyxl' package is not installed.
+            ValueError: If path is None (string serialization is not supported).
             IsADirectoryError: If the path provided is a directory.
-            PermissionError: If the file is locked by another program.
+            PermissionError: If the file lacks write permissions or is open in another program.
         """
-        try:
-            import openpyxl
-        except ImportError as e:
+        if _OPENPYXL is None:
             raise ImportError(
                 "The 'openpyxl' package is required to write Excel files. "
-                "Install it using 'pip install openpyxl'."
-            ) from e
+                "Install it using 'pip install tabular[excel]' or 'pip install openpyxl'."
+            )
 
         if path is None:
             raise ValueError(
-                "Excel format is binary and cannot be generated as a string. You must provide a path."
+                "Excel format is binary and cannot be generated as a string. "
+                "You must provide a path."
             )
 
         self._validate_write_path(path)
         self._ensure_directory(path)
         collection = self._ensure_tables(data)
 
-        wb = openpyxl.Workbook()
+        wb = _OPENPYXL.Workbook()
 
         if "Sheet" in wb.sheetnames:
             wb.remove(wb["Sheet"])
@@ -67,8 +84,11 @@ class ExcelWriter(BaseWriter):
         try:
             wb.save(path)
         except PermissionError as e:
-            msg = f"Permission denied writing to '{path}'. Ensure the file is not currently open in Excel."
-            logger.error(msg)
-            raise PermissionError(msg) from e
+            self._handle_write_error(
+                path,
+                e,
+                "Ensure the file is not open in another program (like Excel).",
+            )
 
-        return None
+        result: Optional[str] = None
+        return result

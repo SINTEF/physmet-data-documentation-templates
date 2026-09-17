@@ -1,10 +1,13 @@
+"""CSV writer implementation."""
+
 import csv
 import io
 import logging
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
+
 from .base import BaseWriter
 
 logger = logging.getLogger(__name__)
@@ -15,7 +18,7 @@ class CSVWriter(BaseWriter):
 
     def write(
         self,
-        data: Union["tabular.models.Table", "tabular.models.Tables"],
+        data: Union[tabular.models.Table, tabular.models.Tables],
         path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
@@ -44,8 +47,13 @@ class CSVWriter(BaseWriter):
 
         table = (
             data.merge_all()
-            if (isinstance(data, tabular.models.Tables) and len(data.tables) > 1)
-            else (data.first if isinstance(data, tabular.models.Tables) else data)
+            if (
+                isinstance(data, tabular.models.Tables)
+                and len(data.tables) > 1
+            )
+            else (
+                data.first if isinstance(data, tabular.models.Tables) else data
+            )
         )
 
         encoding = kwargs.pop("encoding", "utf-8")
@@ -65,7 +73,8 @@ class CSVWriter(BaseWriter):
                     writer.writerow(table.headers)
                     writer.writerows(table.rows)
             except PermissionError as e:
-                msg = f"Permission denied writing to '{path}'. Ensure the file is not open in another program (like Excel)."
+                msg = f"""Permission denied writing to '{path}'.
+                Ensure the file is not open in another program (like Excel)."""
                 logger.error(msg)
                 raise PermissionError(msg) from e
             return None

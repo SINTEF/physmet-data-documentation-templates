@@ -1,9 +1,14 @@
+"""Base parser abstraction for tabular formats."""
+
+from __future__ import annotations
+
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from ..models.tables import Tables
+if TYPE_CHECKING:
+    from tabular.models.tables import Tables
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +28,8 @@ class BaseParser(ABC):
             **kwargs: Format-specific parameters (e.g., delimiter for CSV).
 
         Returns:
-            tabular.models.Tables: A collection representing the parsed dataset(s).
+            Tables: A collection representing the parsed dataset(s).
         """
-        pass
 
     def _validate_path(self, path: Path) -> None:
         """
@@ -40,10 +44,10 @@ class BaseParser(ABC):
         """
         if not path.exists():
             msg = f"File not found: {path}"
-            logger.error(msg)
+            logger.error("%s", msg)
             raise FileNotFoundError(msg)
 
         if path.is_dir():
             msg = f"Expected a file but found a directory: {path}"
-            logger.error(msg)
+            logger.error("%s", msg)
             raise IsADirectoryError(msg)

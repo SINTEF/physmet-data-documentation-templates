@@ -1,9 +1,11 @@
+"""Base writer abstraction for tabular formats."""
+
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
-import tabular.models
+from tabular.models import Table, Tables
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +18,7 @@ class BaseWriter(ABC):
     @abstractmethod
     def write(
         self,
-        data: Union[tabular.models.Table, tabular.models.Tables],
+        data: Union[Table, Tables],
         path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
@@ -24,7 +26,7 @@ class BaseWriter(ABC):
         Writes data to a physical file, or returns it as a formatted string.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to write.
+            data (Union[Table, Tables]): The dataset(s) to write.
             path (Optional[Path], optional): The output file path.
                 If None, the writer should return the serialized string.
             **kwargs: Format-specific parameters.
@@ -32,22 +34,19 @@ class BaseWriter(ABC):
         Returns:
             Optional[str]: The serialized string if path is None, else None.
         """
-        pass
 
-    def _ensure_tables(
-        self, data: Union[tabular.models.Table, tabular.models.Tables]
-    ) -> tabular.models.Tables:
+    def _ensure_tables(self, data: Union[Table, Tables]) -> Tables:
         """
         Helper method to normalize inputs to a Tables collection.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): A single table or collection of tables.
+            data (Union[Table, Tables]): A single table or collection of tables.
 
         Returns:
-            tabular.models.Tables: A valid Tables collection.
+            Tables: A valid Tables collection.
         """
-        if isinstance(data, tabular.models.Table):
-            collection = tabular.models.Tables()
+        if isinstance(data, Table):
+            collection = Tables()
             collection.append_table(data)
             return collection
         return data
@@ -60,7 +59,7 @@ class BaseWriter(ABC):
             path (Optional[Path]): The full file path being written to.
         """
         if path and not path.parent.exists():
-            logger.info(f"Creating missing directories for: {path.parent}")
+            logger.info("Creating missing directories for: %s", path.parent)
             path.parent.mkdir(parents=True, exist_ok=True)
 
     def _validate_write_path(self, path: Optional[Path]) -> None:
@@ -75,5 +74,15 @@ class BaseWriter(ABC):
         """
         if path is not None and path.is_dir():
             msg = f"Cannot write data. Target path is a directory, not a file: '{path}'"
-            logger.error(msg)
+            logger.error("%s", msg)
             raise IsADirectoryError(msg)
+
+    def _handle_write_error(
+        self, path: Path, error: Exception, extra_msg: str = ""
+    ) -> None:
+        """
+        Shared error handler for file write permission issues.
+        """
+        msg = f"Permission denied writing to '{path}'. {extra_msg}".strip()
+        logger.error("%s", msg)
+        raise PermissionError(msg) from error

@@ -1,8 +1,7 @@
-from pathlib import Path
-from typing import Any, Iterator, List, Optional, Union
+"""Tables collection model representing multiple named Table sheets."""
 
-# Leads to circular imports
-# from ..io import read, write
+from typing import Iterator, List, Optional, Union
+
 from .table import Table
 
 
@@ -12,7 +11,7 @@ class Tables:
 
     This class provides a unified interface for managing multiple datasets
     (e.g., sheets in an Excel workbook), allowing for iteration, indexing,
-    merging, and batch I/O operations.
+    and merging.
     """
 
     # --- Initialization ---
@@ -98,12 +97,11 @@ class Tables:
         """
         if isinstance(key, int):
             return self._tables[key]
-        elif isinstance(key, str):
+        if isinstance(key, str):
             return self.get_table(key)
-        else:
-            raise TypeError(
-                "Key must be an integer (index) or string (table name)."
-            )
+        raise TypeError(
+            "Key must be an integer (index) or string (table name)."
+        )
 
     def __iter__(self) -> Iterator[Table]:
         """
@@ -193,49 +191,3 @@ class Tables:
                 merged_table.rows.append(merged_row)
 
         return merged_table
-
-    # --- I/O & Export Operations ---
-
-    def append_file(self, path: Union[str, Path], **kwargs: Any) -> None:
-        """
-        Reads a file and appends its table(s) to this collection.
-
-        Args:
-            path (Union[str, Path]): The path to the file to read.
-            **kwargs: Additional parameters to pass to the underlying parser.
-        """
-        from tabular.io import read  # Imported here to break circular imports
-
-        new_tables = read(path, **kwargs)
-        for t in new_tables.tables:
-            self.append_table(t)
-
-    def write(
-        self,
-        path: Optional[Union[str, Path]] = None,
-        fmt: Optional[str] = None,
-        **kwargs: Any,
-    ) -> Optional[str]:
-        """
-        Writes the tables to a file, or serializes them to a string if path is None.
-
-        Delegates completely to `tabular.io.write`, which handles format resolution,
-        registry validation, and automatic file splitting for formats that do not
-        support multi-sheet structures natively (e.g., CSV).
-
-        Args:
-            path (Optional[Union[str, Path]], optional): The output destination path.
-                If None, the collection is serialized and returned as a string.
-            fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
-                Required if path is None.
-            **kwargs: Additional parameters to pass to the writer.
-
-        Returns:
-            Optional[str]: The serialized string if path is None, else None.
-
-        Raises:
-            ValueError: If path is None but no format is provided, or if format is unsupported.
-        """
-        from tabular.io import write  # Imported here to break circular imports
-
-        return write(self, path=path, fmt=fmt, **kwargs)

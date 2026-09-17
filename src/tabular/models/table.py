@@ -1,9 +1,9 @@
-import logging
-from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Union
+"""Table model representing a single 2D dataset."""
 
-# Leads to circular imports
-# from ..io import read, write
+from __future__ import annotations
+
+import logging
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class Table:
 
     A Table consists of an optional name, a list of string headers representing
     the columns, and a list of rows containing the actual data. It provides
-    utilities for row-level manipulation, Markdown formatting, and I/O operations.
+    utilities for row-level manipulation and Markdown formatting.
     """
 
     # --- Initialization ---
@@ -119,15 +119,14 @@ class Table:
         """
         if isinstance(key, int):
             return self.rows[key]
-        elif isinstance(key, str):
+        if isinstance(key, str):
             if key not in self.headers:
                 raise KeyError(f"Column '{key}' not found in headers.")
             idx = self.headers.index(key)
             return [row[idx] for row in self.rows]
-        else:
-            raise TypeError(
-                "Key must be an integer (row index) or string (column name)."
-            )
+        raise TypeError(
+            "Key must be an integer (row index) or string (column name)."
+        )
 
     def __iter__(self) -> Iterator[List[Any]]:
         """
@@ -152,7 +151,7 @@ class Table:
         """
         if len(row) != len(self.headers):
             msg = f"Row length ({len(row)}) != header length ({len(self.headers)})."
-            logger.error(msg)
+            logger.error("%s", msg)
             raise ValueError(msg)
         self.rows.append(row)
 
@@ -169,9 +168,7 @@ class Table:
         for row in rows:
             self.append_row(row)
 
-    def append_table(
-        self, other: "Table", merge_headers: bool = False
-    ) -> None:
+    def append_table(self, other: Table, merge_headers: bool = False) -> None:
         """
         Appends data from another Table object into this Table.
 
@@ -195,42 +192,22 @@ class Table:
                     f"Failed to append '{other.name}' to '{self.name}'. "
                     f"Unrecognized headers: {new_headers}. Set merge_headers=True to allow."
                 )
-                logger.error(msg)
+                logger.error("%s", msg)
                 raise ValueError(msg)
-            else:
-                logger.info(
-                    f"Expanding table '{self.name}' schema with headers: {new_headers}"
-                )
-                self.headers.extend(new_headers)
-                for row in self.rows:
-                    row.extend([None] * len(new_headers))
+
+            logger.info(
+                "Expanding table '%s' schema with headers: %s",
+                self.name,
+                new_headers,
+            )
+            self.headers.extend(new_headers)
+            for row in self.rows:
+                row.extend([None] * len(new_headers))
 
         for other_row in other.rows:
             row_dict = dict(zip(other.headers, other_row))
             mapped_row = [row_dict.get(h, None) for h in self.headers]
             self.rows.append(mapped_row)
-
-    # --- I/O & Export Operations ---
-
-    def append_file(
-        self,
-        path: Union[str, Path],
-        merge_headers: bool = False,
-        **kwargs: Any,
-    ) -> None:
-        """
-        Reads a file and appends its tabular data directly into this table.
-
-        Args:
-            path (Union[str, Path]): The path to the file to read and append.
-            merge_headers (bool, optional): If True, dynamically adds new columns. Defaults to False.
-            **kwargs: Additional parameters to pass to the underlying parser (e.g., sniff_dialect).
-        """
-        from tabular.io import read  # Imported here to break circular imports
-
-        new_tables = read(path, **kwargs)
-        for t in new_tables.tables:
-            self.append_table(t, merge_headers=merge_headers)
 
     def to_dict_list(self) -> List[Dict[str, Any]]:
         """
@@ -240,31 +217,3 @@ class Table:
             List[Dict[str, Any]]: A list where each dictionary represents one row.
         """
         return [dict(zip(self.headers, row)) for row in self.rows]
-
-    def write(
-        self,
-        path: Optional[Union[str, Path]] = None,
-        fmt: Optional[str] = None,
-        **kwargs: Any,
-    ) -> Optional[str]:
-        """
-        Writes this table directly to a file, or serializes it to a string if path is None.
-
-        Delegates completely to tabular.io.write for format resolution and validation.
-
-        Args:
-            path (Optional[Union[str, Path]], optional): The output destination path.
-                If None, the data is serialized and returned as a string.
-            fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
-                Required if path is None.
-            **kwargs: Additional parameters to pass to the format writer.
-
-        Returns:
-            Optional[str]: The serialized string if path is None, else None.
-
-        Raises:
-            ValueError: If path is None but no format is provided, or if the format isn't registered.
-        """
-        from tabular.io import write  # Imported here to break circular imports
-
-        return write(self, path=path, fmt=fmt, **kwargs)
