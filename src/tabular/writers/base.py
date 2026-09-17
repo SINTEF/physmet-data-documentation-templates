@@ -1,7 +1,7 @@
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
 
@@ -24,7 +24,8 @@ class BaseWriter(ABC):
         Writes data to a physical file, or returns it as a formatted string.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset(s) to write.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The
+                dataset(s) to write.
             path (Optional[Path], optional): The output file path.
                 If None, the writer should return the serialized string.
             **kwargs: Format-specific parameters.
@@ -41,7 +42,8 @@ class BaseWriter(ABC):
         Helper method to normalize inputs to a Tables collection.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): A single table or collection of tables.
+            data (Union[tabular.models.Table, tabular.models.Tables]): A single
+                table or collection of tables.
 
         Returns:
             tabular.models.Tables: A valid Tables collection.
@@ -65,7 +67,8 @@ class BaseWriter(ABC):
 
     def _validate_write_path(self, path: Optional[Path]) -> None:
         """
-        Validates the output path to ensure it is not pointing to an existing directory.
+        Validates the output path to ensure it is not pointing to an existing
+        directory.
 
         Args:
             path (Optional[Path]): The target file path.
@@ -74,6 +77,9 @@ class BaseWriter(ABC):
             IsADirectoryError: If the specified path is a directory.
         """
         if path is not None and path.is_dir():
-            msg = f"Cannot write data. Target path is a directory, not a file: '{path}'"
+            msg = (
+                "Cannot write data. Target path is a directory, not a file: "
+                f"'{path}'"
+            )
             logger.error(msg)
             raise IsADirectoryError(msg)
