@@ -27,7 +27,8 @@ FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 
 
 def test_registry_unsupported_read():
-    """Verify the central registry rejects unknown or write-only formats when parsing."""
+    """Verify the central registry rejects unknown or write-only formats when
+    parsing."""
     with pytest.raises(
         ValueError, match="Unsupported format for reading: 'unknown'"
     ):
@@ -66,7 +67,8 @@ def test_write_directory_raises_error():
 
 
 def test_csv_encoding_error():
-    """Verify CSVParser catches UnicodeDecodeError and raises a helpful ValueError."""
+    """Verify CSVParser catches UnicodeDecodeError and raises a helpful
+    ValueError."""
     bad_csv = TMP_ROOT / "bad_encoding.csv"
     # Write invalid UTF-8 bytes to trigger the decode error natively
     bad_csv.write_bytes(b"\xff\xfe\xfd")
@@ -75,7 +77,8 @@ def test_csv_encoding_error():
 
 
 def test_excel_invalid_file_error():
-    """Verify ExcelParser catches invalid file structures and raises a helpful ValueError."""
+    """Verify ExcelParser catches invalid file structures and raises a helpful
+    ValueError."""
     bad_excel = TMP_ROOT / "bad_excel.xlsx"
     bad_excel.write_text(
         "This is definitely not a zip or excel file.", encoding="utf-8"
@@ -88,7 +91,8 @@ def test_excel_invalid_file_error():
 
 
 def test_csv_returns_tables_collection():
-    """Verify standard CSV files successfully parse and infer complex types with Unicode."""
+    """Verify standard CSV files successfully parse and infer complex types
+    with Unicode."""
     result = tabular.read(FILE_CSV)
 
     assert isinstance(
@@ -111,8 +115,8 @@ def test_csv_returns_tables_collection():
         "Date 3 (yyyy-mm-dd)",
     ]
 
-    # Assert values were cast to native floats, spaces stripped, and strings kept
-    # Row 0 values: 1500.5
+    # Assert values were cast to native floats, spaces stripped, and strings
+    # kept Row 0 values: 1500.5
     assert table.rows[0] == [
         1,
         "Bjørn Ærø",
@@ -141,7 +145,8 @@ def test_csv_returns_tables_collection():
 
 
 def test_excel_multi_sheet_and_inference():
-    """Verify Excel files return multiple sheets and run type inference on complex formats."""
+    """Verify Excel files return multiple sheets and run type inference on
+    complex formats."""
     result = tabular.read(FILE_EXCEL)
 
     assert isinstance(result, Tables)
@@ -179,7 +184,8 @@ def test_excel_multi_sheet_and_inference():
         "2026-05-20",
     ]
 
-    # Test the 'Simple Data' sheet to ensure booleans, big ints, and strings inferred properly
+    # Test the 'Simple Data' sheet to ensure booleans, big ints, and strings
+    # inferred properly
     simple_table = result.get_table("Simple Data")
 
     assert simple_table.headers == [
@@ -211,7 +217,8 @@ def test_excel_multi_sheet_and_inference():
 
 
 def test_append_table_strict_rejection():
-    """Test append_table fails explicitly if target lacks source headers and merge_headers=False."""
+    """Test append_table fails explicitly if target lacks source headers and
+    merge_headers=False."""
     t1 = Table("Target", ["A", "B"], [[1, 2]])
     t2 = Table("Source", ["A", "C"], [[3, 4]])
 
@@ -223,7 +230,8 @@ def test_append_table_strict_rejection():
 
 
 def test_append_table_merge_success():
-    """Test append_table expands columns and inserts None when merge_headers=True."""
+    """Test append_table expands columns and inserts None when
+    merge_headers=True."""
     t1 = Table("Target", ["A", "B"], [[1, 2]])
     t2 = Table("Source", ["A", "C"], [[3, 4]])
 
@@ -279,7 +287,8 @@ def test_csv_parser_sniff_warns_on_fail():
 
 
 def test_table_indexing_and_iteration():
-    """Verify that Table supports row indexing, column indexing, and iteration."""
+    """Verify that Table supports row indexing, column indexing, and
+    iteration."""
     t = Table("Test", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
     assert t[0] == [1, "Alice"]
@@ -294,7 +303,8 @@ def test_table_indexing_and_iteration():
 
 
 def test_table_append_from_file_and_write():
-    """Verify that Table can append data directly from a file and write itself to disk."""
+    """Verify that Table can append data directly from a file and write itself
+    to disk."""
     t = Table("Base", ["ID", "Navn", "Temp (°C)"], [[99, "Zero", 0.0]])
 
     # Append directly from the real physical CSV file
@@ -311,7 +321,8 @@ def test_table_append_from_file_and_write():
 
 
 def test_table_write_unsupported_format_raises_exception():
-    """Verify writing a single Table object with an unregistered format raises a ValueError."""
+    """Verify writing a single Table object with an unregistered format raises
+    a ValueError."""
     t = Table("Sheet1", ["A"])
 
     with pytest.raises(
@@ -321,7 +332,8 @@ def test_table_write_unsupported_format_raises_exception():
 
 
 def test_table_printable():
-    """Verify that Table has appropriate perfectly aligned Markdown __str__ implementations."""
+    """Verify that Table has appropriate perfectly aligned Markdown
+    __str__ implementations."""
     t = Table("TestSheet", ["ID", "Name"], [[1, "Alice"], [2, "Bob"]])
 
     expected_str = (
@@ -385,7 +397,8 @@ def test_tables_indexing_and_iteration():
 
 
 def test_tables_append_from_file_and_write():
-    """Verify that Tables can append data from a file and write to disk dynamically."""
+    """Verify that Tables can append data from a file and write to disk
+    dynamically."""
     ts = Tables()
     ts.append_file(FILE_CSV)
 
@@ -402,7 +415,8 @@ def test_tables_append_from_file_and_write():
 
 
 def test_tables_write_unsupported_format_raises_exception():
-    """Verify writing a Tables object with an unregistered format raises a ValueError."""
+    """Verify writing a Tables object with an unregistered format raises a
+    ValueError."""
     ts = Tables([Table("Sheet1", ["A"])])
 
     with pytest.raises(
@@ -412,7 +426,8 @@ def test_tables_write_unsupported_format_raises_exception():
 
 
 def test_tables_printable():
-    """Verify that Tables has appropriate Markdown __str__ and __repr__ implementations."""
+    """Verify that Tables has appropriate Markdown __str__ and __repr__
+    implementations."""
     t1 = Table("Sheet1", ["A"], [[1]])
     t2 = Table("Sheet2", ["B"], [[2]])
     ts = Tables([t1, t2])
@@ -436,16 +451,19 @@ def test_tables_printable():
 
 
 def test_csv_write_splits_multiple_tables():
-    """Verify that writing a multi-table collection to CSV natively splits into multiple files."""
+    """Verify that writing a multi-table collection to CSV natively splits into
+    multiple files."""
     base_out_csv = TMP_ROOT / "split_output.csv"
 
     # Read the master multi-sheet file
     tables = tabular.read(FILE_EXCEL)
 
-    # Write to CSV via standard writer (io.write will see CSV doesn't support multi-sheet and split it)
+    # Write to CSV via standard writer (io.write will see CSV doesn't support
+    # multi-sheet and split it)
     tabular.write(tables, base_out_csv)
 
-    # Verify that the split files were created successfully using the sheet names
+    # Verify that the split files were created successfully using the sheet
+    # names
     expected_sheet1_path = TMP_ROOT / "split_output_Mixed Formats.csv"
     expected_sheet2_path = TMP_ROOT / "split_output_Simple Data.csv"
 
@@ -463,7 +481,8 @@ def test_csv_write_splits_multiple_tables():
 
 
 def test_writers_append_newline():
-    """Verify that MD and JSON writers safely append an empty newline at the end of generated files."""
+    """Verify that MD and JSON writers safely append an empty newline at the
+    end of generated files."""
     t = Table("NewlineTest", ["Col"], [[1]])
 
     md_path = TMP_ROOT / "test_newline.md"
@@ -508,7 +527,8 @@ def test_json_unicode_formatting():
 
     json_str = tabular.write(tables, fmt="json")
 
-    # ensure_ascii=False guarantees that literal unicode characters are kept intact
+    # ensure_ascii=False guarantees that literal unicode characters are kept
+    # intact
     assert "Bjørn Ærø" in str(
         json_str
     ), "JSON Writer failed to preserve 'ø' and 'Æ' characters."

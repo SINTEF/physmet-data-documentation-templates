@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Union, Optional, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional, Union
 
 from .registry import get_parser, get_writer, supports_multi_sheet
 
@@ -10,7 +10,9 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> "Tables":
+def read(
+    path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any
+) -> "Tables":
     """
     Reads a tabular file and always returns a Tables collection.
 
@@ -38,7 +40,8 @@ def read(path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any) -> "T
 
     if not actual_fmt:
         raise ValueError(
-            "Could not determine format from path. Please explicitly provide 'fmt'."
+            "Could not determine format from path. Please explicitly provide "
+            "'fmt'."
         )
 
     logger.info(f"Reading file '{path}' as format '{actual_fmt}'")
@@ -53,31 +56,35 @@ def write(
     fmt: Optional[str] = None,
     **kwargs: Any,
 ) -> Optional[str]:
-    """
-    Writes a Table or Tables object to a file, OR returns it as a formatted string
-    if path is None.
+    """Writes a Table or Tables object to a file, OR returns it as a
+    formatted string if path is None.
 
-    If writing a multi-table collection to a path and the target format does not
-    natively support multiple sheets (e.g., CSV), this function will automatically
-    split the output, generating a separate file for each table appended with its name.
+    If writing a multi-table collection to a path and the target
+    format does not natively support multiple sheets (e.g., CSV), this
+    function will automatically split the output, generating a
+    separate file for each table appended with its name.
 
     Args:
         data (Union[Table, Tables]): The tabular data to write.
-        path (Optional[Union[str, Path]], optional): The output destination path.
-            If None, the output is returned as a string.
+        path (Optional[Union[str, Path]], optional): The output destination
+            path. If None, the output is returned as a string.
         fmt (Optional[str], optional): The format to save/serialize as.
-            If None, inferred from extension (must be provided if path is None).
+            If None, inferred from extension (must be provided if path is
+            None).
         **kwargs: Additional format-specific arguments.
 
     Returns:
         Optional[str]: The serialized string if path is None, else None.
 
     Raises:
-        ValueError: If the file format is unsupported, or if serializing to string without a format.
+        ValueError: If the file format is unsupported, or if serializing to
+        string without a format.
+
     """
     if path is None and fmt is None:
         raise ValueError(
-            "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None to parse as a string."
+            "You must specify a 'fmt' (e.g., 'csv', 'json') if path is None "
+            "to parse as a string."
         )
 
     if path is not None:
@@ -89,7 +96,8 @@ def write(
 
     if not actual_fmt:
         raise ValueError(
-            "Could not determine format from path. Please explicitly provide 'fmt'."
+            "Could not determine format from path. Please explicitly provide "
+            "'fmt'."
         )
 
     writer = get_writer(actual_fmt)
@@ -102,7 +110,8 @@ def write(
         return writer.write(data, path, **kwargs)
 
     logger.info(
-        f"Splitting data into individual '{actual_fmt}' files at '{path.parent}'"
+        f"Splitting data into individual '{actual_fmt}' files at "
+        f"'{path.parent}'"
     )
 
     if hasattr(data, "tables"):
