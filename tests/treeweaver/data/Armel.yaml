@@ -58,16 +58,17 @@ patterns:
         downloadURL: "{baseURL}/{escapedpath}"
 
 - "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
-    sample:
-      sampleId: "ELKEM-{name}-{date}"
-    dataset:
-      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
-      processedFrom: "{prefix}:ELKEM-{name}-{date}"
-    measurement:
-      measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
-      sampleId: "ELKEM-{name}-{date}"
-      datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
+    vardefs:
+      sample:
+        sampleId: "ELKEM-{name}-{date}"
+      dataset:
+        datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+        processedFrom: "{prefix}:ELKEM-{name}-{date}"
+      measurement:
+        measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
+        sampleId: "ELKEM-{name}-{date}"
+        datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
+        equipmentId: "emlab-equip:SemA"  # TODO: check
 
 
 # List of file patterns to exclude from documentation
