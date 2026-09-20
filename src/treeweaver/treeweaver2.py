@@ -14,6 +14,8 @@ import yaml
 
 from tabular import Table, Tables
 
+__version__ = "2.0"
+
 PathType = Union[Path, str]
 ValueType = Union[str, list, dict, bool, int, float, None]  # template values
 
@@ -323,7 +325,7 @@ def main():
         "--configfile",
         "-c",
         help=(
-            "Configuration YAML file. Default is `treeweaver.yaml` in "
+            "Configuration YAML file. Default is `treeweaver2.yaml` in "
             "`rootdir`."
         ),
     )
