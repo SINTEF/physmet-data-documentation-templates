@@ -1,6 +1,10 @@
 """Tables collection model representing multiple named Table sheets."""
 
-from typing import Iterator, List, Optional, Union
+from __future__ import annotations
+
+import importlib
+from pathlib import Path
+from typing import Any, Iterator, List, Optional, Union
 
 from .table import Table
 
@@ -14,46 +18,17 @@ class Tables:
     and merging.
     """
 
-    # --- Initialization ---
-
     def __init__(self, tables: Optional[List[Table]] = None) -> None:
         """
         Initializes a Tables collection.
 
         Args:
-            tables (List[Table], optional): A list of Table objects to initialize with.
+            tables (List[Table], optional): A list of Table objects.
         """
         self._tables: List[Table] = []
         if tables:
             for t in tables:
                 self.append_table(t)
-
-    # --- Properties ---
-
-    @property
-    def tables(self) -> List[Table]:
-        """
-        Retrieves all tables in the collection.
-
-        Returns:
-            List[Table]: A list of all stored Table objects.
-        """
-        return self._tables
-
-    @property
-    def first(self) -> Table:
-        """
-        Convenience property to quickly retrieve the first table in the collection.
-
-        Returns:
-            Table: The first Table added to the collection.
-
-        Raises:
-            ValueError: If the collection contains no tables.
-        """
-        if not self._tables:
-            raise ValueError("The Tables collection is empty.")
-        return self._tables[0]
 
     # --- Dunder Methods ---
 
@@ -70,10 +45,10 @@ class Tables:
 
     def __repr__(self) -> str:
         """
-        Returns a detailed string representation of the Tables collection for debugging.
+        Returns a detailed string representation of the Tables collection.
 
         Returns:
-            str: The unambiguous representation of the tables object detailing count and names.
+            str: Representation of tables detailing count and names.
         """
         table_names = [
             t.name if t.name else str(i) for i, t in enumerate(self._tables)
@@ -85,7 +60,7 @@ class Tables:
         Allows indexing to get a table by integer index or by name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table.
+            key (Union[int, str]): The integer index or string name.
 
         Returns:
             Table: The requested table.
@@ -112,7 +87,77 @@ class Tables:
         """
         return iter(self._tables)
 
-    # --- Collection Manipulation ---
+    # --- Properties ---
+
+    @property
+    def tables(self) -> List[Table]:
+        """
+        Retrieves all tables in the collection.
+
+        Returns:
+            List[Table]: A list of all stored Table objects.
+        """
+        return self._tables
+
+    @property
+    def first(self) -> Table:
+        """
+        Convenience property to retrieve the first table in the collection.
+
+        Returns:
+            Table: The first Table added to the collection.
+
+        Raises:
+            ValueError: If the collection contains no tables.
+        """
+        if not self._tables:
+            raise ValueError("The Tables collection is empty.")
+        return self._tables[0]
+
+    # --- Class Methods ---
+
+    @classmethod
+    def read(
+        cls,
+        path: Union[str, Path],
+        format: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Tables:
+        """
+        Reads a file directly into a Tables collection instance.
+
+        Args:
+            path (Union[str, Path]): Path to the file.
+            format (Optional[str], optional): Format override.
+            **kwargs: Extra parameters passed to the reader.
+
+        Returns:
+            Tables: The parsed tables collection.
+        """
+        io_mod = importlib.import_module("tabular.io")
+        return io_mod.read(path, format=format, **kwargs)
+
+    # --- Instance Methods ---
+
+    def write(
+        self,
+        path: Optional[Union[str, Path]] = None,
+        format: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Optional[str]:
+        """
+        Writes this Tables collection directly to a file or returns a string.
+
+        Args:
+            path (Optional[Union[str, Path]], optional): Destination path.
+            format (Optional[str], optional): Format override.
+            **kwargs: Extra parameters passed to the writer.
+
+        Returns:
+            Optional[str]: Serialized string if path is None, else None.
+        """
+        io_mod = importlib.import_module("tabular.io")
+        return io_mod.write(self, path=path, format=format, **kwargs)
 
     def get_table(self, name: str) -> Table:
         """
@@ -146,7 +191,7 @@ class Tables:
         Removes a table from the collection by its index or name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table to remove.
+            key (Union[int, str]): The index or name of the table to remove.
 
         Raises:
             KeyError: If a table with the given name does not exist.
@@ -175,7 +220,7 @@ class Tables:
                 Defaults to "MergedTable".
 
         Returns:
-            Table: A new Table containing all row data aligned to a unified schema.
+            Table: A new Table containing all row data aligned to one schema.
         """
         all_headers: List[str] = []
         for table in self._tables:

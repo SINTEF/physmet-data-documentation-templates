@@ -1,4 +1,4 @@
-"""Base parser abstraction for tabular formats."""
+"""Base reader abstraction for tabular formats."""
 
 from __future__ import annotations
 
@@ -13,22 +13,22 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class BaseParser(ABC):
+class BaseReader(ABC):
     """
-    Abstract base class for all file parsers.
+    Abstract base class for all file readers.
     """
 
     @abstractmethod
-    def parse(self, path: Path, **kwargs: Any) -> Tables:
+    def read(self, path: Path, **kwargs: Any) -> Tables:
         """
-        Parses a file from disk into a Tables collection.
+        Reads a file from disk into a Tables collection.
 
         Args:
             path (Path): The Path object pointing to the file to be read.
             **kwargs: Format-specific parameters (e.g., delimiter for CSV).
 
         Returns:
-            Tables: A collection representing the parsed dataset(s).
+            Tables: A collection representing the readd dataset(s).
         """
 
     def _validate_path(self, path: Path) -> None:

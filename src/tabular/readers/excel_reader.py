@@ -1,21 +1,21 @@
-"""Excel format parser implementation."""
+"""Excel format reader implementation."""
 
 import importlib
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 from zipfile import BadZipFile
 
 import tabular.models
 import tabular.utils
 
-from .base import BaseParser
+from .base import BaseReader
 
 logger = logging.getLogger(__name__)
 
 
-def _load_openpyxl() -> Any:
-    """Safely retrieves the openpyxl module and exception classes if installed."""
+def _load_openpyxl() -> Tuple[Any, Any]:
+    """Retrieves the openpyxl module and exception classes if installed."""
     try:
         mod = importlib.import_module("openpyxl")
         exc = importlib.import_module(
@@ -29,8 +29,8 @@ def _load_openpyxl() -> Any:
 _OPENPYXL, _INVALID_FILE_EXCEPTION = _load_openpyxl()
 
 
-class ExcelParser(BaseParser):
-    """Parses Microsoft Excel (.xlsx, .xlsm) files."""
+class ExcelReader(BaseReader):
+    """Reads Microsoft Excel (.xlsx, .xlsm) files."""
 
     def _convert_sheet_to_table(
         self, sheet: Any, sheet_name: str, infer_types: bool
@@ -51,25 +51,27 @@ class ExcelParser(BaseParser):
 
         return table
 
-    def parse(
+    def read(
         self, path: Path, infer_types: bool = True, **kwargs: Any
     ) -> tabular.models.Tables:
         """
-        Parses an Excel file into a Tables collection.
+        Reads an Excel file into a Tables collection.
 
         Args:
             path (Path): The Path object pointing to the Excel file.
-            infer_types (bool, optional): If True, automatically infers and casts data
-                types across all rows. Defaults to True.
-            **kwargs: Reserved for future parser-specific configurations.
+            infer_types (bool, optional): If True, automatically infers and
+                casts data types across all rows. Defaults to True.
+            **kwargs: Reserved for future reader-specific configurations.
 
         Returns:
-            tabular.models.Tables: A collection containing one Table per sheet in the workbook.
+            tabular.models.Tables: A collection containing one Table per
+                sheet in the workbook.
         """
         if _OPENPYXL is None:
             raise ImportError(
                 "The 'openpyxl' package is required to read Excel files. "
-                "Install it using 'pip install tabular[excel]' or 'pip install openpyxl'."
+                "Install it using 'pip install tabular[excel]' or "
+                "'pip install openpyxl'."
             )
 
         self._validate_path(path)

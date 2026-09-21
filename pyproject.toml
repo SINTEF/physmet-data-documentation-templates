@@ -48,7 +48,7 @@ packages = [
 include = ["/src/oold_converter", "/src/tabular", "/src/treeweaver"]
 
 [tool.pylint.messages_control]
-disable = ["too-few-public-methods"]
+disable = ["too-few-public-methods", "redefined-builtin"]
 
 [tool.ruff]
 line-length = 79

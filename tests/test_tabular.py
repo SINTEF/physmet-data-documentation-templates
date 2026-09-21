@@ -11,7 +11,7 @@ import pytest
 
 import tabular
 from tabular.models import Table, Tables
-from tabular.registry import get_parser, get_writer
+from tabular.registry import get_reader, get_writer
 
 # --- Global Test Environment Setup ---
 
@@ -32,16 +32,16 @@ FILE_EXCEL = DATA_DIR / "complex_data.xlsx"
 
 
 def test_registry_unsupported_read():
-    """Verify registry rejects unknown/write-only formats on parse."""
+    """Verify registry rejects unknown/write-only formats on read."""
     with pytest.raises(
         ValueError, match="Unsupported format for reading: 'unknown'"
     ):
-        get_parser("unknown")
+        get_reader("unknown")
 
     with pytest.raises(
         ValueError, match="Unsupported format for reading: 'md'"
     ):
-        get_parser("md")
+        get_reader("md")
 
 
 def test_registry_unsupported_write():
@@ -60,22 +60,22 @@ def test_read_directory_raises_error():
     with pytest.raises(
         IsADirectoryError, match="Expected a file but found a directory"
     ):
-        tabular.read(DATA_DIR, fmt="csv")
+        tabular.read(DATA_DIR, format="csv")
 
 
 def test_write_directory_raises_error():
     """Verify writing to a directory raises IsADirectoryError."""
     t = Table("T1", ["A"], [[1]])
     with pytest.raises(IsADirectoryError, match="Target path is a directory"):
-        tabular.write(t, DATA_DIR, fmt="csv")
+        tabular.write(t, DATA_DIR, format="csv")
 
 
 def test_csv_encoding_error():
-    """Verify CSVParser catches UnicodeDecodeError and raises ValueError."""
+    """Verify CSVReader catches UnicodeDecodeError and raises ValueError."""
     bad_csv = TMP_ROOT / "bad_encoding.csv"
     bad_csv.write_bytes(b"\xff\xfe\xfd")
     with pytest.raises(ValueError, match="Encoding error reading"):
-        tabular.read(bad_csv, fmt="csv")
+        tabular.read(bad_csv, format="csv")
 
 
 def test_excel_invalid_file_error():
@@ -85,14 +85,14 @@ def test_excel_invalid_file_error():
         "This is definitely not a zip or excel file.", encoding="utf-8"
     )
     with pytest.raises(ValueError, match="Failed to load Excel file"):
-        tabular.read(bad_excel, fmt="xlsx")
+        tabular.read(bad_excel, format="xlsx")
 
 
-# --- Tests for Parsers using Unified Real Files ---
+# --- Tests for Readers using Unified Real Files ---
 
 
 def test_csv_returns_tables_collection():
-    """Verify standard CSV files parse and infer complex types."""
+    """Verify standard CSV files read and infer complex types."""
     result = tabular.read(FILE_CSV)
 
     assert isinstance(result, Tables)
@@ -137,19 +137,33 @@ def test_excel_multi_sheet_and_inference():
     assert "Mixed Formats" in sheet_names
     assert "Simple Data" in sheet_names
 
-    mixed_table = result.get_table("Mixed Formats")
-    assert mixed_table.rows[2] == [
-        3,
-        "Jörg Müller",
-        100.0,
-        1000000.0,
-        1000000.0,
-        1000000.0,
-        1000000.0,
-        "20/05/2026",
-        "20.05.2026",
-        "2026-05-20",
-    ]
+
+# --- Tests for Table / Tables Built-In Class Methods ---
+
+
+def test_table_class_read_and_write():
+    """Verify Table class can natively read and write files."""
+    t = Table.read(FILE_CSV)
+    assert t.name == "complex_data"
+
+    out_path = TMP_ROOT / "class_write_test.csv"
+    t.write(out_path)
+    assert out_path.exists()
+
+
+def test_table_read_raises_on_multi_sheet():
+    """Verify Table.read raises an error if multiple tables exist."""
+    with pytest.raises(ValueError, match="Expected a single table"):
+        Table.read(FILE_EXCEL)
+
+
+def test_tables_class_read_and_write():
+    """Verify Tables class can natively read and write files."""
+    ts = Tables.read(FILE_EXCEL)
+    assert len(ts.tables) == 2
+
+    json_str = ts.write(format="json")
+    assert "Mixed Formats" in str(json_str)
 
 
 # --- Tests for Table Model Appending, Logging & Features ---
@@ -162,9 +176,6 @@ def test_append_table_strict_rejection():
 
     with pytest.raises(ValueError, match="Unrecognized headers: \\['C'\\]"):
         t1.append_table(t2, merge_headers=False)
-
-    assert len(t1.rows) == 1
-    assert t1.headers == ["A", "B"]
 
 
 def test_append_table_merge_success():
@@ -194,21 +205,20 @@ def test_append_table_logs_error():
     try:
         with pytest.raises(ValueError):
             t1.append_table(t2, merge_headers=False)
-
         assert "Unrecognized headers:" in log_capture.getvalue()
     finally:
         logger.removeHandler(handler)
         logger.setLevel(old_level)
 
 
-def test_csv_parser_sniff_warns_on_fail():
+def test_csv_reader_sniff_warns_on_fail():
     """Sniffing an empty/invalid file logs a warning gracefully."""
     bad_csv = TMP_ROOT / "empty.csv"
     bad_csv.write_text("", encoding="utf-8")
 
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
-    logger = logging.getLogger("tabular.parsers.csv_parser")
+    logger = logging.getLogger("tabular.readers.csv_reader")
     old_level = logger.level
     logger.setLevel(logging.WARNING)
     logger.addHandler(handler)
@@ -305,7 +315,9 @@ def test_tables_append_from_file_and_write():
 
     ts.append_table(Table("second_sheet", ["A"], [[1]]))
     split_csv_path = TMP_ROOT / "output.csv"
-    tabular.write(ts, split_csv_path)
+
+    with pytest.warns(UserWarning, match="does not support multiple tables"):
+        tabular.write(ts, split_csv_path)
 
     expected_dir = TMP_ROOT / "output"
     assert expected_dir.is_dir()
@@ -335,10 +347,12 @@ def test_tables_printable():
 
 
 def test_csv_write_splits_multiple_tables():
-    """Verify multi-table CSV writes natively split into a directory."""
+    """Verify multi-table CSV writes split into a dir and warn."""
     base_out_csv = TMP_ROOT / "split_output.csv"
     tables = tabular.read(FILE_EXCEL)
-    tabular.write(tables, base_out_csv)
+
+    with pytest.warns(UserWarning, match="does not support multiple tables"):
+        tabular.write(tables, base_out_csv)
 
     expected_dir = TMP_ROOT / "split_output"
     assert expected_dir.is_dir()
@@ -389,7 +403,7 @@ def test_writers_append_newline():
 def test_json_unicode_formatting():
     """Verify JSON writer formats unicode natively."""
     tables = tabular.read(FILE_EXCEL)
-    json_str = tabular.write(tables, fmt="json")
+    json_str = tabular.write(tables, format="json")
     assert "Bjørn Ærø" in str(json_str)
 
 

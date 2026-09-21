@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
 import tabular.models.tables
 
-from .registry import get_parser, get_writer, supports_multi_sheet
+from .registry import get_reader, get_writer, supports_multi_sheet
 
 if TYPE_CHECKING:
     from tabular.models.table import Table
@@ -18,15 +19,15 @@ logger = logging.getLogger(__name__)
 
 
 def read(
-    path: Union[str, Path], fmt: Optional[str] = None, **kwargs: Any
+    path: Union[str, Path], format: Optional[str] = None, **kwargs: Any
 ) -> Tables:
     """
     Reads a tabular file and always returns a Tables collection.
 
     Args:
         path (Union[str, Path]): Path to the file to read.
-        fmt (Optional[str]): Optional format override (e.g. 'csv', 'xlsx').
-        **kwargs: Additional keyword arguments passed to the specific parser.
+        format (Optional[str]): Optional format override (e.g. 'csv', 'xlsx').
+        **kwargs: Additional keyword arguments passed to the specific reader.
 
     Returns:
         Tables: A collection representing the parsed dataset(s).
@@ -35,33 +36,37 @@ def read(
         ValueError: If format cannot be determined or reading fails.
     """
     file_path = Path(path)
-    actual_fmt = fmt or file_path.suffix.lstrip(".").lower()
+    actual_fmt = format or file_path.suffix.lstrip(".").lower()
 
     if not actual_fmt:
         raise ValueError(
             "Could not determine format from path. "
-            "Please explicitly provide 'fmt'."
+            "Please explicitly provide 'format'."
         )
 
     logger.info("Reading file '%s' as format '%s'", file_path, actual_fmt)
-    parser = get_parser(actual_fmt)
-    return parser.parse(file_path, **kwargs)
+    reader = get_reader(actual_fmt)
+    return reader.read(file_path, **kwargs)
 
 
 def write(
     data: Union[Table, Tables],
     path: Optional[Union[str, Path]] = None,
-    fmt: Optional[str] = None,
+    format: Optional[str] = None,
     **kwargs: Any,
 ) -> Optional[str]:
     """
     Writes a Table or Tables object to a file or string.
 
+    If a Tables collection is written to a format that does not support
+    multiple sheets (e.g., 'csv') and a file path is provided, a directory
+    matching the base file name will be created to store individual files.
+
     Args:
         data (Union[Table, Tables]): The dataset to write.
         path (Optional[Union[str, Path]]): Destination path.
             If None, returns string.
-        fmt (Optional[str]): Format identifier (e.g., 'csv', 'json').
+        format (Optional[str]): Format identifier (e.g., 'csv', 'json').
         **kwargs: Additional parameters passed to writer.
 
     Returns:
@@ -69,13 +74,13 @@ def write(
     """
     out_path = Path(path) if path is not None else None
 
-    if out_path is None and fmt is None:
+    if out_path is None and format is None:
         raise ValueError(
-            "You must specify 'fmt' (e.g., 'csv', 'json') "
+            "You must specify 'format' (e.g., 'csv', 'json') "
             "when path is None."
         )
 
-    actual_fmt = fmt or (
+    actual_fmt = format or (
         out_path.suffix.lstrip(".").lower() if out_path else ""
     )
 
@@ -89,6 +94,13 @@ def write(
             target_dir = (
                 out_path.with_suffix("") if out_path.suffix else out_path
             )
+
+            msg = (
+                f"Format '{actual_fmt}' does not support multiple tables. "
+                f"A directory '{target_dir}' will be created containing "
+                "the individual tables."
+            )
+            warnings.warn(msg, UserWarning)
 
             logger.info(
                 "Splitting data into individual '%s' files in directory '%s'",
