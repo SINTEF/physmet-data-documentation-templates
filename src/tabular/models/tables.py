@@ -123,7 +123,10 @@ class Tables:
         **kwargs: Any,
     ) -> Tables:
         """
-        Reads a file directly into a Tables collection instance.
+        Reads a file or directory directly into a Tables collection instance.
+
+        If `format` is not provided, it is inferred from the path's extension,
+        regardless of whether the path points to a file or a directory.
 
         Args:
             path (Union[str, Path]): Path to the file or directory.
@@ -134,9 +137,9 @@ class Tables:
             Tables: The parsed tables collection.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import read
+        from tabular.io import read as io_read
 
-        return read(path, format=format, **kwargs)
+        return io_read(path, format=format, **kwargs)
 
     # --- Instance Methods ---
 
@@ -158,9 +161,9 @@ class Tables:
             Optional[str]: Serialized string if path is None, else None.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import write
+        from tabular.io import write as io_write
 
-        return write(self, path=path, format=format, **kwargs)
+        return io_write(self, path=path, format=format, **kwargs)
 
     def get_table(self, name: str) -> Table:
         """

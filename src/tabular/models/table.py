@@ -144,10 +144,13 @@ class Table:
         **kwargs: Any,
     ) -> Table:
         """
-        Reads a file directly into a Table instance.
+        Reads a file or directory directly into a Table instance.
+
+        If `format` is not provided, it is inferred from the path's extension,
+        regardless of whether the path points to a file or a directory.
 
         Args:
-            path (Union[str, Path]): Path to the file.
+            path (Union[str, Path]): Path to the file or directory.
             format (Optional[str], optional): Format override.
             **kwargs: Extra parameters passed to the reader.
 
@@ -158,9 +161,9 @@ class Table:
             ValueError: If the target file contains multiple tables.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import read
+        from tabular.io import read as io_read
 
-        tables = read(path, format=format, **kwargs)
+        tables = io_read(path, format=format, **kwargs)
         tables_list = getattr(tables, "tables", None)
         if tables_list is not None and len(tables_list) > 1:
             raise ValueError(
@@ -189,9 +192,9 @@ class Table:
             Optional[str]: Serialized string if path is None, else None.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import write
+        from tabular.io import write as io_write
 
-        return write(self, path=path, format=format, **kwargs)
+        return io_write(self, path=path, format=format, **kwargs)
 
     def append_row(self, row: List[Any]) -> None:
         """

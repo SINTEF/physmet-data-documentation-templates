@@ -26,12 +26,14 @@ def read(
     For single-file multi-sheet formats (e.g., .xlsx), reads all sheets
     from the file. For single-sheet formats (e.g., .csv), if the path points
     to a file, reads that single file. If the path points to a directory
-    containing multiple files of the target format, reads all matching
-    files into a unified Tables collection.
+    containing multiple files, reads all matching files into a collection.
+
+    If `format` is not provided, it is inferred from the path's extension,
+    regardless of whether the path points to a file or a directory.
 
     Args:
         path (Union[str, Path]): Path to a file or directory.
-        format (Optional[str]): Optional format override (e.g. 'csv', 'xlsx').
+        format (Optional[str]): Optional format override (e.g. 'csv').
         **kwargs: Additional keyword arguments passed to the specific reader.
 
     Returns:
@@ -53,10 +55,8 @@ def read(
     # Use directory if it exists, otherwise file
     target_path = dir_path if dir_path.is_dir() else file_path
 
-    # Resolve format from override or file extension
-    actual_fmt = format or (
-        file_path.suffix.lstrip(".").lower() if file_path.is_file() else ""
-    )
+    # Resolve format from override or file extension (matches write logic)
+    actual_fmt = format or file_path.suffix.lstrip(".").lower()
 
     if not actual_fmt:
         raise ValueError(
