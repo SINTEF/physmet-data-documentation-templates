@@ -1,0 +1,32 @@
+name: CI Tests
+
+on:
+  pull_request:
+  push:
+    branches: [ "main", "push-action/**" ]
+
+jobs:
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v7
+
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: '3.14'
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install .[pre-commit]
+
+    - name: Run pre-commit hooks
+      uses: pre-commit/action@v3.0.1
+
+    - name: Run tests with pytest
+      run: |
+        pytest
