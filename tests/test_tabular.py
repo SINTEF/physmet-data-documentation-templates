@@ -94,6 +94,7 @@ def test_symmetric_read_write_directory_workflow():
     """
     Verify symmetric read/write behaviour where the exact path passed to
     write() can be passed directly to read() to merge or update data.
+    The format should be automatically inferred even for a directory path.
     """
     t1 = Table("SheetA", ["ID", "Val"], [[1, "A"]])
     t2 = Table("SheetB", ["ID", "Val"], [[2, "B"]])
@@ -105,8 +106,9 @@ def test_symmetric_read_write_directory_workflow():
     with pytest.warns(UserWarning, match="does not support multiple tables"):
         tabular.write(original_tables, target_path)
 
-    # Re-reading the exact same path loads all split CSV files from directory
-    reloaded_tables = tabular.read(target_path, format="csv")
+    # Re-reading exact same path loads split files from directory seamlessly
+    # NOTE: NO explicit format="csv" is provided here. It infers it.
+    reloaded_tables = tabular.read(target_path)
 
     assert len(reloaded_tables.tables) == 2
     assert "SheetA" in [t.name for t in reloaded_tables.tables]
@@ -119,7 +121,8 @@ def test_symmetric_read_write_directory_workflow():
     with pytest.warns(UserWarning, match="does not support multiple tables"):
         tabular.write(reloaded_tables, target_path)
 
-    updated_tables = tabular.read(target_path, format="csv")
+    # Again, read without explicit format
+    updated_tables = tabular.read(target_path)
     assert len(updated_tables.tables) == 3
 
 
