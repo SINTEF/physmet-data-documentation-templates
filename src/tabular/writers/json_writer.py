@@ -1,3 +1,5 @@
+"""JSON writer implementation."""
+
 import json
 import logging
 from pathlib import Path
@@ -15,7 +17,7 @@ class JSONWriter(BaseWriter):
 
     def write(
         self,
-        data: Union["tabular.models.Table", "tabular.models.Tables"],
+        data: Union[tabular.models.Table, tabular.models.Tables],
         path: Optional[Path] = None,
         **kwargs: Any,
     ) -> Optional[str]:
@@ -49,7 +51,6 @@ class JSONWriter(BaseWriter):
         }
 
         indent = kwargs.pop("indent", 4)
-
         ensure_ascii = kwargs.pop("ensure_ascii", False)
 
         if path is None:
@@ -71,8 +72,6 @@ class JSONWriter(BaseWriter):
                 )
                 f.write("\n")
         except PermissionError as e:
-            msg = f"Permission denied writing to '{path}'."
-            logger.error(msg)
-            raise PermissionError(msg) from e
+            self._handle_write_error(path, e)
 
         return None
