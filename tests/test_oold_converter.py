@@ -463,6 +463,7 @@ def test_conversion_error_wraps_original_exception():
 
 # --- Standalone Execution Logic (for ipython / python execution) ---
 
+# pylint: disable=duplicate-code
 if __name__ == "__main__":
     print("Running OOLD Converter tests standalone...\n")
 

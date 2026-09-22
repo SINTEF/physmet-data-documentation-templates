@@ -1,5 +1,5 @@
 """
-Parser factory for tabular data formats.
+Reader factory for tabular data formats.
 """
 
 import logging
@@ -10,22 +10,22 @@ import tabular.registry
 logger = logging.getLogger(__name__)
 
 
-def get_parser(fmt: str) -> Any:
+def get_reader(format: str) -> Any:
     """
-    Factory function to retrieve the appropriate parser for a file format.
+    Factory function to retrieve the appropriate reader for a file format.
     Delegates to the central registry.
 
     Args:
-        fmt (str): The file extension format (e.g., 'csv', 'xlsx').
+        format (str): The file extension format (e.g., 'csv', 'xlsx').
 
     Returns:
-        BaseParser: An instantiated parser capable of handling the format.
+        BaseReader: An instantiated reader capable of handling the format.
 
     Raises:
         ValueError: If the format is unknown or not supported for reading.
     """
     try:
-        return tabular.registry.get_parser(fmt)
+        return tabular.registry.get_reader(format)
     except ValueError as e:
         logger.error(str(e))
         raise
