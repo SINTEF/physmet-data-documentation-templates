@@ -1,8 +1,8 @@
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
-# Leads to circular imports
-# from ..io import read, write
+import tabular.io
+
 from .table import Table
 
 
@@ -22,7 +22,8 @@ class Tables:
         Initializes a Tables collection.
 
         Args:
-            tables (List[Table], optional): A list of Table objects to initialize with.
+            tables (List[Table], optional): A list of Table objects to
+                initialize with.
         """
         self._tables: List[Table] = []
         if tables:
@@ -44,7 +45,8 @@ class Tables:
     @property
     def first(self) -> Table:
         """
-        Convenience property to quickly retrieve the first table in the collection.
+        Convenience property to quickly retrieve the first table in the
+        collection.
 
         Returns:
             Table: The first Table added to the collection.
@@ -71,10 +73,12 @@ class Tables:
 
     def __repr__(self) -> str:
         """
-        Returns a detailed string representation of the Tables collection for debugging.
+        Returns a detailed string representation of the Tables collection for
+        debugging.
 
         Returns:
-            str: The unambiguous representation of the tables object detailing count and names.
+            str: The unambiguous representation of the tables object detailing
+                count and names.
         """
         table_names = [
             t.name if t.name else str(i) for i, t in enumerate(self._tables)
@@ -86,7 +90,7 @@ class Tables:
         Allows indexing to get a table by integer index or by name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table.
+            key (Union[int, str]): Integer index or string name of the table.
 
         Returns:
             Table: The requested table.
@@ -148,7 +152,8 @@ class Tables:
         Removes a table from the collection by its index or name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table to remove.
+            key (Union[int, str]): The integer index or string name of the
+                table to remove.
 
         Raises:
             KeyError: If a table with the given name does not exist.
@@ -177,7 +182,8 @@ class Tables:
                 Defaults to "MergedTable".
 
         Returns:
-            Table: A new Table containing all row data aligned to a unified schema.
+            Table: A new Table containing all row data aligned to a unified
+                schema.
         """
         all_headers: List[str] = []
         for table in self._tables:
@@ -204,9 +210,7 @@ class Tables:
             path (Union[str, Path]): The path to the file to read.
             **kwargs: Additional parameters to pass to the underlying parser.
         """
-        from tabular.io import read  # Imported here to break circular imports
-
-        new_tables = read(path, **kwargs)
+        new_tables = tabular.io.read(path, **kwargs)
         for t in new_tables.tables:
             self.append_table(t)
 
@@ -216,17 +220,19 @@ class Tables:
         fmt: Optional[str] = None,
         **kwargs: Any,
     ) -> Optional[str]:
-        """
-        Writes the tables to a file, or serializes them to a string if path is None.
+        """Writes the tables to a file, or serializes them to a string
+        if path is None.
 
-        Delegates completely to `tabular.io.write`, which handles format resolution,
-        registry validation, and automatic file splitting for formats that do not
-        support multi-sheet structures natively (e.g., CSV).
+        Delegates completely to `tabular.io.write`, which handles
+        format resolution, registry validation, and automatic file
+        splitting for formats that do not support multi-sheet
+        structures natively (e.g., CSV).
 
         Args:
-            path (Optional[Union[str, Path]], optional): The output destination path.
-                If None, the collection is serialized and returned as a string.
-            fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
+            path (Optional[Union[str, Path]], optional): The output destination
+                path. If None, the collection is serialized and returned as a
+                string.
+            fmt (Optional[str], optional): Target format (e.g., 'csv', 'md').
                 Required if path is None.
             **kwargs: Additional parameters to pass to the writer.
 
@@ -234,8 +240,8 @@ class Tables:
             Optional[str]: The serialized string if path is None, else None.
 
         Raises:
-            ValueError: If path is None but no format is provided, or if format is unsupported.
-        """
-        from tabular.io import write  # Imported here to break circular imports
+            ValueError: If path is None but no format is provided, or if format
+                is unsupported.
 
-        return write(self, path=path, fmt=fmt, **kwargs)
+        """
+        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)
