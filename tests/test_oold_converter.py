@@ -474,6 +474,7 @@ if __name__ == "__main__":
         if callable(obj) and name.startswith("test_")
     ]
 
+    # pylint: disable=invalid-name
     PASSED = 0
     FAILED = 0
 
