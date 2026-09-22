@@ -87,8 +87,10 @@ def test_from_wtpercent():
 
 def test_parse():
     """Test parse()."""
-    from tripper import EMMO, Triplestore
+    from tripper import Triplestore
     from tripper.datadoc import get_context, store
+
+    from utils import EMMO
 
     tmpdir = get_tmpdir("parse")
 
