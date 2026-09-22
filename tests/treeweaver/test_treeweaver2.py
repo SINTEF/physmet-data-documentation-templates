@@ -216,6 +216,7 @@ patterns:
         assert len(tables.tables) > 0
 
 
+@pytest.mark.filterwarnings("ignore:Format.*tables.:UserWarning")
 def test_treeweaver_savedoc_writes_file():
     """Test Treeweaver.savedoc() writes documentation to file."""
     testdir = outdir / "test_treeweaver_savedoc_writes_file"
@@ -234,10 +235,9 @@ patterns:
 """)
 
     tw = Treeweaver(configfile, rootdir=rootdir)
+    outfile = testdir / "sample.csv"
 
-    # Very confusing output file name. Should be fixed in Tables.write()
-    outfile = testdir / "x_sample.csv"
-    tw.savedoc(rootdir, testdir / "x.csv", format="csv")
+    tw.savedoc(rootdir, testdir, format="csv")
 
     assert outfile.exists()
     lines = outfile.read_text().split(os.linesep)
@@ -245,6 +245,7 @@ patterns:
     assert lines[1] == "ARP001,chameo:Sample"
 
 
+@pytest.mark.filterwarnings("ignore:Format.*tables.:UserWarning")
 def test_treeweaver_savedoc_update():
     """Test updating existing file."""
     testdir = outdir / "test_treeweaver_savedoc_update"
@@ -262,15 +263,13 @@ patterns:
       vardefs:
         sampleId: "{sample}"
 """)
-    # __FIXME__ - this really needs improved tabular io
-    outfile = testdir / "x_sample.csv"
+    outfile = testdir / "sample.csv"
     outfile.write_text("""\
 @id,@type,description
 ARP001,chameo:Sample,Some docs
 """)
-    # Very confusing output file name...
     tw = Treeweaver(configfile, rootdir=rootdir)
-    tw.savedoc(rootdir, testdir / "x_sample.csv", format="csv")
+    tw.savedoc(rootdir, testdir, format="csv")
 
 
 def test_treeweaver_savedoc_andreas():

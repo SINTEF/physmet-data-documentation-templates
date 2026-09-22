@@ -234,17 +234,16 @@ class Treeweaver:
         """
         tables = Tables()
         for name, docs in self.document(rootdir).items():
-            oldtable = (
-                None
-                if oldtables is None
-                else (
-                    oldtables[0]
-                    if len(oldtables.tables) == 1
-                    else oldtables[name]
-                )
-            )
+            if oldtables is None:
+                oldtable = None
+            elif len(oldtables) == 1:
+                oldtable = oldtables[0]
+            elif name in oldtables:
+                oldtable = oldtables[name]
+            else:
+                oldtable = None
             table = totable(docs, name=name, oldtable=oldtable)
-            tables.append_table(table)
+            tables.append(table)
         return tables
 
     def savedoc(
@@ -263,7 +262,7 @@ class Treeweaver:
         Arguments:
             rootdir: Root directory of the directory tree to document.
             path: Output path. Format is inferred from the file extension
-                unless explicitly provided via `fmt`.
+                unless explicitly provided via `format`.
             format: Output format. Any format supported by tabular.
                 Single-file formats: xlsx, json
                 Multi-file formats: csv
@@ -287,14 +286,13 @@ class Treeweaver:
             if p.is_dir() and format.lower() in singlefile_formats:
                 oldtables = Tables()
                 for filename in p.glob(f"*.{format}"):
-                    oldtables.append_file(filename)
+                    oldtables.append(Tables.read(filename))
             else:
-                oldtables = tabular.io.read(p, fmt=format, **kwargs)
+                oldtables = tabular.io.read(p, format=format, **kwargs)
             tables = self.totables(rootdir, oldtables=oldtables)
         else:
             tables = self.totables(rootdir)
-
-        tables.write(p, fmt=format, **kwargs)
+        tables.write(p, format=format, **kwargs)
 
 
 def totable(
