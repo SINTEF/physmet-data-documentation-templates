@@ -221,12 +221,14 @@ flowchart LR
   M -- hasOutput --> D
   M -- performedWith --> EQ("instrument<br>(equipments.csv)")
   M -- hasOperator --> ST
+  M -- hasTechnique --> TC("technique<br>(techniques.csv)")
 
   click CP "../templates/people.csv" "template"
   click ST "../templates/people.csv" "template"
   click RH "../templates/organisations.csv" "template"
   click LD "../templates/licenses.csv" "template"
   click EQ "../templates/equipments.csv" "template"
+  click TC "../templates/techniques.csv" "template"
 ```
 **Figure 1**. Generated section of a knowledge graph showing interrelations between the generated `sample`, `dataset` and `measurement` (blue boxes) and their relation to shared resources (red boxes). The dataset `distribution` (gray box) is also generated, while the relations to the `composition` must be entered by hand (see below). Colour codes are the same as in the [templates figure] in the [README] file.
 
