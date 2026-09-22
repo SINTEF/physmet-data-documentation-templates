@@ -1,3 +1,5 @@
+"""Unit tests for the OO-LD converter module."""
+
 import csv
 import json
 import logging
@@ -28,21 +30,23 @@ from oold_converter import (
 DATA_DIR = Path(__file__).parent / "data" / "oold_converter"
 
 # Create a root temporary directory for the session
+# pylint: disable=consider-using-with
 _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
-# Cache the registry so we only download it once
-_REGISTRY_CACHE = None
+# Cache the registry so we only download it once using a mutable list wrapper
+_REGISTRY_CACHE: list = []
 
 
 def get_schema_registry():
     """
-    Creates a referencing Registry that explicitly allows fetching remote schemas.
+    Creates a referencing Registry that explicitly allows fetching remote
+    schemas.
+
     Safely prevents the jsonschema DeprecationWarning about auto-fetching URLs.
     """
-    global _REGISTRY_CACHE
-    if _REGISTRY_CACHE is not None:
-        return _REGISTRY_CACHE
+    if _REGISTRY_CACHE:
+        return _REGISTRY_CACHE[0]
 
     def retrieve_schema(uri):
         response = requests.get(uri, timeout=10)
@@ -51,13 +55,14 @@ def get_schema_registry():
 
     try:
         oold_meta = retrieve_schema(META_SCHEMA)
-        _REGISTRY_CACHE = Registry(retrieve=retrieve_schema).with_resource(
+        registry = Registry(retrieve=retrieve_schema).with_resource(
             META_SCHEMA, oold_meta
         )
-        return _REGISTRY_CACHE
+        _REGISTRY_CACHE.append(registry)
+        return registry
     except requests.exceptions.RequestException as e:
         logger = logging.getLogger("oold.converter")
-        logger.warning(f"Could not reach the OO-LD meta-schema: {e}")
+        logger.warning("Could not reach the OO-LD meta-schema: %s", e)
         return None
 
 
@@ -88,7 +93,8 @@ def test_infer_type():
 
 
 def test_infer_type_blank_entries_dont_affect_type():
-    """A blank/empty entry among otherwise-consistent booleans or numbers should not affect type inference."""
+    """A blank/empty entry among otherwise-consistent booleans or numbers
+    should not affect type inference."""
     cases = [
         (["true", "", "false"], "boolean"),
         (["1", "", "2.5"], "number"),
@@ -102,7 +108,8 @@ def test_infer_type_blank_entries_dont_affect_type():
 
 
 def test_csv_to_json_schema_content():
-    """Tests if the CSV parsing extracts only the first row for examples and hardcodes @id and @type."""
+    """Tests if the CSV parsing extracts only the first row for examples and
+    hardcodes @id and @type."""
     tmp_path = get_test_tmp_path("csv_to_json_schema_content")
     input_csv = DATA_DIR / "test_input.csv"
 
@@ -132,7 +139,8 @@ def test_csv_to_json_schema_content():
 
 
 def test_csv_to_json_schema_type_inference():
-    """Tests if type inference dynamically resolves numbers, booleans, and strings."""
+    """Tests if type inference dynamically resolves numbers, booleans, and
+    strings."""
     tmp_path = get_test_tmp_path("csv_to_json_schema_type_inference")
     input_csv = tmp_path / "inference_test.csv"
     input_csv.write_text(
@@ -142,7 +150,9 @@ def test_csv_to_json_schema_type_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Inference_test.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Inference_test.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
     properties = schema["properties"]
@@ -153,7 +163,8 @@ def test_csv_to_json_schema_type_inference():
 
 
 def test_csv_to_json_schema_strict_number_inference():
-    """Tests if type inference strictly rejects NaN and Inf, falling back to string."""
+    """Tests if type inference strictly rejects NaN and Inf, falling back to
+    string."""
     tmp_path = get_test_tmp_path("csv_to_json_schema_strict_number_inference")
     input_csv = tmp_path / "strict_numbers.csv"
     input_csv.write_text(
@@ -165,7 +176,9 @@ def test_csv_to_json_schema_strict_number_inference():
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Strict_numbers.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
     properties = schema["properties"]
@@ -175,17 +188,20 @@ def test_csv_to_json_schema_strict_number_inference():
 
 
 def test_csv_to_json_schema_no_rows_omits_examples():
-    """A CSV with headers but no data rows should produce properties with no 'examples' key at all."""
+    """A CSV with headers but no data rows should produce properties with no
+    'examples' key at all."""
     tmp_path = get_test_tmp_path("csv_to_json_schema_no_rows")
     input_csv = tmp_path / "headers_only.csv"
     input_csv.write_text("title,description\n", encoding="utf-8")
 
     csv_to_json_schema(input_csv, tmp_path)
 
-    with open(tmp_path / "Headers_only.schema.json", "r", encoding="utf-8") as f:
+    with open(
+        tmp_path / "Headers_only.schema.json", "r", encoding="utf-8"
+    ) as f:
         schema = json.load(f)
 
-    for name, prop in schema["properties"].items():
+    for prop in schema["properties"].values():
         assert "examples" not in prop
 
 
@@ -205,7 +221,8 @@ def test_csv_to_json_schema_base_url():
 
 
 def test_csv_to_json_schema_properties_mapping():
-    """Tests if mapping ONLY extracts description/conformance and safely ignores other properties."""
+    """Tests if mapping ONLY extracts description/conformance and safely
+    ignores other properties."""
     tmp_path = get_test_tmp_path("csv_to_json_schema_properties_mapping")
     input_csv = DATA_DIR / "test_input.csv"
 
@@ -228,7 +245,8 @@ def test_csv_to_json_schema_properties_mapping():
 
     properties = schema["properties"]
 
-    # Conformance was 'mandatory', so it should be required, but type stays purely "string"
+    # Conformance was 'mandatory', so it should be required, but type stays
+    # purely "string"
     assert "title" in schema["required"]
     assert properties["title"]["type"] == "string"
     assert properties["title"]["description"] == "My Custom Title Description"
@@ -238,7 +256,8 @@ def test_csv_to_json_schema_properties_mapping():
 
 
 def test_csv_to_json_schema_oold_compliance():
-    """Strictly validates the generated JSON against the official OO-LD meta-schema."""
+    """Strictly validates the generated JSON against the official OO-LD
+    meta-schema."""
     registry = get_schema_registry()
     if registry is None:
         # Skip gracefully if running without internet access
@@ -260,7 +279,9 @@ def test_csv_to_json_schema_oold_compliance():
             registry=registry,
         )
     except ValidationError as e:
-        raise AssertionError(f"Schema failed OO-LD validation: {e.message}")
+        raise AssertionError(
+            f"Schema failed OO-LD validation: {e.message}"
+        ) from e
 
 
 def test_csv_to_json_file_not_found():
@@ -276,7 +297,8 @@ def test_csv_to_json_file_not_found():
 
 
 def test_json_schema_to_csv_content():
-    """Tests if the schema correctly unpacks array examples into CSV rows (expecting 1 row)."""
+    """Tests if the schema correctly unpacks array examples into CSV rows
+    (expecting 1 row)."""
     tmp_path = get_test_tmp_path("json_schema_to_csv_content")
     input_json = tmp_path / "Test_input.schema.json"
 
@@ -336,7 +358,8 @@ def test_process_path_directory():
 
 
 def test_process_path_directory_skips_mismatched_files():
-    """Files in a directory that don't match the requested mode are silently skipped."""
+    """Files in a directory that don't match the requested mode are silently
+    skipped."""
     tmp_path = get_test_tmp_path("process_path_directory_skips")
     input_dir = tmp_path / "in"
     input_dir.mkdir()
@@ -345,32 +368,33 @@ def test_process_path_directory_skips_mismatched_files():
     # Manually capture logs without relying on pytest caplog fixture
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
-    logger = logging.getLogger("oold.converter")
-    logger.addHandler(handler)
+    log = logging.getLogger("oold.converter")
+    log.addHandler(handler)
 
     try:
         process_path(input_dir, tmp_path / "out", "csv2json")
         assert "No files were processed" in log_capture.getvalue()
     finally:
-        logger.removeHandler(handler)
+        log.removeHandler(handler)
 
 
 def test_process_path_single_unsupported_file_warns():
-    """A single file explicitly passed in that doesn't match the mode logs a specific warning."""
+    """A single file explicitly passed in that doesn't match the mode logs a
+    specific warning."""
     tmp_path = get_test_tmp_path("process_path_single_unsupported")
     bad_file = tmp_path / "notes.txt"
     bad_file.write_text("not convertible", encoding="utf-8")
 
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
-    logger = logging.getLogger("oold.converter")
-    logger.addHandler(handler)
+    log = logging.getLogger("oold.converter")
+    log.addHandler(handler)
 
     try:
         process_path(bad_file, tmp_path / "out", "csv2json")
         assert "unsupported for mode" in log_capture.getvalue()
     finally:
-        logger.removeHandler(handler)
+        log.removeHandler(handler)
 
 
 def test_process_path_missing_input():
@@ -382,7 +406,8 @@ def test_process_path_missing_input():
 
 
 def test_process_path_exclude_files():
-    """Tests if process_path correctly skips multiple files specified by the exclude_files parameter."""
+    """Tests if process_path correctly skips multiple files specified by the
+    exclude_files parameter."""
     tmp_path = get_test_tmp_path("process_path_exclude_files")
 
     # Create input and output directories
@@ -422,7 +447,8 @@ def test_process_path_exclude_files():
 
 
 def test_conversion_error_wraps_original_exception():
-    """ConversionError should preserve the underlying exception for callers using the __cause__ attribute."""
+    """ConversionError should preserve the underlying exception for callers
+    using the __cause__ attribute."""
     original = ValueError("boom")
 
     try:
@@ -447,21 +473,22 @@ if __name__ == "__main__":
         if callable(obj) and name.startswith("test_")
     ]
 
-    passed = 0
-    failed = 0
+    PASSED = 0
+    FAILED = 0
 
     for test_func in test_functions:
         sys.stdout.write(f"Running {test_func.__name__} ... ")
         try:
             test_func()
             print("PASSED")
-            passed += 1
-        except Exception as e:
-            print(f"FAILED\n  -> {type(e).__name__}: {e}")
-            failed += 1
+            PASSED += 1
+        # pylint: disable=broad-exception-caught
+        except Exception as err:
+            print(f"FAILED\n  -> {type(err).__name__}: {err}")
+            FAILED += 1
 
     print("\n--- Test Run Summary ---")
-    print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
+    print(f"Total: {PASSED + FAILED} | Passed: {PASSED} | Failed: {FAILED}")
 
-    if failed > 0:
+    if FAILED > 0:
         sys.exit(1)
