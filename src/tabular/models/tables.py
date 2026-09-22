@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
@@ -127,15 +126,17 @@ class Tables:
         Reads a file directly into a Tables collection instance.
 
         Args:
-            path (Union[str, Path]): Path to the file.
+            path (Union[str, Path]): Path to the file or directory.
             format (Optional[str], optional): Format override.
             **kwargs: Extra parameters passed to the reader.
 
         Returns:
             Tables: The parsed tables collection.
         """
-        io_mod = importlib.import_module("tabular.io")
-        return io_mod.read(path, format=format, **kwargs)
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import read
+
+        return read(path, format=format, **kwargs)
 
     # --- Instance Methods ---
 
@@ -156,8 +157,10 @@ class Tables:
         Returns:
             Optional[str]: Serialized string if path is None, else None.
         """
-        io_mod = importlib.import_module("tabular.io")
-        return io_mod.write(self, path=path, format=format, **kwargs)
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import write
+
+        return write(self, path=path, format=format, **kwargs)
 
     def get_table(self, name: str) -> Table:
         """

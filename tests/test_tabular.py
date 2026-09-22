@@ -55,16 +55,15 @@ def test_registry_unsupported_write():
 # --- Tests for Validation & Error Handling ---
 
 
-def test_read_directory_raises_error():
-    """Verify reading a directory raises IsADirectoryError."""
-    with pytest.raises(
-        IsADirectoryError, match="Expected a file but found a directory"
-    ):
-        tabular.read(DATA_DIR, format="csv")
+def test_read_nonexistent_path_raises_error():
+    """Verify reading a non-existent path raises FileNotFoundError."""
+    missing_path = TMP_ROOT / "non_existent_file.csv"
+    with pytest.raises(FileNotFoundError, match="Path not found"):
+        tabular.read(missing_path)
 
 
 def test_write_directory_raises_error():
-    """Verify writing to a directory raises IsADirectoryError."""
+    """Verify writing a Table to a directory raises IsADirectoryError."""
     t = Table("T1", ["A"], [[1]])
     with pytest.raises(IsADirectoryError, match="Target path is a directory"):
         tabular.write(t, DATA_DIR, format="csv")
@@ -86,6 +85,42 @@ def test_excel_invalid_file_error():
     )
     with pytest.raises(ValueError, match="Failed to load Excel file"):
         tabular.read(bad_excel, format="xlsx")
+
+
+# --- Tests for Symmetric Path Read / Write Workflows ---
+
+
+def test_symmetric_read_write_directory_workflow():
+    """
+    Verify symmetric read/write behaviour where the exact path passed to
+    write() can be passed directly to read() to merge or update data.
+    """
+    t1 = Table("SheetA", ["ID", "Val"], [[1, "A"]])
+    t2 = Table("SheetB", ["ID", "Val"], [[2, "B"]])
+    original_tables = Tables([t1, t2])
+
+    target_path = TMP_ROOT / "dataset.csv"
+
+    # Writing multi-table CSV creates 'dataset' directory
+    with pytest.warns(UserWarning, match="does not support multiple tables"):
+        tabular.write(original_tables, target_path)
+
+    # Re-reading the exact same path loads all split CSV files from directory
+    reloaded_tables = tabular.read(target_path, format="csv")
+
+    assert len(reloaded_tables.tables) == 2
+    assert "SheetA" in [t.name for t in reloaded_tables.tables]
+    assert "SheetB" in [t.name for t in reloaded_tables.tables]
+
+    # Demonstrate merging logic before writing back
+    new_table = Table("SheetC", ["ID", "Val"], [[3, "C"]])
+    reloaded_tables.append_table(new_table)
+
+    with pytest.warns(UserWarning, match="does not support multiple tables"):
+        tabular.write(reloaded_tables, target_path)
+
+    updated_tables = tabular.read(target_path, format="csv")
+    assert len(updated_tables.tables) == 3
 
 
 # --- Tests for Readers using Unified Real Files ---

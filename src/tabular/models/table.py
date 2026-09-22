@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 import logging
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Union
@@ -147,8 +146,6 @@ class Table:
         """
         Reads a file directly into a Table instance.
 
-        Raises a ValueError if the target file contains multiple tables.
-
         Args:
             path (Union[str, Path]): Path to the file.
             format (Optional[str], optional): Format override.
@@ -156,15 +153,21 @@ class Table:
 
         Returns:
             Table: The parsed single table.
+
+        Raises:
+            ValueError: If the target file contains multiple tables.
         """
-        io_mod = importlib.import_module("tabular.io")
-        tables = io_mod.read(path, format=format, **kwargs)
-        if len(tables.tables) > 1:
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import read
+
+        tables = read(path, format=format, **kwargs)
+        tables_list = getattr(tables, "tables", None)
+        if tables_list is not None and len(tables_list) > 1:
             raise ValueError(
                 "Expected a single table but found multiple. "
                 "Use Tables.read() instead."
             )
-        return tables.first
+        return getattr(tables, "first")
 
     # --- Instance Methods ---
 
@@ -185,8 +188,10 @@ class Table:
         Returns:
             Optional[str]: Serialized string if path is None, else None.
         """
-        io_mod = importlib.import_module("tabular.io")
-        return io_mod.write(self, path=path, format=format, **kwargs)
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import write
+
+        return write(self, path=path, format=format, **kwargs)
 
     def append_row(self, row: List[Any]) -> None:
         """

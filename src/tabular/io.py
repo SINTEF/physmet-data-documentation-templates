@@ -7,10 +7,9 @@ import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-import tabular.models.tables
-
 from .registry import get_reader, get_writer, supports_multi_sheet
 
+# Imported strictly for static analysis to avoid runtime cycles
 if TYPE_CHECKING:
     from tabular.models.table import Table
     from tabular.models.tables import Tables
@@ -22,21 +21,42 @@ def read(
     path: Union[str, Path], format: Optional[str] = None, **kwargs: Any
 ) -> Tables:
     """
-    Reads a tabular file and always returns a Tables collection.
+    Reads a tabular file or directory into a Tables collection.
+
+    For single-file multi-sheet formats (e.g., .xlsx), reads all sheets
+    from the file. For single-sheet formats (e.g., .csv), if the path points
+    to a file, reads that single file. If the path points to a directory
+    containing multiple files of the target format, reads all matching
+    files into a unified Tables collection.
 
     Args:
-        path (Union[str, Path]): Path to the file to read.
+        path (Union[str, Path]): Path to a file or directory.
         format (Optional[str]): Optional format override (e.g. 'csv', 'xlsx').
         **kwargs: Additional keyword arguments passed to the specific reader.
 
     Returns:
-        Tables: A collection representing the parsed dataset(s).
+        Tables: A collection representing the loaded dataset(s).
 
     Raises:
         ValueError: If format cannot be determined or reading fails.
+        FileNotFoundError: If the specified path does not exist.
     """
     file_path = Path(path)
-    actual_fmt = format or file_path.suffix.lstrip(".").lower()
+
+    # Check if directory exists directly or as a stem fallback (for symmetry)
+    dir_path = file_path if file_path.is_dir() else file_path.with_suffix("")
+
+    if not file_path.exists() and not dir_path.is_dir():
+        logger.error("Path not found: '%s'", file_path)
+        raise FileNotFoundError(f"Path not found: '{file_path}'")
+
+    # Use directory if it exists, otherwise file
+    target_path = dir_path if dir_path.is_dir() else file_path
+
+    # Resolve format from override or file extension
+    actual_fmt = format or (
+        file_path.suffix.lstrip(".").lower() if file_path.is_file() else ""
+    )
 
     if not actual_fmt:
         raise ValueError(
@@ -44,8 +64,32 @@ def read(
             "Please explicitly provide 'format'."
         )
 
-    logger.info("Reading file '%s' as format '%s'", file_path, actual_fmt)
     reader = get_reader(actual_fmt)
+
+    # Directory loading logic for multi-file format support
+    if target_path.is_dir():
+        logger.info(
+            "Reading directory '%s' for format '%s'", target_path, actual_fmt
+        )
+        matching_files = sorted(target_path.glob(f"*.{actual_fmt}"))
+
+        if not matching_files:
+            raise ValueError(
+                f"No matching '.{actual_fmt}' files found in directory "
+                f"'{target_path}'."
+            )
+
+        collection: Any = None
+        for sub_file in matching_files:
+            sub_tables = reader.read(sub_file, **kwargs)
+            if collection is None:
+                collection = sub_tables.__class__()
+            for table in sub_tables.tables:
+                collection.append_table(table)
+
+        return collection
+
+    logger.info("Reading file '%s' as format '%s'", file_path, actual_fmt)
     return reader.read(file_path, **kwargs)
 
 
@@ -87,10 +131,8 @@ def write(
     writer = get_writer(actual_fmt)
 
     if out_path is not None and not supports_multi_sheet(actual_fmt):
-        if (
-            isinstance(data, tabular.models.tables.Tables)
-            and len(data.tables) > 1
-        ):
+        tables_list = getattr(data, "tables", None)
+        if tables_list is not None and len(tables_list) > 1:
             target_dir = (
                 out_path.with_suffix("") if out_path.suffix else out_path
             )
@@ -100,7 +142,7 @@ def write(
                 f"A directory '{target_dir}' will be created containing "
                 "the individual tables."
             )
-            warnings.warn(msg, UserWarning)
+            warnings.warn(msg, UserWarning, stacklevel=2)
 
             logger.info(
                 "Splitting data into individual '%s' files in directory '%s'",
@@ -109,11 +151,9 @@ def write(
             )
 
             target_dir.mkdir(parents=True, exist_ok=True)
-            ext = f".{actual_fmt}"
-
-            for table in data.tables:
+            for table in tables_list:
                 table_name = table.name or "sheet"
-                split_path = target_dir / f"{table_name}{ext}"
+                split_path = target_dir / f"{table_name}.{actual_fmt}"
                 writer.write(table, split_path, **kwargs)
             return None
 
