@@ -21,3 +21,25 @@ An example table may look like this:
 When parsed, it will produce an RDF representation looking like the following:
 
 ![RDF representation](figs/compositions-rdf.png)
+
+
+## Usage example
+This example reads a composition file and serialises it in turtle.
+The context file could e.g. be the one found in [context/context.json](#../context/context.json).
+
+```python
+from tripper import Triplestore
+from tripper.datadoc import get_context, store
+from parse_compositions import parse
+
+# Parse compositions
+compositions = parse("compositions.csv")
+
+# Load local context
+context = get_context("context/context.json")
+
+# Save compositions to triplestore and write turtle file
+ts = Triplestore(backend="rdflib")
+store(ts, compositions, context=context)
+ts.serialize("compositions.ttl")
+```

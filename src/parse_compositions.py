@@ -3,25 +3,6 @@
 Compositions has a more complex representation in RDF and requires
 special handling.
 
-Usage example:
-
-```python
-from tripper import Triplestore
-from tripper.datadoc import get_context, store
-from parse_compositions import parse
-
-# Parse compositions
-compositions = parse("compositions.csv")
-
-# Load local context
-context = get_context(context.json")
-
-# Save compositions to triplestore and write turtle file
-ts = Triplestore(backend="rdflib")
-store(ts, compositions, context=context)
-ts.serialize("compositions.ttl")
-```
-
 """
 
 import argparse
@@ -202,7 +183,6 @@ def parse(filename: Path, **spec) -> list:
                 "@id": [cell for h, cell in zip(header, row) if h == "@id"][0],
                 "@type": EMMO.ChemicalComposition,
                 "hasSingleComponentComposition": [],
-                # TODO: include other non-composition annotations
             }
             values = to_wtpercent([row[i] for i in icomp], symbols, unitname)
             for symbol, v in zip(symbols, values):
