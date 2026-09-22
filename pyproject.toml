@@ -13,6 +13,7 @@ dependencies = [
     "pyyaml",
     "tripper[datadoc] @ git+https://github.com/EMMC-ASBL/tripper.git@master",
     "jsonschema>=4.26.0",
+    "requests>=2.34.2",
 ]
 
 [project.optional-dependencies]
@@ -20,17 +21,16 @@ excel = ["openpyxl"]
 testing = [
     "PhysMetDatadoc[excel]",
     "pytest==9.1.1",
-    "pytest-cov==6.0.0",
-    "requests>=2.34.2",
+    "pytest-cov==7.1.0",
 ]
 pre-commit = [
     "PhysMetDatadoc[testing]",
-    "pre-commit==4.0.1",
-    "pylint==3.3.4",
+    "pre-commit==4.6.2",
+    "pylint==4.0.8",
 ]
 dev = [
     "PhysMetDatadoc[pre-commit]",
-    "virtualenvwrapper>=4.0.0",
+    "virtualenvwrapper==6.1.1",
 ]
 
 [project.scripts]
