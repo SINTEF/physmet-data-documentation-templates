@@ -3,15 +3,18 @@ PhysMet Data Documentation Templates
 The objective of this repository is to share templates and recommended
 folder structures to store data in the frame of the SFI PhysMet.
 
-Templates
----------
-The [templates/](templates/) folder contain a set of CSV templates for data documentation.
-Figure 1. below shows how these templates are related to each other.
+Templates and shared resources
+------------------------------
+The [templates/](templates/) folder contain a set of CSV templates for documentation of scientific data.
+To increase the richness and FAIRness or the metadata, the documented data should be related to other shared resources.
+These shared resources can be found in the CSV files in the [shared/](shared/) folder.
+
+Figure 1. below shows how the templates and shared resources are related to each other.
 
 ![Tables](figs/tables.svg)
 > Figure 1. Overview of template tables and how they relate to each other.
 >
-> The colour coding is as follows; red: general tables reused between
+> The colour coding is as follows; red: shared resources reused between
 > projects, blue: tables created by the individual data producer (not
 > all tables are needed by everyone); violet: templates for new
 > classes and properties.
@@ -19,24 +22,26 @@ Figure 1. below shows how these templates are related to each other.
 Each row in a CSV template documents an individual, class or property that will be added to the knowledge base.
 The templates can be grouped into three categories:
 
+Shared resources (maintained at Centre-level):
+- **[equipment.csv](shared/equipment.csv)**: Equipment for materials processing, characterisation instruments, etc.
+- **[techniques.csv](shared/techniques.csv)**: Characterisation techniques (documented as classes)
+- **[people.csv](shared/people.csv)**: People. May be a contact point for a sample, dataset or equipment or the operator of a process.
+- **[software.csv](shared/software.csv)**: Software used for driving a process.
+- **[projects.csv](shared/projects.csv)**: Projects. May e.g. be referred to as the creator of a sample or dataset.
+- **[organisations.csv](shared/organisations.csv)**: Organisations. May e.g. be referred to as the owner of a dataset.
+- **[licenses.csv](shared/licenses.csv)**: Licenses used in SFI PhysMet.
+
 Individuals documented by the user:
 - **[datasets.csv](templates/datasets.csv)**: Datasets. What the dataset is about, how can it be accessed and (optionally) what it contain how it is structured.
 - **[samples.csv](templates/samples.csv)**: Physical samples (material objects) that are processed and characterised.
 - **[processes.csv](templates/processes.csv)**: Processes and procedures. Includes materials processing, characterisation and computations. Has samples/datasets as input and output.
-- **[software.csv](templates/software.csv)**: Software used for driving a process.
-- **[composition.csv](templates/composition.csv)**: Chemical composition of a sample.
+- **[composition.csv](templates/composition.csv)**: Chemical composition of a sample. This table has a custom and user-friendly format. It must be parsed with the [compositions] tool.
 
 Class-level documentation - generalised input provided by the user:
 - **[datasetClasses.csv](templates/datasetClasses.csv)**: Dataset classes, like the general concept of a TEM bright field image. An actual TEM bright field image would be an instance of this class.
 - **[sampleClasses.csv](templates/sampleClasses.csv)**: Sample classes, like TEM sample. An actual TEM sample would be an instance of this class.
 - **[processClasses.csv](templates/processClasses.csv)**: Process classes, like TEM bright field imaging. Has class-level samples/datasets as input and output.
 - **[properties.csv](templates/properties.csv)**: For user-defined annotations, data properties or object properties.
-
-Agents maintained at Centre-level:
-- **[projects.csv](templates/projects.csv)**: Projects. May e.g. be referred to as the creator of a sample or dataset.
-- **[organisations.csv](templates/organisations.csv)**: Organisations. May e.g. be referred to as the owner of a dataset.
-- **[people.csv](templates/people.csv)**: People. May be a contact point for a sample, dataset or equipment or the operator of a process.
-- **[equipment.csv](templates/equipment.csv)**: Equipment for materials processing, characterisation instruments, etc.
 
 
 ### Column headers
@@ -48,7 +53,7 @@ TODO: Describe how to extend this list.
 ### Prefixes
 See section [identifiers](#identifiers) below for an introduction.
 
-A list of all default prefixes can be found in [prefixes.csv](prefixes.csv).
+A list of all default prefixes can be found in [prefixes.csv](shared/prefixes.csv).
 
 
 Identifiers
@@ -107,3 +112,4 @@ Workflows can both be documented at individual-level (for provenance) or at a cl
 
 [CURIE]: https://www.w3.org/2001/sw/BestPractices/HTML/2005-10-27-CURIE
 [Qname]: https://en.wikipedia.org/wiki/QName
+[compositions]: https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/docs/tools.md#compositions
