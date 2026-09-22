@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from parse_compositions import (
+    EMMO,
     _asfloat,
     from_wtpercent,
     normalize_unit,
@@ -89,8 +90,6 @@ def test_parse():
     """Test parse()."""
     from tripper import Triplestore
     from tripper.datadoc import get_context, store
-
-    from utils import EMMO  # pylint: disable=import-error
 
     tmpdir = get_tmpdir("parse")
 
