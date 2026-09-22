@@ -1,3 +1,6 @@
+"""Treeweaver tests"""
+
+# pylint: disable=missing-function-docstring,subprocess-run-check
 import json
 import subprocess
 

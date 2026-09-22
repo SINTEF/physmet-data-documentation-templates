@@ -81,7 +81,9 @@ def write_jsonld(output: Optional[Path], prefixes: dict) -> None:
 def main() -> None:
     """Main function."""
     parser = argparse.ArgumentParser(
-        description="Extract prefixes from CSV files defining shared resources."
+        description=(
+            "Extract prefixes from CSV files defining shared resources."
+        )
     )
     parser.add_argument(
         "paths",
@@ -91,8 +93,8 @@ def main() -> None:
         help=(
             "Directories or CSV files to parse. "
             "If no argument is given, it defaults to the current directory. "
-            "If a directory is given, the following files within the directory "
-            "are parsed (if they exists): "
+            "If a directory is given, the following files within the "
+            "directory are parsed (if they exists): "
             "organisations.csv, people.csv, projects.csv"
         ),
     )

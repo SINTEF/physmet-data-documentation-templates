@@ -1,3 +1,5 @@
+"""OO-LD Converter module for translating between CSV and JSON Schema."""
+
 import argparse
 import csv
 import json
@@ -48,8 +50,6 @@ def _iri_property(description: str) -> Dict[str, Any]:
 class ConversionError(Exception):
     """Error raised when conversion between formats fails."""
 
-    pass
-
 
 def infer_type(values: List[Optional[str]]) -> str:
     """
@@ -75,6 +75,83 @@ def infer_type(values: List[Optional[str]]) -> str:
         return "number"
 
     return "string"
+
+
+def _build_base_schema(
+    file_stem: str, base_url: Optional[str]
+) -> Dict[str, Any]:
+    """Constructs the baseline JSON Schema dictionary structure."""
+    schema_filename = f"{file_stem}.schema.json"
+    schema_id = (
+        f"{base_url.rstrip('/')}/{schema_filename}"
+        if base_url
+        else schema_filename
+    )
+
+    return {
+        "$schema": META_SCHEMA,
+        "$id": schema_id,
+        "@context": CONTEXT_URL,
+        "title": file_stem,
+        "type": "object",
+        "properties": {
+            "@id": _iri_property(
+                "Unique IRI identifying the documented resource."
+            ),
+            "@type": _iri_property(
+                "IRI of the class the resource belongs to."
+            ),
+        },
+        "required": ["@id", "@type"],
+    }
+
+
+def _process_csv_headers(
+    headers: List[str],
+    rows: List[Dict[str, Any]],
+    properties_mapping: Optional[Dict[str, Any]],
+    schema: Dict[str, Any],
+) -> None:
+    """Processes CSV headers to define JSON Schema properties and fields."""
+    for header in headers:
+        if header in HARDCODED_PROPERTIES:
+            schema["properties"][header]["examples"] = []
+            continue
+
+        column_values = [row.get(header) for row in rows]
+        inferred_type = infer_type(column_values)
+
+        prop_def: Dict[str, Any] = {
+            "type": inferred_type,
+            "description": "",
+            "examples": [],
+        }
+
+        mapping = (
+            properties_mapping.get(header) if properties_mapping else None
+        )
+        if isinstance(mapping, dict):
+            if "description" in mapping:
+                prop_def["description"] = mapping["description"]
+            if mapping.get("conformance") == "mandatory":
+                schema["required"].append(header)
+
+        schema["properties"][header] = prop_def
+
+
+def _add_examples_from_first_row(
+    schema: Dict[str, Any], headers: List[str], first_row: Dict[str, Any]
+) -> None:
+    """Extracts the first row of data to serve as JSON Schema examples."""
+    if first_row:
+        for header in headers:
+            val = first_row.get(header)
+            stripped = val.strip() if val is not None else None
+            schema["properties"][header]["examples"].append(stripped or None)
+    else:
+        for header in headers:
+            if "examples" in schema["properties"][header]:
+                del schema["properties"][header]["examples"]
 
 
 def csv_to_json_schema(
@@ -106,119 +183,79 @@ def csv_to_json_schema(
 
     """
     if not input_file.exists() or not input_file.is_file():
-        logger.error(f"Input file not found: {input_file}")
+        logger.error("Input file not found: %s", input_file)
         raise FileNotFoundError(
             f"The specified input CSV file does not exist: {input_file}"
         )
 
     file_stem = input_file.stem[0].upper() + input_file.stem[1:]
-    schema_filename = f"{file_stem}.schema.json"
+    schema = _build_base_schema(file_stem, base_url)
 
-    if base_url:
-        schema_id = f"{base_url.rstrip('/')}/{schema_filename}"
-    else:
-        schema_id = schema_filename
-
-    schema: Dict[str, Any] = {
-        "$schema": META_SCHEMA,
-        "$id": schema_id,
-        "@context": CONTEXT_URL,
-        "title": file_stem,
-        "type": "object",
-        "properties": {},
-    }
-
-    logger.info(f"Reading CSV file: {input_file}")
+    logger.info("Reading CSV file: %s", input_file)
 
     try:
         with open(input_file, mode="r", encoding="utf-8-sig") as f:
             reader = csv.DictReader(f)
-            headers = reader.fieldnames or []
-            rows = list(reader)
-            required_fields = ["@id", "@type"]
 
-            # Unconditionally hardcode @id and @type definitions
-            schema["properties"]["@id"] = _iri_property(
-                "Unique IRI identifying the documented resource."
-            )
-            schema["properties"]["@type"] = _iri_property(
-                "IRI of the class the resource belongs to."
-            )
+            headers = list(reader.fieldnames) if reader.fieldnames else []
+            rows = list(reader)
 
             if not headers:
                 logger.warning(
-                    f"The CSV file '{input_file}' is empty or missing headers."
+                    "The CSV file '%s' is empty or missing headers.",
+                    input_file,
                 )
 
-            for header in headers:
-                # If header is one of the hardcoded properties, prepare
-                # examples array
-                if header in HARDCODED_PROPERTIES:
-                    schema["properties"][header]["examples"] = []
-                    continue
-
-                column_values = [row.get(header) for row in rows]
-                inferred_type = infer_type(column_values)
-
-                prop_def: Dict[str, Any] = {
-                    "type": inferred_type,
-                    "description": "",
-                    "examples": [],
-                }
-
-                # Inject ONLY description and conformance from the mapping if
-                # present
-                mapping = (
-                    properties_mapping.get(header)
-                    if properties_mapping
-                    else None
-                )
-                if mapping:
-                    if "description" in mapping:
-                        prop_def["description"] = mapping["description"]
-
-                    if mapping.get("conformance") == "mandatory":
-                        required_fields.append(header)
-
-                schema["properties"][header] = prop_def
-
-            schema["required"] = required_fields
-
-            # Only extract the FIRST row of examples from the CSV (if present)
-            if rows:
-                first_row = rows[0]
-                for header in headers:
-                    val = first_row.get(header)
-                    stripped = val.strip() if val is not None else None
-                    schema["properties"][header]["examples"].append(
-                        stripped or None
-                    )
-            else:
-                # No rows means every "examples" array is still empty
-                # - drop them.
-                for header in headers:
-                    del schema["properties"][header]["examples"]
+            _process_csv_headers(headers, rows, properties_mapping, schema)
+            _add_examples_from_first_row(
+                schema, headers, rows[0] if rows else {}
+            )
 
     except csv.Error as e:
-        logger.error(f"Error parsing the CSV file {input_file}: {e}")
+        logger.error("Error parsing the CSV file %s: %s", input_file, e)
         raise ConversionError(f"Failed to parse CSV: {e}") from e
     except OSError as e:
-        logger.error(f"OS Error while reading {input_file}: {e}")
+        logger.error("OS Error while reading %s: %s", input_file, e)
         raise ConversionError(f"Failed to read CSV: {e}") from e
 
-    output_path = output_folder / schema_filename
+    output_path = output_folder / f"{file_stem}.schema.json"
 
     try:
         output_folder.mkdir(parents=True, exist_ok=True)
         with open(output_path, mode="w", encoding="utf-8") as f:
             json.dump(schema, f, indent=2)
             f.write("\n")
-
-        logger.info(f"Successfully created JSON Schema at: {output_path}")
-
+        logger.info("Successfully created JSON Schema at: %s", output_path)
     except OSError as e:
-        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
+        logger.error(
+            "Filesystem error while writing to %s: %s", output_folder, e
+        )
         raise ConversionError(f"Failed to write JSON: {e}") from e
+
+
+def _write_csv_reconstruction(
+    output_path: Path, headers: List[str], properties: Dict[str, Any]
+) -> None:
+    """Calculates max examples rows and outputs the reconstructed CSV."""
+    max_rows = 0
+    for prop in properties.values():
+        examples = prop.get("examples")
+        if isinstance(examples, list):
+            max_rows = max(max_rows, len(examples))
+
+    with open(output_path, mode="w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        for i in range(max_rows):
+            row = {}
+            for header in headers:
+                examples = properties[header].get("examples")
+                if isinstance(examples, list) and i < len(examples):
+                    val = examples[i]
+                    row[header] = val if val is not None else ""
+                else:
+                    row[header] = ""
+            writer.writerow(row)
 
 
 def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
@@ -242,7 +279,7 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
 
     """
     if not input_file.exists() or not input_file.is_file():
-        logger.error(f"Input file not found: {input_file}")
+        logger.error("Input file not found: %s", input_file)
         raise FileNotFoundError(
             f"The specified input JSON file does not exist: {input_file}"
         )
@@ -254,16 +291,17 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
         file_stem = input_file.stem
 
     file_stem = file_stem[0].lower() + file_stem[1:]
-    logger.info(f"Reading JSON Schema file: {input_file}")
+
+    logger.info("Reading JSON Schema file: %s", input_file)
 
     try:
         with open(input_file, mode="r", encoding="utf-8") as f:
             schema = json.load(f)
     except json.JSONDecodeError as e:
-        logger.error(f"Failed to decode JSON from {input_file}: {e}")
+        logger.error("Failed to decode JSON from %s: %s", input_file, e)
         raise ConversionError(f"Failed to decode JSON: {e}") from e
     except OSError as e:
-        logger.error(f"OS error reading JSON file {input_file}: {e}")
+        logger.error("OS error reading JSON file %s: %s", input_file, e)
         raise ConversionError(f"Failed to read JSON: {e}") from e
 
     if "properties" not in schema:
@@ -275,40 +313,21 @@ def json_schema_to_csv(input_file: Path, output_folder: Path) -> None:
         raise ValueError(error_msg)
 
     properties = schema["properties"]
-    headers = list(properties.keys())
-
-    max_rows = 0
-    for prop in properties.values():
-        examples = prop.get("examples")
-        if isinstance(examples, list):
-            max_rows = max(max_rows, len(examples))
-
     output_path = output_folder / f"{file_stem}.csv"
 
     try:
         output_folder.mkdir(parents=True, exist_ok=True)
-        with open(output_path, mode="w", encoding="utf-8", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=headers)
-            writer.writeheader()
-
-            for i in range(max_rows):
-                row = {}
-                for header in headers:
-                    examples = properties[header].get("examples")
-                    if isinstance(examples, list) and i < len(examples):
-                        val = examples[i]
-                        row[header] = val if val is not None else ""
-                    else:
-                        row[header] = ""
-                writer.writerow(row)
-
-        logger.info(f"Successfully created CSV at: {output_path}")
-
+        _write_csv_reconstruction(
+            output_path, list(properties.keys()), properties
+        )
+        logger.info("Successfully created CSV at: %s", output_path)
     except OSError as e:
-        logger.error(f"Filesystem error while writing to {output_folder}: {e}")
+        logger.error(
+            "Filesystem error while writing to %s: %s", output_folder, e
+        )
         raise ConversionError(f"Failed to write CSV: {e}") from e
     except csv.Error as e:
-        logger.error(f"Error writing to the CSV file {output_path}: {e}")
+        logger.error("Error writing to the CSV file %s: %s", output_path, e)
         raise ConversionError(f"Failed to write CSV fields: {e}") from e
 
 
@@ -316,9 +335,7 @@ def process_path(
     input_path: Union[str, Path],
     output_folder: Union[str, Path],
     mode: str,
-    base_url: Optional[str] = None,
-    properties_mapping: Optional[Dict[str, Any]] = None,
-    exclude_files: Optional[List[str]] = None,
+    **kwargs: Any,
 ) -> None:
     """Processes a single file or a directory of files based on the specified
     mode.
@@ -352,52 +369,54 @@ def process_path(
     path = Path(input_path)
     out_folder = Path(output_folder)
 
+    base_url = kwargs.get("base_url")
+    properties_mapping = kwargs.get("properties_mapping")
+    exclude_files = kwargs.get("exclude_files")
+
     if not path.exists():
-        logger.error(f"Input path not found: {input_path}")
+        logger.error("Input path not found: %s", input_path)
         raise FileNotFoundError(
             f"The specified input path does not exist: {input_path}"
         )
 
-    # Gather files to process
-    files_to_process = []
-    if path.is_file():
-        files_to_process.append(path)
-    elif path.is_dir():
-        files_to_process = [p for p in path.iterdir() if p.is_file()]
-
+    files_to_process = (
+        [path]
+        if path.is_file()
+        else [p for p in path.iterdir() if p.is_file()]
+    )
     processed_count = 0
 
-    for path in files_to_process:
-        ext = path.suffix.lower()
+    for current_path in files_to_process:
+        ext = current_path.suffix.lower()
 
-        if exclude_files and path.name in exclude_files:
-            logger.info(f"Skipping excluded file: {path.name}")
+        if exclude_files and current_path.name in exclude_files:
+            logger.info("Skipping excluded file: %s", current_path.name)
             continue
 
         if mode == "csv2json" and ext == ".csv":
-            csv_to_json_schema(path, out_folder, base_url, properties_mapping)
+            csv_to_json_schema(
+                current_path, out_folder, base_url, properties_mapping
+            )
             processed_count += 1
-
         elif mode == "json2csv" and ext == ".json":
-            json_schema_to_csv(path, out_folder)
+            json_schema_to_csv(current_path, out_folder)
             processed_count += 1
-
         else:
-            if path.is_file():
-                # Only warn if the user explicitly provided a single file that
-                # we can't process
+            if current_path.is_file():
                 logger.warning(
-                    f"File '{path.name}' unsupported for mode '{mode}'. "
-                    "Skipped."
+                    "File '%s' unsupported for mode '%s'. Skipped.",
+                    current_path.name,
+                    mode,
                 )
 
     if processed_count == 0:
         logger.warning(
-            f"No files were processed. Ensure the input contains files "
-            f"matching mode '{mode}'."
+            "No files were processed. Ensure the input contains files "
+            "matching mode '%s'.",
+            mode,
         )
     else:
-        logger.info(f"Finished processing {processed_count} file(s).")
+        logger.info("Finished processing %d file(s).", processed_count)
 
 
 def main() -> None:
@@ -456,7 +475,9 @@ def main() -> None:
                 properties_mapping = json.load(f)
         except (OSError, json.JSONDecodeError) as e:
             logger.error(
-                f"Failed to load properties mapping from {args.mappings}: {e}"
+                "Failed to load properties mapping from %s: %s",
+                args.mappings,
+                e,
             )
             sys.exit(1)
 
@@ -469,8 +490,8 @@ def main() -> None:
             properties_mapping=properties_mapping,
             exclude_files=args.exclude,
         )
-    except Exception as e:
-        logger.critical(f"Process failed: {e}")
+    except (FileNotFoundError, ValueError, ConversionError) as e:
+        logger.critical("Process failed: %s", e)
         sys.exit(1)
 
 

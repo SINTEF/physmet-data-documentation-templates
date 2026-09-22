@@ -1,3 +1,5 @@
+"""Unit tests for the OO-LD converter module."""
+
 import csv
 import json
 import logging
@@ -28,11 +30,12 @@ from oold_converter import (
 DATA_DIR = Path(__file__).parent / "data" / "oold_converter"
 
 # Create a root temporary directory for the session
+# pylint: disable=consider-using-with
 _SESSION_TMP_DIR = tempfile.TemporaryDirectory()
 TMP_ROOT = Path(_SESSION_TMP_DIR.name)
 
-# Cache the registry so we only download it once
-_REGISTRY_CACHE = None
+# Cache the registry so we only download it once using a mutable list wrapper
+_REGISTRY_CACHE: list = []
 
 
 def get_schema_registry():
@@ -42,9 +45,8 @@ def get_schema_registry():
 
     Safely prevents the jsonschema DeprecationWarning about auto-fetching URLs.
     """
-    global _REGISTRY_CACHE
-    if _REGISTRY_CACHE is not None:
-        return _REGISTRY_CACHE
+    if _REGISTRY_CACHE:
+        return _REGISTRY_CACHE[0]
 
     def retrieve_schema(uri):
         response = requests.get(uri, timeout=10)
@@ -53,13 +55,14 @@ def get_schema_registry():
 
     try:
         oold_meta = retrieve_schema(META_SCHEMA)
-        _REGISTRY_CACHE = Registry(retrieve=retrieve_schema).with_resource(
+        registry = Registry(retrieve=retrieve_schema).with_resource(
             META_SCHEMA, oold_meta
         )
-        return _REGISTRY_CACHE
+        _REGISTRY_CACHE.append(registry)
+        return registry
     except requests.exceptions.RequestException as e:
         logger = logging.getLogger("oold.converter")
-        logger.warning(f"Could not reach the OO-LD meta-schema: {e}")
+        logger.warning("Could not reach the OO-LD meta-schema: %s", e)
         return None
 
 
@@ -198,7 +201,7 @@ def test_csv_to_json_schema_no_rows_omits_examples():
     ) as f:
         schema = json.load(f)
 
-    for name, prop in schema["properties"].items():
+    for prop in schema["properties"].values():
         assert "examples" not in prop
 
 
@@ -276,7 +279,9 @@ def test_csv_to_json_schema_oold_compliance():
             registry=registry,
         )
     except ValidationError as e:
-        raise AssertionError(f"Schema failed OO-LD validation: {e.message}")
+        raise AssertionError(
+            f"Schema failed OO-LD validation: {e.message}"
+        ) from e
 
 
 def test_csv_to_json_file_not_found():
@@ -363,14 +368,14 @@ def test_process_path_directory_skips_mismatched_files():
     # Manually capture logs without relying on pytest caplog fixture
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
-    logger = logging.getLogger("oold.converter")
-    logger.addHandler(handler)
+    log = logging.getLogger("oold.converter")
+    log.addHandler(handler)
 
     try:
         process_path(input_dir, tmp_path / "out", "csv2json")
         assert "No files were processed" in log_capture.getvalue()
     finally:
-        logger.removeHandler(handler)
+        log.removeHandler(handler)
 
 
 def test_process_path_single_unsupported_file_warns():
@@ -382,14 +387,14 @@ def test_process_path_single_unsupported_file_warns():
 
     log_capture = StringIO()
     handler = logging.StreamHandler(log_capture)
-    logger = logging.getLogger("oold.converter")
-    logger.addHandler(handler)
+    log = logging.getLogger("oold.converter")
+    log.addHandler(handler)
 
     try:
         process_path(bad_file, tmp_path / "out", "csv2json")
         assert "unsupported for mode" in log_capture.getvalue()
     finally:
-        logger.removeHandler(handler)
+        log.removeHandler(handler)
 
 
 def test_process_path_missing_input():
@@ -458,6 +463,7 @@ def test_conversion_error_wraps_original_exception():
 
 # --- Standalone Execution Logic (for ipython / python execution) ---
 
+# pylint: disable=duplicate-code
 if __name__ == "__main__":
     print("Running OOLD Converter tests standalone...\n")
 
@@ -468,21 +474,22 @@ if __name__ == "__main__":
         if callable(obj) and name.startswith("test_")
     ]
 
-    passed = 0
-    failed = 0
+    PASSED = 0
+    FAILED = 0
 
     for test_func in test_functions:
         sys.stdout.write(f"Running {test_func.__name__} ... ")
         try:
             test_func()
             print("PASSED")
-            passed += 1
-        except Exception as e:
-            print(f"FAILED\n  -> {type(e).__name__}: {e}")
-            failed += 1
+            PASSED += 1
+        # pylint: disable=broad-exception-caught
+        except Exception as err:
+            print(f"FAILED\n  -> {type(err).__name__}: {err}")
+            FAILED += 1
 
     print("\n--- Test Run Summary ---")
-    print(f"Total: {passed + failed} | Passed: {passed} | Failed: {failed}")
+    print(f"Total: {PASSED + FAILED} | Passed: {PASSED} | Failed: {FAILED}")
 
-    if failed > 0:
+    if FAILED > 0:
         sys.exit(1)
