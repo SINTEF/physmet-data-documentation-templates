@@ -26,7 +26,7 @@ def test_template_substitute():
     template = Template(
         "sample",
         {
-            "id": "sample-{sampleId}",
+            "@id": "sample-{sampleId}",
             "title": "{sampleId}",
             "comment": "",
         },
@@ -34,7 +34,7 @@ def test_template_substitute():
     env = {"sampleId": "ARP001"}
     result = template.substitute(env)
 
-    assert result["id"] == "sample-ARP001"
+    assert result["@id"] == "sample-ARP001"
     assert result["title"] == "ARP001"
     assert "comment" not in result  # Empty templates are excluded
 
@@ -42,7 +42,7 @@ def test_template_substitute():
 def test_template_substitute_raises_on_missing_variable():
     """Test Template.substitute() raises KeyError for missing template
     variables."""
-    template = Template("sample", {"id": "sample-{missing}"})
+    template = Template("sample", {"@id": "sample-{missing}"})
     env = {"sampleId": "ARP001"}
 
     with pytest.raises(KeyError):
@@ -51,24 +51,24 @@ def test_template_substitute_raises_on_missing_variable():
 
 def test_pattern_document_matches_path():
     """Test Pattern.document() matches paths and returns documentation."""
+    template = Template("sample", {"@id": "{sample}", "@type": "cameo:Sample"})
     pattern = Pattern(
-        "Armel/characterizations/GDmass/{sampleId}",
-        {"sample": {"id": "{sampleId}", "type": "sample"}},
-        {},
+        "Armel/characterizations/GDmass/{sample}",
+        {"sampleId": "{sample}"},
+        {"sample": template},
     )
     env = {"rootdir": "."}
     result = pattern.document("Armel/characterizations/GDmass/ARP001", env)
-
     assert "sample" in result
-    assert result["sample"]["id"] == "ARP001"
-    assert result["sample"]["type"] == "sample"
+    assert result["sample"]["@id"] == "ARP001"
+    assert result["sample"]["@type"] == "cameo:Sample"
 
 
 def test_pattern_document_returns_empty_for_non_matching_path():
     """Test Pattern.document() returns empty dict for non-matching paths."""
     pattern = Pattern(
         "Armel/characterizations/GDmass/{sampleId}",
-        {"sample": {"id": "{sampleId}"}},
+        {"sample": {"@id": "{sampleId}"}},
         {},
     )
     env = {"rootdir": "."}
@@ -87,8 +87,8 @@ def test_pattern_document_sets_file_metadata():
 
         pattern = Pattern(
             "{name}.txt",
-            {"file": {"filename": "{filename}"}},
             {},
+            {"file": Template("file", {"filename": "{filename}"})},
         )
         env = {"rootdir": str(tmppath)}
         result = pattern.document("test.txt", env)
@@ -106,12 +106,11 @@ environment:
   prefix: "arp"
 templates:
   sample:
-    id: "{sampleId}"
+    "@id": "{sampleId}"
 patterns:
-  - "Armel/{sampleId}":
+  - "Armel/{sample}":
       vardefs:
-        sample:
-          id: "{sampleId}"
+        sampleId: "{sample}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -139,7 +138,7 @@ patterns: []
         tw = Treeweaver(configfile, rootdir=tmppath)
 
         assert "sample" in tw.templates
-        assert tw.templates["sample"]["title"] == "{sampleId}"
+        assert tw.templates["sample"].stencils["title"] == "{sampleId}"
 
 
 def test_treeweaver_document_path_single_pattern():
@@ -152,12 +151,11 @@ environment:
   rootdir: {tmppath}
 templates:
   sample:
-    id: "{{sampleId}}"
+    "@id": "{{sampleId}}"
 patterns:
-  - "{{sampleId}}":
+  - "{{sample}}":
       vardefs:
-        sample:
-          id: "{{sampleId}}"
+        sampleId: "{{sample}}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -180,12 +178,11 @@ environment:
   rootdir: {tmppath}
 templates:
   dir:
-    name: "{{dir_name}}"
+    name: "{{name}}"
 patterns:
   - "{{dir_name}}":
       vardefs:
-        dir:
-          name: "{{dir_name}}"
+        name: "{{dir_name}}"
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -205,12 +202,11 @@ def test_treeweaver_totables_converts_to_tables():
         configfile.write_text("""
 templates:
   sample:
-    id: "{sampleId}"
+    "@id": "{sampleId}"
 patterns:
-  - "{sampleId}":
+  - "{sample}":
       vardefs:
-        sample:
-          id: "{sampleId}"
+        sampleId: {sample}
 """)
 
         tw = Treeweaver(configfile, rootdir=tmppath)
@@ -232,16 +228,16 @@ templates:
     "@id": "{sampleId}"
     "@type": chameo:Sample
 patterns:
-  - "{sampleId}":
-      sample:
-        "@id": "{sampleId}"
+  - "{sample}":
+      vardefs:
+        "sampleId": "{sample}"
 """)
 
     tw = Treeweaver(configfile, rootdir=rootdir)
 
     # Very confusing output file name. Should be fixed in Tables.write()
     outfile = testdir / "x_sample.csv"
-    tw.savedoc(rootdir, testdir / "x.csv", fmt="csv")
+    tw.savedoc(rootdir, testdir / "x.csv", format="csv")
 
     assert outfile.exists()
     lines = outfile.read_text().split(os.linesep)
@@ -249,38 +245,66 @@ patterns:
     assert lines[1] == "ARP001,chameo:Sample"
 
 
+def test_treeweaver_savedoc_update():
+    """Test updating existing file."""
+    testdir = outdir / "test_treeweaver_savedoc_update"
+    rootdir = testdir / "Data"
+    (rootdir / "ARP001").mkdir(parents=True, exist_ok=True)
+    (rootdir / "ARP002").mkdir(parents=True, exist_ok=True)
+    configfile = testdir / "treeweaver2.yaml"
+    configfile.write_text("""
+templates:
+  sample:
+    "@id": "{sampleId}"
+    "@type": chameo:Sample
+patterns:
+  - "{sample}":
+      vardefs:
+        sampleId: "{sample}"
+""")
+    # __FIXME__ - this really needs improved tabular io
+    outfile = testdir / "x_sample.csv"
+    outfile.write_text("""\
+@id,@type,description
+ARP001,chameo:Sample,Some docs
+""")
+    # Very confusing output file name...
+    tw = Treeweaver(configfile, rootdir=rootdir)
+    tw.savedoc(rootdir, testdir / "x_sample.csv", format="csv")
+
+
 def test_treeweaver_savedoc_andreas():
     """Test documenting Andreas's data."""
     tw = Treeweaver(datadir / "Andreas.yaml")
-    tw.savedoc(datadir, outdir / "Andreas.xlsx")
+    tw.savedoc(datadir, outdir / "Andreas.xlsx", mode="overwrite")
 
 
 def test_treeweaver_savedoc_armel():
     """Test documenting Armel's data."""
     tw = Treeweaver(datadir / "Armel.yaml")
-    tw.savedoc(datadir, outdir / "Armel.xlsx")
+    tw.savedoc(datadir, outdir / "Armel.xlsx", mode="overwrite")
 
 
 def test_totable_converts_dicts_to_table():
     """Test totable() converts list of dicts to Table object."""
     dicts = [
-        {"id": "ARP001", "type": "sample", "title": "Sample 1"},
-        {"id": "ARP002", "type": "sample", "title": "Sample 2"},
+        {"@id": "ARP001", "type": "sample", "title": "Sample 1"},
+        {"@id": "ARP002", "type": "sample", "title": "Sample 2"},
     ]
     table = totable(dicts, name="samples")
 
     assert isinstance(table, Table)
     assert table.name == "samples"
     assert len(table.headers) == 3
-    assert "id" in table.headers
+    assert "@id" in table.headers
     assert len(table.rows) == 2
 
 
 def test_totable_handles_missing_keys():
     """Test totable() handles dicts with missing keys (fills with None)."""
     dicts = [
-        {"id": "ARP001", "type": "sample"},
-        {"id": "ARP002", "title": "Sample 2"},
+        {"@id": "ARP001", "type": "sample"},
+        {"@id": "ARP002", "title": "Sample 2"},
     ]
     table = totable(dicts)
 
@@ -294,21 +318,56 @@ def test_totable_handles_missing_keys():
 def test_totable_preserves_column_ordering():
     """Test totable() preserves the order of headers as encountered."""
     dicts = [
-        {"z": 1, "a": 2, "m": 3},
-        {"z": 4, "a": 5, "m": 6},
+        {"@id": "id1", "a": 2, "m": 3},
+        {"@id": "id2", "a": 5, "m": 6},
+    ]
+    table = totable(dicts, indexcolumn=None)
+
+    # Headers should be in the order they were first encountered
+    assert table.headers == ["@id", "a", "m"]
+
+
+def test_totable_duplicated_indexcolumn():
+    """Test totable() with unique index column."""
+    dicts = [
+        {"@id": "id1", "a": 2, "m": 3},
+        {"@id": "id2", "a": 5, "m": 6},
+        {"@id": "id1", "a": 7, "m": 8},
     ]
     table = totable(dicts)
 
-    # Headers should be in the order they were first encountered
-    assert table.headers == ["z", "a", "m"]
+    # First row should be overwritten by third row
+    assert table.headers == ["@id", "a", "m"]
+    assert len(table.rows) == 2
+    assert table.rows[0] == ["id1", 7, 8]
+    assert table.rows[1] == ["id2", 5, 6]
+
+
+def test_totable_with_oldtable():
+    """Test totable() with defaults from existing table."""
+    oldtable = Table(
+        headers=["@id", "a", "b", "c"],
+        rows=[["id1", None, 1, 2], ["id2", 3, 4, 5]],
+    )
+    dicts = [
+        {"@id": "id1", "a": 6, "c": 7},
+        {"@id": "id3", "a": 8, "d": 9},
+    ]
+    table = totable(dicts, oldtable=oldtable)
+
+    # Row "id1", column "b" should fallback to oldtable
+    assert table.headers == ["@id", "a", "b", "c", "d"]
+    assert len(table.rows) == 2
+    assert table.rows[0] == ["id1", 6, 1, 7, None]
+    assert table.rows[1] == ["id3", 8, None, None, 9]
 
 
 def test_totable_handles_iterator_input():
     """Test totable() handles iterator input (converts to list)."""
 
     def dict_generator():
-        yield {"id": "ARP001"}
-        yield {"id": "ARP002"}
+        yield {"@id": "ARP001"}
+        yield {"@id": "ARP002"}
 
     table = totable(dict_generator())
 
@@ -344,10 +403,10 @@ def test_substitute_processes_lists():
 def test_substitute_processes_dicts():
     """Test substitute() recursively processes nested dicts."""
     template = {
-        "id": "{id}",
+        "@id": "{id}",
         "nested": {"name": "{name}"},
     }
     result = substitute(template, {"id": "123", "name": "test"})
 
-    assert result["id"] == "123"
+    assert result["@id"] == "123"
     assert result["nested"]["name"] == "test"

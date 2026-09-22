@@ -30,17 +30,11 @@ environment:
 patterns:
 - "{sample:.4}/{instrument}/{technique}/{experiment:underscored}":
     vardefs:
-      sample:
-        sampleId: "{sample}"
-      dataset:
-        datasetId: "data-{sample}-{technique}-{experiment}"
-        processedFrom: "{prefix}:{sample}"
-      measurement:
-        measurementId: "{sample}-{technique}-{experiment}"
-        sampleId: "{sample}"
-        datasetId: "data-{sample}-{technique}-{experiment}"
-        equipmentId: "equip:{instrument}"  # TODO: map this to equipment list
-
+      sampleId: "{sample}"
+      datasetId: "data-{sample}-{technique}-{experiment}"
+      measurementId: "{sample}-{technique}-{experiment}"
+      equipmentId: "equip:{instrument}"  # TODO: map this to equipment list
+      processedFrom: "{prefix}:{sample}"
 
 
 # List of file patterns to exclude from documentation

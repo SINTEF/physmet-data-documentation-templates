@@ -12,6 +12,7 @@ from typing import Optional, Union
 import parse
 import yaml
 
+import tabular.io
 from tabular import Table, Tables
 
 __version__ = "2.0"
@@ -51,14 +52,14 @@ class Template:
 
     Arguments:
         name: Name of the template (ex "dataset").
-        template: Dict mapping variable names to stencil strings (using the
+        stencils: Dict mapping variable names to stencil strings (using the
             Python Format Specification Mini-Language).
 
     """
 
-    def __init__(self, name: str, template: dict[str, str]) -> None:
+    def __init__(self, name: str, stencils: dict[str, str]) -> None:
         self.name = name
-        self.template = template
+        self.stencils = stencils
 
     def substitute(self, env: dict) -> dict:
         """Return a JSON-LD dict documenting a resource by
@@ -72,10 +73,10 @@ class Template:
 
         """
         doc = {}
-        for keyword, template in self.template.items():
-            if template:
+        for keyword, stencil in self.stencils.items():
+            if stencil:
                 try:
-                    if s := substitute(template, env):
+                    if s := substitute(stencil, env):
                         doc[keyword] = s
                 except KeyError as exc:
                     raise KeyError(  # pylint: disable=raise-missing-from
@@ -91,19 +92,17 @@ class Pattern:
 
     Arguments:
         pattern: Wildcard pattern a directory or file path.
-        templates: Dict mapping template names (defined for the given pattern)
-            to corresponding template dicts (from the templates section).
+        templates: Dict mapping template names to Template instances that this
+            pattern applies to.
         vardefs: Dict defining variable definitions for updating the
             environment.
 
     """
 
-    def __init__(self, pattern: str, templates: dict, vardefs: dict) -> None:
+    def __init__(self, pattern: str, vardefs: dict, templates: dict) -> None:
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
-        self.pattern_template = {
-            name: Template(name, t) for name, t in templates.items()
-        }
         self.vardefs = vardefs
+        self.templates = templates
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -136,8 +135,8 @@ class Pattern:
             e.update(
                 {k: substitute(v, e) for k, v in self.vardefs.items() if v}
             )
-            for name, skencil in self.pattern_template.items():
-                docs[name] = skencil.substitute(e)
+            for name, template in self.templates.items():
+                docs[name] = template.substitute(e)
         return docs
 
 
@@ -163,15 +162,19 @@ class Treeweaver:
         with open(yamlfile, "r", encoding="utf-8") as f:
             d = yaml.safe_load(f)
             self.env.update(d.get("environment", {}))
-            self.templates.update(d.get("templates", {}))
+            templates = d.get("templates", {})
+            self.templates.update(
+                {name: Template(name, v) for name, v in templates.items()}
+            )
             self.exclude.extend(d.get("exclude", ()))
             self.patterns = []
             for p in d.get("patterns", ()):
+                # pylint: disable=invalid-name
                 pattern, updates = next(iter(p.items()))
-                for name, env in updates.get("vardefs", {}).items():
-                    templates = {}
-                    templates[name] = self.templates.get(name, {})
-                    self.patterns.append(Pattern(pattern, templates, env))
+                vardefs = updates.get("vardefs", {})
+                appliesTo = updates.get("appliesTo", self.templates.keys())
+                templates = {name: self.templates[name] for name in appliesTo}
+                self.patterns.append(Pattern(pattern, vardefs, templates))
 
     def document_path(self, path: PathType) -> dict:
         """Document a directory or file path.
@@ -211,7 +214,9 @@ class Treeweaver:
                     docs[k].extend(v)
         return dict(docs)
 
-    def totables(self, rootdir: PathType) -> Tables:
+    def totables(
+        self, rootdir: PathType, oldtables: Optional[Tables] = None
+    ) -> Tables:
         """Create table documentation of directory tree.
 
         Processes all templates from the documented directory tree and
@@ -220,13 +225,25 @@ class Treeweaver:
 
         Arguments:
             rootdir: Root directory of the directory tree to document.
+            oldtables: Old versions of the generated tables. If given,
+                columns in `oldtables` that doesn't exists in the generated
+                tables will be included in the generated tables.
 
         Returns:
             A Tables object containing one table per template type.
         """
         tables = Tables()
-        for template, docs in self.document(rootdir).items():
-            table = totable(docs, name=template)
+        for name, docs in self.document(rootdir).items():
+            oldtable = (
+                None
+                if oldtables is None
+                else (
+                    oldtables[0]
+                    if len(oldtables.tables) == 1
+                    else oldtables[name]
+                )
+            )
+            table = totable(docs, name=name, oldtable=oldtable)
             tables.append_table(table)
         return tables
 
@@ -234,7 +251,8 @@ class Treeweaver:
         self,
         rootdir: PathType,
         path: PathType,
-        fmt: Optional[str] = None,
+        format: Optional[str] = None,  # pylint: disable=redefined-builtin
+        mode: str = "update",
         **kwargs,
     ) -> None:
         """Document a directory tree and save created tables to file.
@@ -244,22 +262,46 @@ class Treeweaver:
 
         Arguments:
             rootdir: Root directory of the directory tree to document.
-            path: Output file path. Format is inferred from the file extension
+            path: Output path. Format is inferred from the file extension
                 unless explicitly provided via `fmt`.
-            fmt: Optional explicit format specifier (e.g., 'csv', 'xlsx',
-                'json'). If not provided, format is inferred from the `path`
-                extension.
+            format: Output format. Any format supported by tabular.
+                Single-file formats: xlsx, json
+                Multi-file formats: csv
+                If not provided, format is inferred from `path` file extension.
+            mode: Either "overwrite" or "update". If "overwrite", the
+                destination is overwritten. If "update", columns in the
+                destination that doesn't exists in the generated table
+                will be included in the generated table.
             **kwargs: Additional keyword arguments passed to the Tables.write()
                 method.
         """
-        tables = self.totables(rootdir)
-        tables.write(path, fmt=fmt, **kwargs)
+        singlefile_formats = set(["csv"])
+        p: Path = Path(path)
+        if format is None:
+            if p.is_dir():
+                raise ValueError(
+                    "`format` is required when `path` is a directory"
+                )
+            format = p.suffix.lstrip(".")
+        if mode == "update" and p.exists():
+            if p.is_dir() and format.lower() in singlefile_formats:
+                oldtables = Tables()
+                for filename in p.glob(f"*.{format}"):
+                    oldtables.append_file(filename)
+            else:
+                oldtables = tabular.io.read(p, fmt=format, **kwargs)
+            tables = self.totables(rootdir, oldtables=oldtables)
+        else:
+            tables = self.totables(rootdir)
+
+        tables.write(p, fmt=format, **kwargs)
 
 
 def totable(
     dicts: list,
     name: Optional[str] = None,
-    unique_header: Optional[str] = "@id",
+    indexcolumn: Optional[str] = "@id",
+    oldtable: Optional[Table] = None,
 ) -> Table:
     """Convert a list of dictionaries to a Table.
 
@@ -271,45 +313,63 @@ def totable(
         dicts: List of dictionaries to convert. All values should be
             JSON-compatible (str, int, float, bool, None, list, dict).
         name: Optional name for the resulting table. Defaults to None.
-        unique_header: If given and there are more than one row whos
-            value in the column with header equal to `unique_header`,
-            then only the first of these rows will be included in the table.
+        indexcolumn: Name of index column. All values in the index column
+            must be unique. If more than one row has the index column value,
+            only the last of these rows will be included in the table.
+        oldtable: Old version of the generated table. If given,
+            columns in `oldtable` that doesn't exists in the generated
+            table will be included in the generated table.
+            Requires that `indexcolumn` is given.
 
     Returns:
         A Table object with headers from all unique keys across the input
         dictionaries, and rows in the order of the input list.
     """
-    headers: dict = {}  # use dict instead of set to keep ordering
+    # headers: dict = {}  # use dict instead of set to keep ordering
     dicts = list(dicts)  # in case dicts is a iterator
-    rows = []
-
+    headers = {}
     for d in dicts:
-        for k in d.keys():
-            headers[k] = None
+        headers.update({k: True for k in d.keys()})
 
-    unique_values = set()
-    for d in dicts:
-        if unique_header and unique_header in d:
-            unique_value = d[unique_header]
-            if unique_value in unique_values:
-                continue
-            unique_values.add(unique_value)
-        row = []
-        for header in headers:
-            row.append(d.get(header))
-        rows.append(row)
+    if indexcolumn:
+        if oldtable:
+            heads = {h: False for h in oldtable.headers}
+            heads.update(headers)
+            headers = heads
+            dl = oldtable.to_dict_list()
+            oldcols = {
+                d[indexcolumn]: {h: d.get(h) for h in heads if h} for d in dl
+            }
+            columns: dict[str, dict] = {}
+            for d in dicts:
+                k = d[indexcolumn]
+                columns[k] = {
+                    h: d.get(h) if v else oldcols.get(k, {}).get(h)
+                    for h, v in headers.items()
+                }
+        else:
+            columns: dict[str, dict] = {  # type: ignore[no-redef]
+                d[indexcolumn]: {h: d.get(h) for h in headers} for d in dicts
+            }
+        dicts = list(columns.values())
+    elif oldtable:
+        raise ValueError("The `oldtable` argument requires `indexcolumn`.")
+
+    rows = [[d.get(h) for h in headers] for d in dicts]
     return Table(name=name, headers=list(headers.keys()), rows=rows)
 
 
-def substitute(template: ValueType, env: dict) -> ValueType:
-    """Return template with substitutions applied from `env`."""
-    if isinstance(template, (bool, int, float, None.__class__)):
-        return template
-    if isinstance(template, (list, tuple)):
-        return [substitute(element, env) for element in template if element]
-    if isinstance(template, dict):
-        return {k: substitute(v, env) for k, v in template.items()}
-    return template.format(**env) if template else None
+def substitute(stencil: ValueType, env: dict) -> ValueType:
+    """Return stencil with substitutions applied from `env`."""
+    if isinstance(stencil, (bool, int, float, None.__class__)):
+        return stencil
+    if isinstance(stencil, list):
+        return [substitute(element, env) for element in stencil if element]
+    if isinstance(stencil, dict):
+        return {k: substitute(v, env) for k, v in stencil.items()}
+    if isinstance(stencil, str):
+        return stencil.format(**env) if stencil else None
+    raise TypeError("Unsupported stencil type:", type(stencil))
 
 
 def main():
