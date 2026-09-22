@@ -161,9 +161,9 @@ class Table:
             ValueError: If the target file contains multiple tables.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import read as io_read
+        from tabular.io import read
 
-        tables = io_read(path, format=format, **kwargs)
+        tables = read(path, format=format, **kwargs)
         tables_list = getattr(tables, "tables", None)
         if tables_list is not None and len(tables_list) > 1:
             raise ValueError(
@@ -192,9 +192,9 @@ class Table:
             Optional[str]: Serialized string if path is None, else None.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import write as io_write
+        from tabular.io import write
 
-        return io_write(self, path=path, format=format, **kwargs)
+        return write(self, path=path, format=format, **kwargs)
 
     def append_row(self, row: List[Any]) -> None:
         """

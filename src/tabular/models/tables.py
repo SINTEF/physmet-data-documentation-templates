@@ -137,9 +137,9 @@ class Tables:
             Tables: The parsed tables collection.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import read as io_read
+        from tabular.io import read
 
-        return io_read(path, format=format, **kwargs)
+        return read(path, format=format, **kwargs)
 
     # --- Instance Methods ---
 
@@ -161,9 +161,9 @@ class Tables:
             Optional[str]: Serialized string if path is None, else None.
         """
         # pylint: disable=import-outside-toplevel
-        from tabular.io import write as io_write
+        from tabular.io import write
 
-        return io_write(self, path=path, format=format, **kwargs)
+        return write(self, path=path, format=format, **kwargs)
 
     def get_table(self, name: str) -> Table:
         """
