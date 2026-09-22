@@ -445,6 +445,7 @@ def test_json_unicode_formatting():
     assert "Bjørn Ærø" in str(json_str)
 
 
+# pylint: disable=duplicate-code
 if __name__ == "__main__":
     print("Running Tabular Data IO tests standalone...\n")
     test_functions = [
