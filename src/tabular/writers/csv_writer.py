@@ -23,22 +23,25 @@ class CSVWriter(BaseWriter):
         **kwargs: Any,
     ) -> Optional[str]:
         """
-        Writes tabular data to a CSV file or string. If a multiple-table collection
-        is provided, it automatically merges them into a single table prior to writing.
+        Writes tabular data to a CSV file or string. If a multiple-table
+        collection is provided, it automatically merges them prior to writing.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]):
+                The dataset to export.
             path (Optional[Path], optional): Output destination path.
                 If None, returns the CSV string.
-            **kwargs: Standard parameters accepted by the `csv.writer` (e.g., delimiter).
-                Supports custom 'encoding' keyword argument (defaults to utf-8).
+            **kwargs: Standard parameters accepted by the `csv.writer`
+                (e.g., delimiter). Supports custom 'encoding' keyword
+                argument (defaults to utf-8).
 
         Returns:
             Optional[str]: The CSV string if path is None, else None.
 
         Raises:
             IsADirectoryError: If the path provided is a directory.
-            PermissionError: If the file cannot be written to (e.g., open in Excel).
+            PermissionError: If the file cannot be written to
+                (e.g., open in Excel).
         """
         self._validate_write_path(path)
 
@@ -73,8 +76,11 @@ class CSVWriter(BaseWriter):
                     writer.writerow(table.headers)
                     writer.writerows(table.rows)
             except PermissionError as e:
-                msg = f"""Permission denied writing to '{path}'.
-                Ensure the file is not open in another program (like Excel)."""
+                msg = (
+                    f"Permission denied writing to '{path}'.\n"
+                    "Ensure the file is not open in another program "
+                    "(like Excel)."
+                )
                 logger.error(msg)
                 raise PermissionError(msg) from e
             return None

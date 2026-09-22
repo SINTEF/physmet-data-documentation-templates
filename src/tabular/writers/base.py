@@ -32,7 +32,7 @@ class BaseWriter(ABC):
             **kwargs: Format-specific parameters.
 
         Returns:
-            Optional[str]: The serialized string if path is None, else None.
+            Optional[str]: Serialized string if path is None, else None.
         """
 
     def _ensure_tables(self, data: Union[Table, Tables]) -> Tables:
@@ -40,7 +40,7 @@ class BaseWriter(ABC):
         Helper method to normalize inputs to a Tables collection.
 
         Args:
-            data (Union[Table, Tables]): A single table or collection of tables.
+            data (Union[Table, Tables]): A single table or collection.
 
         Returns:
             Tables: A valid Tables collection.
@@ -64,7 +64,7 @@ class BaseWriter(ABC):
 
     def _validate_write_path(self, path: Optional[Path]) -> None:
         """
-        Validates the output path to ensure it is not pointing to an existing directory.
+        Validates the output path to ensure it is not a directory.
 
         Args:
             path (Optional[Path]): The target file path.
@@ -73,7 +73,10 @@ class BaseWriter(ABC):
             IsADirectoryError: If the specified path is a directory.
         """
         if path is not None and path.is_dir():
-            msg = f"Cannot write data. Target path is a directory, not a file: '{path}'"
+            msg = (
+                f"Cannot write data. Target path is a directory, "
+                f"not a file: '{path}'"
+            )
             logger.error("%s", msg)
             raise IsADirectoryError(msg)
 
