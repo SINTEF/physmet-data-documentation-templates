@@ -1,5 +1,8 @@
 """Unified I/O interface for reading and writing tabular datasets."""
 
+# Seems that pylint errorously reports cyclic import
+# pylint: disable=cyclic-import
+
 from __future__ import annotations
 
 import logging
