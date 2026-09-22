@@ -90,7 +90,7 @@ def test_parse():
     from tripper import Triplestore
     from tripper.datadoc import get_context, store
 
-    from utils import EMMO
+    from utils import EMMO  # pylint: disable=import-error
 
     tmpdir = get_tmpdir("parse")
 
