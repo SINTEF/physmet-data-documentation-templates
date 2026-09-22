@@ -1,7 +1,10 @@
+"""Tables collection model representing multiple named Table sheets."""
+
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Iterator, List, Optional, Union
 
-import tabular.io
 from .table import Table
 
 
@@ -11,49 +14,20 @@ class Tables:
 
     This class provides a unified interface for managing multiple datasets
     (e.g., sheets in an Excel workbook), allowing for iteration, indexing,
-    merging, and batch I/O operations.
+    and merging.
     """
-
-    # --- Initialization ---
 
     def __init__(self, tables: Optional[List[Table]] = None) -> None:
         """
         Initializes a Tables collection.
 
         Args:
-            tables (List[Table], optional): A list of Table objects to initialize with.
+            tables (List[Table], optional): A list of Table objects.
         """
         self._tables: List[Table] = []
         if tables:
             for t in tables:
                 self.append_table(t)
-
-    # --- Properties ---
-
-    @property
-    def tables(self) -> List[Table]:
-        """
-        Retrieves all tables in the collection.
-
-        Returns:
-            List[Table]: A list of all stored Table objects.
-        """
-        return self._tables
-
-    @property
-    def first(self) -> Table:
-        """
-        Convenience property to quickly retrieve the first table in the collection.
-
-        Returns:
-            Table: The first Table added to the collection.
-
-        Raises:
-            ValueError: If the collection contains no tables.
-        """
-        if not self._tables:
-            raise ValueError("The Tables collection is empty.")
-        return self._tables[0]
 
     # --- Dunder Methods ---
 
@@ -70,12 +44,14 @@ class Tables:
 
     def __repr__(self) -> str:
         """
-        Returns a detailed string representation of the Tables collection for debugging.
+        Returns a detailed string representation of the Tables collection.
 
         Returns:
-            str: The unambiguous representation of the tables object detailing count and names.
+            str: Representation of tables detailing count and names.
         """
-        table_names = [t.name if t.name else str(i) for i, t in enumerate(self._tables)]
+        table_names = [
+            t.name if t.name else str(i) for i, t in enumerate(self._tables)
+        ]
         return f"<Tables(count={len(self._tables)}, names={table_names})>"
 
     def __getitem__(self, key: Union[int, str]) -> Table:
@@ -83,7 +59,7 @@ class Tables:
         Allows indexing to get a table by integer index or by name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table.
+            key (Union[int, str]): The integer index or string name.
 
         Returns:
             Table: The requested table.
@@ -95,10 +71,11 @@ class Tables:
         """
         if isinstance(key, int):
             return self._tables[key]
-        elif isinstance(key, str):
+        if isinstance(key, str):
             return self.get_table(key)
-        else:
-            raise TypeError("Key must be an integer (index) or string (table name).")
+        raise TypeError(
+            "Key must be an integer (index) or string (table name)."
+        )
 
     def __iter__(self) -> Iterator[Table]:
         """
@@ -109,7 +86,84 @@ class Tables:
         """
         return iter(self._tables)
 
-    # --- Collection Manipulation ---
+    # --- Properties ---
+
+    @property
+    def tables(self) -> List[Table]:
+        """
+        Retrieves all tables in the collection.
+
+        Returns:
+            List[Table]: A list of all stored Table objects.
+        """
+        return self._tables
+
+    @property
+    def first(self) -> Table:
+        """
+        Convenience property to retrieve the first table in the collection.
+
+        Returns:
+            Table: The first Table added to the collection.
+
+        Raises:
+            ValueError: If the collection contains no tables.
+        """
+        if not self._tables:
+            raise ValueError("The Tables collection is empty.")
+        return self._tables[0]
+
+    # --- Class Methods ---
+
+    @classmethod
+    def read(
+        cls,
+        path: Union[str, Path],
+        format: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Tables:
+        """
+        Reads a file or directory directly into a Tables collection instance.
+
+        If `format` is not provided, it is inferred from the path's extension,
+        regardless of whether the path points to a file or a directory.
+
+        Args:
+            path (Union[str, Path]): Path to the file or directory.
+            format (Optional[str], optional): Format override.
+            **kwargs: Extra parameters passed to the reader.
+
+        Returns:
+            Tables: The parsed tables collection.
+        """
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import read
+
+        return read(path, format=format, **kwargs)
+
+    # --- Instance Methods ---
+
+    def write(
+        self,
+        path: Optional[Union[str, Path]] = None,
+        format: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Optional[str]:
+        """
+        Writes this Tables collection directly to a file or returns a string.
+
+        Args:
+            path (Optional[Union[str, Path]], optional): Destination path.
+            format (Optional[str], optional): Format override.
+            **kwargs: Extra parameters passed to the writer.
+
+        Returns:
+            Optional[str]: Serialized string if path is None, else None.
+        """
+        # pylint: disable=import-outside-toplevel
+        from tabular.io import write
+
+        return write(self, path=path, format=format, **kwargs)
 
     def get_table(self, name: str) -> Table:
         """
@@ -143,7 +197,7 @@ class Tables:
         Removes a table from the collection by its index or name.
 
         Args:
-            key (Union[int, str]): The integer index or string name of the table to remove.
+            key (Union[int, str]): The index or name of the table to remove.
 
         Raises:
             KeyError: If a table with the given name does not exist.
@@ -156,7 +210,9 @@ class Tables:
             table_to_remove = self.get_table(key)
             self._tables.remove(table_to_remove)
         else:
-            raise TypeError("Key must be an integer (index) or string (table name).")
+            raise TypeError(
+                "Key must be an integer (index) or string (table name)."
+            )
 
     def merge_all(self, merged_name: str = "MergedTable") -> Table:
         """
@@ -170,7 +226,7 @@ class Tables:
                 Defaults to "MergedTable".
 
         Returns:
-            Table: A new Table containing all row data aligned to a unified schema.
+            Table: A new Table containing all row data aligned to one schema.
         """
         all_headers: List[str] = []
         for table in self._tables:
@@ -186,45 +242,3 @@ class Tables:
                 merged_table.rows.append(merged_row)
 
         return merged_table
-
-    # --- I/O & Export Operations ---
-
-    def append_file(self, path: Union[str, Path], **kwargs: Any) -> None:
-        """
-        Reads a file and appends its table(s) to this collection.
-
-        Args:
-            path (Union[str, Path]): The path to the file to read.
-            **kwargs: Additional parameters to pass to the underlying parser.
-        """
-        new_tables = tabular.io.read(path, **kwargs)
-        for t in new_tables.tables:
-            self.append_table(t)
-
-    def write(
-        self,
-        path: Optional[Union[str, Path]] = None,
-        fmt: Optional[str] = None,
-        **kwargs: Any,
-    ) -> Optional[str]:
-        """
-        Writes the tables to a file, or serializes them to a string if path is None.
-
-        Delegates completely to `tabular.io.write`, which handles format resolution,
-        registry validation, and automatic file splitting for formats that do not
-        support multi-sheet structures natively (e.g., CSV).
-
-        Args:
-            path (Optional[Union[str, Path]], optional): The output destination path.
-                If None, the collection is serialized and returned as a string.
-            fmt (Optional[str], optional): The target format (e.g., 'csv', 'md').
-                Required if path is None.
-            **kwargs: Additional parameters to pass to the writer.
-
-        Returns:
-            Optional[str]: The serialized string if path is None, else None.
-
-        Raises:
-            ValueError: If path is None but no format is provided, or if format is unsupported.
-        """
-        return tabular.io.write(self, path=path, fmt=fmt, **kwargs)

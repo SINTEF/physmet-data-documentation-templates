@@ -1,8 +1,11 @@
+"""Markdown writer implementation."""
+
 import logging
 from pathlib import Path
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 import tabular.models
+
 from .base import BaseWriter
 
 logger = logging.getLogger(__name__)
@@ -21,10 +24,12 @@ class MDWriter(BaseWriter):
         Writes tabular data as visually aligned Markdown.
 
         Args:
-            data (Union[tabular.models.Table, tabular.models.Tables]): The dataset to export.
+            data (Union[tabular.models.Table, tabular.models.Tables]): The
+                dataset to export.
             path (Optional[Path], optional): Output destination path.
                 If None, returns the MD string.
-            **kwargs: Supports custom 'encoding' keyword argument (defaults to utf-8).
+            **kwargs: Supports custom 'encoding' keyword argument (defaults to
+                utf-8).
 
         Returns:
             Optional[str]: The MD string if path is None, else None.
@@ -45,11 +50,8 @@ class MDWriter(BaseWriter):
 
         try:
             with open(path, mode="w", encoding=encoding) as f:
-                f.write(out_str)
-                f.write("\n")
+                f.write(out_str + "\n")
         except PermissionError as e:
-            msg = f"Permission denied writing to '{path}'."
-            logger.error(msg)
-            raise PermissionError(msg) from e
+            self._handle_write_error(path, e)
 
         return None

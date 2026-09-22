@@ -5,8 +5,12 @@
 #     "pyyaml",
 # ]
 # ///
-# Get information from path to a dict (json)
 # Written with support from AI (ChatGPT Codex)
+"""Get information from path to a dict (json)"""
+
+# Ignore pylint issues
+# pylint: disable=missing-class-docstring,missing-function-docstring
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 
 import argparse
 import csv
