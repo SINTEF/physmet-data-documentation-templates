@@ -5,12 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from parse_compositions import (
-    EMMO,
+from compositions import EMMO, normalize_unit, parse
+from compositions.compositions import (
     _asfloat,
     from_wtpercent,
-    normalize_unit,
-    parse,
     to_wtpercent,
 )
 
