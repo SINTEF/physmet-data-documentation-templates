@@ -209,7 +209,9 @@ flowchart LR
   classDef grayBox fill:#ccc,stroke:#333,color:#111827;
 
   D(dataset):::blueBox -- contactPoint --> CP("supervisor<br>(people.csv)")
+  D -- wasGeneratedBy --> PR("project<br>(projects.csv)")
   S(sample):::blueBox -- contactPoint --> CP
+  S -- wasGeneratedBy --> PR
   S -. hasComposition .-> C("composition"):::lightBlueBox
   S -- creator --> ST("student<br>(people.csv)")
   D -- rightsHolder --> RH("university<br>(organisations.csv)")
@@ -223,12 +225,13 @@ flowchart LR
   M -- hasOperator --> ST
   M -- hasTechnique --> TC("technique<br>(techniques.csv)")
 
-  click CP "../templates/people.csv" "template"
-  click ST "../templates/people.csv" "template"
-  click RH "../templates/organisations.csv" "template"
-  click LD "../templates/licenses.csv" "template"
-  click EQ "../templates/equipments.csv" "template"
-  click TC "../templates/techniques.csv" "template"
+  click CP "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/people.csv" "template"
+  click ST "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/people.csv" "template"
+  click PR "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/project.csv" "template"
+  click RH "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/organisations.csv" "template"
+  click LD "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/licenses.csv" "template"
+  click EQ "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/equipments.csv" "template"
+  click TC "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/techniques.csv" "template"
 ```
 **Figure 1**. Generated section of a knowledge graph showing interrelations between the generated `sample`, `dataset` and `measurement` (blue boxes) and their relation to shared resources (red boxes). The dataset `distribution` (gray box) is also generated, while the relations to the `composition` must be entered by hand (see below). Colour codes are the same as in the [templates figure] in the [README] file.
 
