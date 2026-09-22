@@ -8,7 +8,8 @@ environment:
   rightsHolder: "org:NTNU"
   license: "TBD"  # XXX - define a license
 
-  contactPoint: "pers:MarisaDiSabatino"
+  project: "proj:physmet"                  # Project that created a sample or dataset
+  contactPoint: "pers:MarisaDiSabatino"    # Project leader or Supervisor
   creator: "pers:AnderasVollBugten"        # Creator of sample or dataset
   operator: "pers:AnderasVollBugten"       # Operator of an instrument
 
@@ -23,6 +24,7 @@ environment:
   isTemporalPartOf: ""
   isSpatioTemporalPartOf: ""
   downloadURL: ""
+  technique: ""
 
 
 # Patterns matching
@@ -54,6 +56,7 @@ templates:
     description: ""
     comment: ""
     hasComposition: "{hasComposition}"
+    wasGeneratedBy: "{project}"
     contactPoint: "{contactPoint}"
     creator: "{creator}"
     #creationDate: "{ctime}"
@@ -71,6 +74,7 @@ templates:
     keyword: ""
     rightsHolder: "{rightsHolder}"
     license: "{license}"
+    wasGeneratedBy: "{project}"
     contactPoint: "{contactPoint}"
     creator: "{creator}"
     seeAlso: ""
@@ -92,3 +96,4 @@ templates:
     hasOutput: "{prefix}:{datasetId}"
     hasOperator: "{operator}"
     performedWith: "{equipmentId}"
+    hasTechnique: "{technique}"

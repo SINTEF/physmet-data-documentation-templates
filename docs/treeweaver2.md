@@ -84,6 +84,7 @@ templates:
   sample:
     "@id": "{prefix}:{sampleId}"          # Sample ID
     "@type": cameo:Sample                 # Specify that this is a sample
+    wasGeneratedBy: "{project}"           # The project in which the sample was created
     contactPoint: "{contactPoint}"        # Contact person for the sample
     creator: "{creator}"                  # Who created the sample
 
@@ -94,6 +95,7 @@ templates:
     description: "{description}"          # Additional description of the data
     rightsHolder: "{rightsHolder}"        # Who own's the dataset
     license: "{license}"                  # What is the license of the dataset
+    wasGeneratedBy: "{project}"           # The project in which the dataset was created
     contactPoint: "{contactPoint}"        # Contact person
     creator: "{creator}"                  # Who created the dataset
     releaseDate: "{ctime}"                # When was the dataset released
@@ -106,6 +108,7 @@ templates:
     hasInput: "{prefix}:{sampleId}"       # Sample that was measured
     hasOutput: "{prefix}:{datasetId}"     # Dataset that was produced
     performedWith: "{equipmentId}"        # Instrument used for the measurement
+    hasTechnique: "{technique}"           # The technique used for the measurement
     hasOperator: "{operator}"             # Who operated the instrument
 ```
 
@@ -124,7 +127,8 @@ environment:
 
   rightsHolder: "org:MyOrganisation"
   license: https://creativecommons.org/licenses/by/4.0/
-  contactPoint: "pers:MyProjectLeader"
+  project: "proj:MyProject"               # Project that created a sample or dataset
+  contactPoint: "pers:MyProjectLeader"    # Project leader or supervisor
   creator: "pers:Me"                      # Creator of sample or dataset
   operator: "pers:Me"                     # Operator of an instrument
 
@@ -227,7 +231,7 @@ flowchart LR
 
   click CP "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/people.csv" "template"
   click ST "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/people.csv" "template"
-  click PR "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/project.csv" "template"
+  click PR "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/projects.csv" "template"
   click RH "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/organisations.csv" "template"
   click LD "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/licenses.csv" "template"
   click EQ "https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/shared/equipments.csv" "template"
