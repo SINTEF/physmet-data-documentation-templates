@@ -14,7 +14,7 @@ from typing import Optional, Sequence, Union
 from tripper import Session, Triplestore
 from tripper.datadoc import store
 
-from compositions.utils import (
+from compositions import (
     EMMO,
     atomic_masses,
     atomic_names,
