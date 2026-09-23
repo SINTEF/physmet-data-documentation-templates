@@ -51,7 +51,7 @@ exclude:
 templates:
   sample:
     "@id": "{prefix}:{sampleId}"
-    "@type": cameo:Sample
+    "@type": chameo:Sample
     title: "{sampleId}"
     description: ""
     comment: ""
