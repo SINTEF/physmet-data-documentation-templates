@@ -50,7 +50,7 @@ line-length = 79
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/extract_prefixes.py",
-    "src/parse_compositions.py",
+    "src/compositions",
     "src/oold_converter",
     "src/tabular",
     "src/treeweaver",
