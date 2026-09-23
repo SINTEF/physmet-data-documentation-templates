@@ -1,32 +1,36 @@
 [project]
-name = "PhysMetDatadoc"
+name = "physmetdoc"
 version = "0.1.0"
 description = "Data documentation templates and tools for physical metallurgy."
 readme = "README.md"
 authors = [
     { name = "Jesper Friis", email = "jesper.friis@sintef.no" },
     { name = "Tor S. Haugland", email = "tor.haugland@sintef.no" },
+    { name = "Sylvain Gouttebroze", email = "sylvain.gouttebroze@sintef.no" },
     { name = "Michele Brigadoi", email = "michele.brigadoi@unibo.it" },
 ]
 requires-python = ">=3.12"
-dependencies = ["pyyaml"]
+dependencies = [
+    "PyYAML>=6.0.3",
+    "parse>=1.22.1",
+    "jsonschema>=4.26.0",
+    "requests>=2.34.2",
+]
 
 [project.optional-dependencies]
 excel = ["openpyxl"]
 testing = [
-    "PhysMetDatadoc[excel]",
+    "physmetdoc[excel]",
     "pytest==9.1.1",
     "pytest-cov==7.1.0",
-    "jsonschema>=4.26.0",
-    "requests>=2.34.2",
 ]
 pre-commit = [
-    "PhysMetDatadoc[testing]",
+    "physmetdoc[testing]",
     "pre-commit==4.6.2",
     "pylint==4.0.8",
 ]
 dev = [
-    "PhysMetDatadoc[pre-commit]",
+    "physmetdoc[pre-commit]",
     "virtualenvwrapper==6.1.1",
 ]
 
