@@ -6,7 +6,7 @@ environment:
   prefix: "arp"
 
   rightsHolder: "org:NTNU"
-  license: "TBD"  # XXX - define a license
+  license: "https://spdx.org"  # XXX - define a license (this means All Rights Reserved)
 
   project: "proj:physmet"                # Project that created a sample or dataset
   contactPoint: "pers:MarisaDiSabatino"  # Project leader or Supervisor
@@ -35,7 +35,7 @@ patterns:
       sampleId: "{sampleId}"
       datasetId: "data-GDMS-{sampleId}-{name}"
       measurementId: "GDMS-{sampleId}-{name}"
-      equipmentId: "equip:GDMS"  # TODO: add this to equipment list
+      equipmentId: "emlab:GDMS"  # TODO: add this to equipment list
       processedFrom: "{prefix}:{sampleId}"
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
@@ -43,7 +43,7 @@ patterns:
       sampleId: "{sampleId}"
       datasetId: "data-EDS-{sampleId}"
       measurementId: "EDS-{sampleId}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
+      equipmentId: "emlab:SemA"  # TODO: check
       processedFrom: "{prefix}:{sampleId}"
 
 - "Armel/characterizations/SEM/EDS/{sample}- {name:underscored}.docx":
@@ -59,7 +59,7 @@ patterns:
       sampleId: "ELKEM-{name}-{date}"
       datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
       measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
-      equipmentId: "emlab-equip:SemA"  # TODO: check
+      equipmentId: "emlab:SemA"  # TODO: check
       processedFrom: "{prefix}:ELKEM-{name}-{date}"
 
 
@@ -75,7 +75,7 @@ exclude:
 templates:
   sample:
     "@id": "{prefix}:{sampleId}"
-    "@type": cameo:Sample
+    "@type": chameo:Sample
     title: "{sampleId}"
     description: ""
     comment: ""
@@ -119,5 +119,5 @@ templates:
     hasInput: "{prefix}:{sampleId}"
     hasOutput: "{prefix}:{datasetId}"
     hasOperator: "{operator}"
-    performedWith: "{equipmentId}"
-    hasTechnique: "{technique}"
+    hasInterpreter: "{equipmentId}"
+    #hasTechnique: "{technique}"

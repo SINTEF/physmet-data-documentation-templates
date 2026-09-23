@@ -6,7 +6,7 @@ environment:
   prefix: "avb"
 
   rightsHolder: "org:NTNU"
-  license: "TBD"  # XXX - define a license
+  license: "https://spdx.org"  # XXX - define a license (this means All Rights Reserved)
 
   project: "proj:physmet"                  # Project that created a sample or dataset
   contactPoint: "pers:MarisaDiSabatino"    # Project leader or Supervisor
@@ -35,7 +35,7 @@ patterns:
       sampleId: "{sample}"
       datasetId: "data-{sample}-{technique}-{experiment}"
       measurementId: "{sample}-{technique}-{experiment}"
-      equipmentId: "equip:{instrument}"  # TODO: map this to equipment list
+      equipmentId: "emlab:{instrument}"  # TODO: map this to equipment list
       processedFrom: "{prefix}:{sample}"
 
 
@@ -51,7 +51,7 @@ exclude:
 templates:
   sample:
     "@id": "{prefix}:{sampleId}"
-    "@type": cameo:Sample
+    "@type": chameo:Sample
     title: "{sampleId}"
     description: ""
     comment: ""
@@ -95,5 +95,5 @@ templates:
     hasInput: "{prefix}:{sampleId}"
     hasOutput: "{prefix}:{datasetId}"
     hasOperator: "{operator}"
-    performedWith: "{equipmentId}"
-    hasTechnique: "{technique}"
+    hasInterpreter: "{equipmentId}"
+    #hasTechnique: "{technique}"

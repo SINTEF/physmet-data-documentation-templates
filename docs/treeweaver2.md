@@ -107,7 +107,7 @@ templates:
     "@type": emmo:Measurement             # This is a measurement
     hasInput: "{prefix}:{sampleId}"       # Sample that was measured
     hasOutput: "{prefix}:{datasetId}"     # Dataset that was produced
-    performedWith: "{equipmentId}"        # Instrument used for the measurement
+    hasInterpreter: "{equipmentId}"       # Instrument used for the measurement
     hasTechnique: "{technique}"           # The technique used for the measurement
     hasOperator: "{operator}"             # Who operated the instrument
 ```
