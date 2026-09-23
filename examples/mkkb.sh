@@ -37,3 +37,6 @@ for csvdir in "$rootdir/shared" "$tmpdir/Armel" "$tmpdir/Andreas"; do
         fi
     done
 done
+
+# Clean up temporary files
+rm -r "$tmpdir"

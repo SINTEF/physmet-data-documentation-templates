@@ -31,7 +31,7 @@ environment:
 # Variables will be assigned
 patterns:
 - "{sample:.4}/{instrument}/{technique}/{experiment:underscored}":
-    vardefs:
+    vars:
       sampleId: "{sample}"
       datasetId: "data-{sample}-{technique}-{experiment}"
       measurementId: "{sample}-{technique}-{experiment}"
