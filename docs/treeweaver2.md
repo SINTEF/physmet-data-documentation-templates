@@ -83,7 +83,7 @@ The example below shows templates for `sample`, `dataset` and `measurement`:
 templates:
   sample:
     "@id": "{prefix}:{sampleId}"          # Sample ID
-    "@type": cameo:Sample                 # Specify that this is a sample
+    "@type": chameo:Sample                 # Specify that this is a sample
     wasGeneratedBy: "{project}"           # The project in which the sample was created
     contactPoint: "{contactPoint}"        # Contact person for the sample
     creator: "{creator}"                  # Who created the sample
