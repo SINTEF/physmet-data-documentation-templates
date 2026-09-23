@@ -5,12 +5,18 @@
     "sintef": "https://www.sintef.no/",
     "ntnu": "https://www.ntnu.no/",
     "elkem": "https://www.elkem.com/",
-    "pm": "https://www.ntnu.edu/physmet/kb/"
+    "pm": "https://www.ntnu.edu/physmet/kb/",
     "org": "https://www.ntnu.edu/physmet/org/",
     "pers": "https://www.ntnu.edu/physmet/people/",
     "proj": "https://www.ntnu.edu/physmet/project/",
+<<<<<<< Updated upstream
+    "emlab": "https://www.ntnu.edu/ima/research/emlab/equipment/",
+    "nanolab": "https://www.ntnu.edu/nanolab/equipment/",
+    "temgemini": "https://www.ntnu.edu/temgemini/tem/equipment/"
+=======
     "emlab-equip": "https://www.ntnu.edu/ima/research/emlab/equipment/",
     "nanolab-equip": "https://www.ntnu.edu/nanolab/equipment/",
-    "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/",
+    "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/"
+>>>>>>> Stashed changes
   }
 }

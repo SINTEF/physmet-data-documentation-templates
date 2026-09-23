@@ -10,6 +10,7 @@
     "dctype": "http://purl.org/dc/dcmitype/",
     "eli": "http://data.europa.eu/eli/ontology#",
     "foaf": "http://xmlns.com/foaf/0.1/",
+    "frapo": "http://purl.org/cerif/frapo/",
     "iana": "https://www.iana.org/assignments/media-types/",
     "locn": "http://www.w3.org/ns/locn#",
     "odrl": "http://www.w3.org/ns/odrl/2/",
@@ -35,9 +36,72 @@
     "org": "https://www.ntnu.edu/physmet/org/",
     "pers": "https://www.ntnu.edu/physmet/people/",
     "proj": "https://www.ntnu.edu/physmet/project/",
-    "emlab-equip": "https://www.ntnu.edu/ima/research/emlab/equipment/",
-    "nanolab-equip": "https://www.ntnu.edu/nanolab/equipment/",
-    "tem-equip": "https://www.ntnu.edu/temgemini/tem/equipment/",
+    "emlab": "https://www.ntnu.edu/ima/research/emlab/equipment/",
+    "nanolab": "https://www.ntnu.edu/nanolab/equipment/",
+    "temgemini": "https://www.ntnu.edu/temgemini/tem/equipment/",
+<<<<<<< Updated upstream
+=======
+
+
+    "prefix": "vann:preferredNamespacePrefix",
+    "namespace": "vann:preferredNamespaceUri",
+    "sameAs": {
+      "@id": "owl:sameAs",
+      "@type": "@id"
+    },
+    "affiliation": {
+      "@id": "schema:affiliation",
+      "@type": "@id"
+    },
+    "email": "foaf:mbox",
+    "hasFundingAgency": {
+      "@id": "frapo:hasFundingAgency",
+      "@type": "@id"
+    },
+    "hasGrantNumber": "frapo:hasGrantNumber",
+    "rightsHolder": {
+      "@id": "dcterms:rightsHolder",
+      "@type": "@id"
+    },
+    "processedFrom": {
+      "@id": "emmo:EMMO_7821eeb8_5e44_452b_90e9_3db03bbef241",
+      "@type": "@id"
+    },
+    "isDatumOf": {
+      "@reverse": "emmo:EMMO_b19aacfc_5f73_4c33_9456_469c1e89a53e",
+      "@type": "@id"
+    },
+    "hasInput": {
+      "@id": "emmo:EMMO_36e69413_8c59_4799_946c_10b05d266e22",
+      "@type": "@id"
+    },
+    "hasOutput": {
+      "@id": "emmo:EMMO_c4bace1d_4db0_4cd3_87e9_18122bae2840",
+      "@type": "@id"
+    },
+    "hasOutput": {
+      "@id": "emmo:EMMO_c4bace1d_4db0_4cd3_87e9_18122bae2840",
+      "@type": "@id"
+    },
+    "hasInterpreter": {
+      "@id": "emmo:EMMO_cb804456_9459_4be5_ac63_a291a872fbd0",
+      "@type": "@id"
+    },
+    "hasOperator": {
+      "@id": "ddoc:hasOperator",
+      "@type": "@id"
+    },
+    "performedWith": {
+      "@id": "ddoc:performedWith",
+      "@type": "@id"
+    },
+    "hasTechnique": {
+      "@id": "ddoc:hasTechnique",
+      "@type": "@id"
+    },
+
+
+>>>>>>> Stashed changes
 
     "accessRights": {
       "@id": "dcterms:accessRights",
@@ -311,7 +375,7 @@
     },
     "accessURL": {
       "@id": "dcat:accessURL",
-      "@type": "@id"
+      "@type": "xsd:anyURI"
     },
     "availability": {
       "@id": "dcatap:availability",
