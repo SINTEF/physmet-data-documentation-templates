@@ -54,8 +54,8 @@ def test_pattern_document_matches_path():
     template = Template("sample", {"@id": "{sample}", "@type": "cameo:Sample"})
     pattern = Pattern(
         "Armel/characterizations/GDmass/{sample}",
-        {"sampleId": "{sample}"},
         {"sample": template},
+        {"vars": {"sampleId": "{sample}"}},
     )
     env = {"rootdir": "."}
     result = pattern.document("Armel/characterizations/GDmass/ARP001", env)
@@ -87,8 +87,8 @@ def test_pattern_document_sets_file_metadata():
 
         pattern = Pattern(
             "{name}.txt",
-            {},
             {"file": Template("file", {"filename": "{filename}"})},
+            {},
         )
         env = {"rootdir": str(tmppath)}
         result = pattern.document("test.txt", env)

@@ -21,6 +21,10 @@ PathType = Union[Path, str]
 ValueType = Union[str, list, dict, bool, int, float, None]  # template values
 
 
+class PatternSpecError(Exception):
+    """Error in pattern specification."""
+
+
 # Parse formatters
 def underscored(string: str):
     """Parse formatter that converts blanks to underscore."""
@@ -94,15 +98,69 @@ class Pattern:
         pattern: Wildcard pattern a directory or file path.
         templates: Dict mapping template names to Template instances that this
             pattern applies to.
-        vars: Dict defining variable definitions for updating the
-            environment.
+        spec: Dict with pattern specifications.
 
     """
 
-    def __init__(self, pattern: str, vars: dict, templates: dict) -> None:
+    def __init__(self, pattern: str, templates: dict, spec: dict) -> None:
+        # pylint: disable=invalid-name
+        s = spec.copy()
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
-        self.vars = vars
-        self.templates = templates
+        self.appliesTo = s.pop("appliesTo", templates.keys())
+        self.templates = {name: templates[name] for name in self.appliesTo}
+        self.vars = s.pop("vars", {})
+
+        self.mappings = {}
+        for key, maps in s.pop("mappings", {}):
+            newvar, var = key.split(":") if ":" in key else (key, key)
+            self.mappings[(newvar, var)] = {
+                parse.compile(k): v for k, v in maps.items()
+            }
+
+        if s:
+            raise ValueError(
+                f"unknown specifications for pattern '{pattern}': "
+                f"{', '.join(s.keys())}"
+            )
+
+    def assign_computed_variables(self, path: PathType, env: dict) -> None:
+        """Update `env` with computed variables.
+
+        Arguments:
+            path: Directory or file path to document.
+            env: Environment to update.
+        """
+        p = Path(env.get("rootdir", ".")) / path
+        if p.exists():
+            ctime = datetime.fromtimestamp(p.stat().st_ctime).isoformat()
+            mtime = datetime.fromtimestamp(p.stat().st_mtime).isoformat()
+        else:
+            ctime = mtime = ""
+        env.setdefault("fullpath", str(p))
+        env.setdefault("escapedpath", str(p).replace(" ", "%20"))
+        env.setdefault("filename", p.name)
+        env.setdefault("dirname", str(p.parent))
+        env.setdefault("ctime", ctime)
+        env.setdefault("mtime", mtime)
+        env.setdefault("pattern", self.pattern.format)
+
+    def assign_mappings(self, env: dict):
+        """Update `env` with mappings."""
+        for (newvar, var), maps in self.mappings.items():
+            if var not in env:
+                raise PatternSpecError(
+                    f"in mappings for pattern '{self.pattern}': variable "
+                    f"'{var}' is not in environment"
+                )
+            for k, v in maps.items():
+                if r := k.parse(env[var]):
+                    env[newvar] = v.format(**r)
+                    break
+            else:
+                raise PatternSpecError(
+                    f"in mappings for pattern '{self.pattern}': no matching "
+                    f"mapping for variable '{var}'"
+                )
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -119,19 +177,10 @@ class Pattern:
         if r := self.pattern.parse(str(path)):
             e = env.copy()
             e.update(r.named)
-            p = Path(e.get("rootdir", ".")) / path
-            if p.exists():
-                ctime = datetime.fromtimestamp(p.stat().st_ctime).isoformat()
-                mtime = datetime.fromtimestamp(p.stat().st_mtime).isoformat()
-            else:
-                ctime = mtime = ""
-            e.setdefault("fullpath", str(p))
-            e.setdefault("escapedpath", str(p).replace(" ", "%20"))
-            e.setdefault("filename", p.name)
-            e.setdefault("dirname", str(p.parent))
-            e.setdefault("ctime", ctime)
-            e.setdefault("mtime", mtime)
-            e.setdefault("pattern", self.pattern.format)
+
+            self.assign_computed_variables(path, e)
+            self.assign_mappings(e)
+
             e.update({k: substitute(v, e) for k, v in self.vars.items() if v})
             for name, template in self.templates.items():
                 docs[name] = template.substitute(e)
@@ -167,12 +216,8 @@ class Treeweaver:
             self.exclude.extend(d.get("exclude", ()))
             self.patterns = []
             for p in d.get("patterns", ()):
-                # pylint: disable=invalid-name
-                pattern, updates = next(iter(p.items()))
-                vars = updates.get("vars", {})
-                appliesTo = updates.get("appliesTo", self.templates.keys())
-                templates = {name: self.templates[name] for name in appliesTo}
-                self.patterns.append(Pattern(pattern, vars, templates))
+                pattern, spec = next(iter(p.items()))
+                self.patterns.append(Pattern(pattern, self.templates, spec))
 
     def document_path(self, path: PathType) -> dict:
         """Document a directory or file path.
