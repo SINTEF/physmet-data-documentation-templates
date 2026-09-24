@@ -88,7 +88,7 @@
       "@type": "@id"
     },
     "hasOperator": {
-      "@id": "ddoc:hasOperator",
+      "@id": "chamio:hasOperator",
       "@type": "@id"
     },
     "performedWith": {
