@@ -85,6 +85,10 @@
       "@id": "emmo:EMMO_cb804456_9459_4be5_ac63_a291a872fbd0",
       "@type": "@id"
     },
+    "hasParticipant": {
+      "@id": "emmo:EMMO_ae2d1a96_bfa1_409a_a7d2_03d69e8a125a",
+      "@type": "@id"
+    },
     "hasOperator": {
       "@id": "chamio:hasOperator",
       "@type": "@id"
