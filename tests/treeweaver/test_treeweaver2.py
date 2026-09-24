@@ -109,7 +109,7 @@ templates:
     "@id": "{sampleId}"
 patterns:
   - "Armel/{sample}":
-      vardefs:
+      vars:
         sampleId: "{sample}"
 """)
 
@@ -154,7 +154,7 @@ templates:
     "@id": "{{sampleId}}"
 patterns:
   - "{{sample}}":
-      vardefs:
+      vars:
         sampleId: "{{sample}}"
 """)
 
@@ -181,7 +181,7 @@ templates:
     name: "{{name}}"
 patterns:
   - "{{dir_name}}":
-      vardefs:
+      vars:
         name: "{{dir_name}}"
 """)
 
@@ -205,7 +205,7 @@ templates:
     "@id": "{sampleId}"
 patterns:
   - "{sample}":
-      vardefs:
+      vars:
         sampleId: {sample}
 """)
 
@@ -230,7 +230,7 @@ templates:
     "@type": chameo:Sample
 patterns:
   - "{sample}":
-      vardefs:
+      vars:
         "sampleId": "{sample}"
 """)
 
@@ -260,7 +260,7 @@ templates:
     "@type": chameo:Sample
 patterns:
   - "{sample}":
-      vardefs:
+      vars:
         sampleId: "{sample}"
 """)
     outfile = testdir / "sample.csv"

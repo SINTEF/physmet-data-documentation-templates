@@ -94,14 +94,14 @@ class Pattern:
         pattern: Wildcard pattern a directory or file path.
         templates: Dict mapping template names to Template instances that this
             pattern applies to.
-        vardefs: Dict defining variable definitions for updating the
+        vars: Dict defining variable definitions for updating the
             environment.
 
     """
 
-    def __init__(self, pattern: str, vardefs: dict, templates: dict) -> None:
+    def __init__(self, pattern: str, vars: dict, templates: dict) -> None:
         self.pattern = parse.compile(pattern, extra_types=parse_formatters)
-        self.vardefs = vardefs
+        self.vars = vars
         self.templates = templates
 
     def document(self, path: PathType, env: dict) -> dict:
@@ -132,9 +132,7 @@ class Pattern:
             e.setdefault("ctime", ctime)
             e.setdefault("mtime", mtime)
             e.setdefault("pattern", self.pattern.format)
-            e.update(
-                {k: substitute(v, e) for k, v in self.vardefs.items() if v}
-            )
+            e.update({k: substitute(v, e) for k, v in self.vars.items() if v})
             for name, template in self.templates.items():
                 docs[name] = template.substitute(e)
         return docs
@@ -171,10 +169,10 @@ class Treeweaver:
             for p in d.get("patterns", ()):
                 # pylint: disable=invalid-name
                 pattern, updates = next(iter(p.items()))
-                vardefs = updates.get("vardefs", {})
+                vars = updates.get("vars", {})
                 appliesTo = updates.get("appliesTo", self.templates.keys())
                 templates = {name: self.templates[name] for name in appliesTo}
-                self.patterns.append(Pattern(pattern, vardefs, templates))
+                self.patterns.append(Pattern(pattern, vars, templates))
 
     def document_path(self, path: PathType) -> dict:
         """Document a directory or file path.

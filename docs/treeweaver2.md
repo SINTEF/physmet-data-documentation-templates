@@ -240,7 +240,7 @@ flowchart LR
 **Figure 1**. Generated section of a knowledge graph showing interrelations between the generated `sample`, `dataset` and `measurement` (blue boxes) and their relation to shared resources (red boxes). The dataset `distribution` (gray box) is also generated, while the relations to the `composition` must be entered by hand (see below). Colour codes are the same as in the [templates figure] in the [README] file.
 
 
-[treeweaver1]: treeweaver.md
+[Treeweaver]: treeweaver.md
 [%-encoded]: https://en.wikipedia.org/wiki/Percent-encoding
 [version]: #version
 [environment]: #environment

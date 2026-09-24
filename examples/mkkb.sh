@@ -1,4 +1,7 @@
 #!/bin/sh
+# Script creating a example knowledge base in `examples/kb.ttl`
+# documenting test data from Armel and Andreas.
+
 #set -x
 set -e
 
@@ -12,10 +15,10 @@ kb="$rootdir/examples/kb.ttl"
 prefixfile="$tmpdir/prefixes.json"
 context="$rootdir/context/context.json"
 
-echo "tmpdir: $tmpdir"
-
 # Create prefix file
-extract-prefixes -o "$prefixfile" "$rootdir"/shared/{people,projects,organisations}.csv
+extract-prefixes \
+    -o "$prefixfile" \
+    "$rootdir"/shared/{people,projects,organisations}.csv
 
 # Extract data documentation
 treeweaver2 "$datadir" -c "$datadir/Armel.yaml" -f csv -o "$tmpdir/Armel"
@@ -37,3 +40,6 @@ for csvdir in "$rootdir/shared" "$tmpdir/Armel" "$tmpdir/Andreas"; do
         fi
     done
 done
+
+# Clean up temporary files
+rm -r "$tmpdir"

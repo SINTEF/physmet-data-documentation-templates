@@ -31,7 +31,7 @@ environment:
 # Variables will assigned
 patterns:
 - "Armel/characterizations/GDmass/{sampleId}/{name:underscored}.{ext}":
-    vardefs:
+    vars:
       sampleId: "{sampleId}"
       datasetId: "data-GDMS-{sampleId}-{name}"
       measurementId: "GDMS-{sampleId}-{name}"
@@ -39,7 +39,7 @@ patterns:
       processedFrom: "{prefix}:{sampleId}"
 
 - "Armel/characterizations/SEM/EDS/{sampleId}- {name:underscored}.docx":
-    vardefs:
+    vars:
       sampleId: "{sampleId}"
       datasetId: "data-EDS-{sampleId}"
       measurementId: "EDS-{sampleId}"
@@ -48,14 +48,14 @@ patterns:
 
 - "Armel/characterizations/SEM/EDS/{sample}- {name:underscored}.docx":
     appliesTo: [dataset]
-    vardefs:
+    vars:
       datasetId: "data-EDS-{sample}-{name}"
       processedFrom: "{prefix}:{sample}"
       isDatumOf: "{prefix}:data-EDS-{sample}"
       downloadURL: "{baseURL}/{escapedpath}"
 
 - "Armel/characterizations/SEM/ELKEM {name} {date:underscored}/{filename:underscored}.{ext}":
-    vardefs:
+    vars:
       sampleId: "ELKEM-{name}-{date}"
       datasetId: "data-SEM-ELKEM-{name}-{date}/{filename}"
       measurementId: "SEM-ELKEM-{name}-{date}/{filename}"
