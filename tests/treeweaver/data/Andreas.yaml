@@ -95,5 +95,5 @@ templates:
     hasInput: "{prefix}:{sampleId}"
     hasOutput: "{prefix}:{datasetId}"
     hasOperator: "{operator}"
-    hasInterpreter: "{equipmentId}"
+    hasParticipant: "{equipmentId}"
     #hasTechnique: "{technique}"
