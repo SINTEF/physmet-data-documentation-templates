@@ -1,3 +1,4 @@
+prefix,namespace
 rdf,http://www.w3.org/1999/02/22-rdf-syntax-ns#
 rdfs,http://www.w3.org/2000/01/rdf-schema#
 owl,http://www.w3.org/2002/07/owl#
@@ -8,7 +9,7 @@ nfr,https://www.forskningsradet.no/
 sintef,https://www.sintef.no/
 ntnu,https://www.ntnu.no/
 elkem,https://www.elkem.com/
-pm,https://www.ntnu.edu/physmet/kb/"
+pm,https://www.ntnu.edu/physmet/kb/
 org,https://www.ntnu.edu/physmet/org/
 pers,https://www.ntnu.edu/physmet/people/
 proj,https://www.ntnu.edu/physmet/project/
