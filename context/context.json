@@ -52,6 +52,7 @@
       "@type": "@id"
     },
     "email": "foaf:mbox",
+    "homepage": "foaf:homepage",
     "hasFundingAgency": {
       "@id": "frapo:hasFundingAgency",
       "@type": "@id"
