@@ -39,8 +39,6 @@
     "emlab": "https://www.ntnu.edu/ima/research/emlab/equipment/",
     "nanolab": "https://www.ntnu.edu/nanolab/equipment/",
     "temgemini": "https://www.ntnu.edu/temgemini/tem/equipment/",
-<<<<<<< Updated upstream
-=======
 
 
     "prefix": "vann:preferredNamespacePrefix",
@@ -100,8 +98,6 @@
       "@type": "@id"
     },
 
-
->>>>>>> Stashed changes
 
     "accessRights": {
       "@id": "dcterms:accessRights",
