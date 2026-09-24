@@ -109,7 +109,7 @@
       "@type": "@id"
     },
     "hasOperator": {
-      "@id": "chamio:hasOperator",
+      "@id": "chameo:hasOperator",
       "@type": "@id"
     },
     "performedWith": {
