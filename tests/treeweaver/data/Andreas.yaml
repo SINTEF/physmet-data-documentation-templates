@@ -8,7 +8,7 @@ environment:
   rightsHolder: "org:NTNU"
   license: "https://spdx.org"  # XXX - define a license (this means All Rights Reserved)
 
-  project: "proj:physmet"                  # Project that created a sample or dataset
+  project: "proj:PhysMet"                  # Project that created a sample or dataset
   contactPoint: "pers:MarisaDiSabatino"    # Project leader or Supervisor
   creator: "pers:AnderasVollBugten"        # Creator of sample or dataset
   operator: "pers:AnderasVollBugten"       # Operator of an instrument
