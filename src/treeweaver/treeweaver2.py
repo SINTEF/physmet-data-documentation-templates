@@ -111,7 +111,7 @@ class Pattern:
         self.vars = s.pop("vars", {})
 
         self.mappings = {}
-        for key, maps in s.pop("mappings", {}):
+        for key, maps in s.pop("mappings", {}).items():
             newvar, var = key.split(":") if ":" in key else (key, key)
             self.mappings[(newvar, var)] = {
                 parse.compile(k): v for k, v in maps.items()
@@ -154,12 +154,12 @@ class Pattern:
                 )
             for k, v in maps.items():
                 if r := k.parse(env[var]):
-                    env[newvar] = v.format(**r)
+                    env[newvar] = v.format(**r.named)
                     break
             else:
                 raise PatternSpecError(
-                    f"in mappings for pattern '{self.pattern}': no matching "
-                    f"mapping for variable '{var}'"
+                    f"in mappings for pattern '{self.pattern.format}': no "
+                    f"matching mapping for variable '{var}={env[var]}'"
                 )
 
     def document(self, path: PathType, env: dict) -> dict:

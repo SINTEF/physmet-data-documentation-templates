@@ -120,7 +120,7 @@
       "@type": "@id"
     },
     "hasTechnique": {
-      "@id": "ddoc:hasTechnique",
+      "@id": "chameo:hasTechnique",
       "@type": "@id"
     },
 
