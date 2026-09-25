@@ -1,0 +1,4 @@
+@id,@type,name,prefix,namespace,homepage,hasFundingAgency,hasGrantNumber
+proj:PhysMet,foaf:Project,"SFI PhysMet",pm,https://www.ntnu.edu/physmet/kb/,https://www.ntnu.edu/physmet/,org:NFR,309584
+proj:FAST,foaf:Project,FAST,,,https://www.ntnu.edu/fast/,org:NFR,
+proj:MaterialsCommons,foaf:Project,MaterialsCommons,,,https://www.materialscommons.eu/,org:EC,101293545
