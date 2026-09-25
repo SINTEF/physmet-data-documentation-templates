@@ -37,6 +37,12 @@ patterns:
       measurementId: "{sample}-{technique}-{experiment}"
       equipmentId: "emlab:{instrument}"  # TODO: map this to equipment list
       processedFrom: "{prefix}:{sample}"
+    mappings:
+      instrument:
+        SEM: "emlab:SemA"
+        SIMS: ""
+        EPMA: "emlab:EMPA"
+        Synchrotron: x
 
 
 # List of file patterns to exclude from documentation

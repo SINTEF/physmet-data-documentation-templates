@@ -169,22 +169,41 @@ This is a nice well-defined file structure that can be matched with the followin
 
 ```yaml
 patterns:
-- "Data/{instrument}/{technique}/{sample}/{session}/{datafile}":
-    vardefs:
-      sampleId: "{sample}"
-      datasetId: "data-{sample}-{technique}-{experiment}"
-      measurementId: "{sample}-{technique}-{experiment}"
-      equipmentId: "equip:{instrument}"
-      processedFrom: "{prefix}:{sample}"
+  - "Data/{instrument}/{technique}/{sample}/{session}/{datafile}":
+      vars:
+        # Definition of variables used in the templates
+        sampleId: "{sample}"
+        datasetId: "data-{sample}-{technique}-{experiment}"
+        measurementId: "{sample}-{technique}-{experiment}"
+        equipmentId: "equip:{instrument}"
+        processedFrom: "{prefix}:{sample}"
+      mappings:
+        # Update or define variables via mappings
+        # The below updates `instrument` according to the following statements:
+        #     if instrument == "SEM":  instrument = "emlab:LVSEM"
+        #     if instrument == "SIMS": instrument = "emlab:SIMS30"
+        # It is an error if `instrument` is anything else.
+        instrument:
+          SEM: emlab:LVSEM
+          SIMS: emlab:SIMS30
+        # The following sets `data` accoring to the following statements:
+        #     if dataset == "sem260925": data = "pm:SEM"
+        #     if dataset match "{x}":    data = "pm:{x}"
+        # where `{x}` is a local variable that will not influence the environment
+        "data:dataset":
+          "sem260925": "pm:SEM"
+          "{x}": "pm:{x}"
+
 ```
 
 Here one pattern is defined, that will match the leaf files, assigning the variables `instrument`, `technique`, `sample`, `session` and `datafile` based on the matching parts of the full path of each file.
-The `vardefs` field will define additional variables based on the new environment.
+The `vars` field will define additional variables based on the new environment.
 
 Currently patterns supports the following fields:
-- **vardefs**: Variable definitions based on the new environment.
 - **appliesTo**: List of template names that the pattern applies to.
   The default is to apply it to all patterns.
+- **vars**: Updates the environment with additional variable definitions.
+- **mappings**: Updates the environment based on mapping transformations.
 
 
 #### exclude
