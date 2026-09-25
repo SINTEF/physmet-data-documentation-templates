@@ -27,6 +27,9 @@
     "auth": "http://publications.europa.eu/resource/authority/",
     "accr": "http://publications.europa.eu/resource/authority/access-right/",
     "avail": "http://publications.europa.eu/resource/authority/planned-availability/",
+    "ordic": "https://orcid.org/",
+    "nvaid": "https://nva.sikt.no/research-profile/",
+    "ror": "https://ror.org/",
 
     "emmo": "https://w3id.org/emmo#",
     "ssbd": "https://w3id.org/ssbd/",
