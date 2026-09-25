@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Script creating a example knowledge base in `examples/kb.ttl`
 # documenting test data from Armel and Andreas.
 
