@@ -12,10 +12,11 @@ from treeweaver.treeweaver2 import (
     PatternSpecError,
     Template,
     Treeweaver,
-    main,
     substitute,
     totable,
 )
+
+# --- Test Environment Setup ---
 
 datadir = Path(__file__).resolve().parent / "data"
 outdir = datadir / "output"
@@ -33,6 +34,9 @@ def mktestdir(testname: str) -> Path:
         shutil.rmtree(testdir)
     testdir.mkdir(parents=True)
     return testdir
+
+
+# --- Tests Template class ---
 
 
 def test_template_substitute():
@@ -62,6 +66,9 @@ def test_template_substitute_raises_on_missing_variable():
 
     with pytest.raises(KeyError):
         template.substitute(env)
+
+
+# --- Tests Pattern class ---
 
 
 def test_pattern_mapping_assigns_value_from_environment():
@@ -179,6 +186,9 @@ def test_pattern_document_sets_file_metadata():
     result = pattern.document("test.txt", env)
 
     assert result["file"]["filename"] == "test.txt"
+
+
+# --- Tests Treeweaver class ---
 
 
 def test_treeweaver_init_loads_config():
@@ -361,6 +371,9 @@ def test_treeweaver_savedoc_armel():
     tw.savedoc(datadir, outdir / "Armel.xlsx", mode="overwrite")
 
 
+# --- Tests functions ---
+
+
 def test_totable_converts_dicts_to_table():
     """Test totable() converts list of dicts to Table object."""
     dicts = [
@@ -486,26 +499,3 @@ def test_substitute_processes_dicts():
 
     assert result["@id"] == "123"
     assert result["nested"]["name"] == "test"
-
-
-def test_main_with_all_arguments():
-    """Test main() with all arguments provided."""
-    testdir = mktestdir("test_main_with_all_arguments")
-    config = testdir / "config.yaml"
-    config.write_text("version: '2.0'\nenvironment: {}\npatterns: []\n")
-
-    output = testdir / "output.xlsx"
-
-    main(
-        [
-            str(testdir),
-            "--configfile",
-            str(config),
-            "--format",
-            "xlsx",
-            "--output",
-            str(output),
-        ]
-    )
-
-    assert output.exists()

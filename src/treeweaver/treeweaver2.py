@@ -464,7 +464,8 @@ def main(argv: Optional[list[str]] = None):
     )
     args = parser.parse_args(argv)
 
-    tw = Treeweaver(args.configfile)
+    defaultconf = Path(args.rootdir) / "treeweaver2.yaml"
+    tw = Treeweaver(args.configfile if args.configfile else defaultconf)
     tw.savedoc(rootdir=args.rootdir, path=args.output, format=args.format)
 
 
