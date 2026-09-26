@@ -31,6 +31,7 @@ environment:
 # Variables will be assigned
 patterns:
 - "Andreas/{sample}/{instrument}/{technique}/{experiment}":
+    match: "Andreas/{JM1?,JO11}/**"
     vars:
       sampleId: "{sample}"
       datasetId: "data-{sample}-{technique}-{experiment}"

@@ -170,6 +170,7 @@ This is a nice well-defined file structure that can be matched with the followin
 ```yaml
 patterns:
   - "Data/{instrument}/{technique}/{sample}/{session}/{datafile}":
+      match: "Data/{SIMS,SEM}/**"  # Only match "instrument"-directories named "SIMS" and "SEM"
       vars:
         # Definition of variables used in the templates
         sampleId: "{sample}"
@@ -195,6 +196,14 @@ patterns:
         "data:dataset":
           "sem260925": "pm:SEM"
           "{x}": "pm:{x}"
+      call:
+        # List of user-defined functions to call in the given order.
+        # These functions extracts documentation from the file system and returns a dict with variable-value pairs.
+        # They are called with arguments `path`, `env`, `**args`, where optional `**args` may be give as shown for myfunction2 below.
+          - "mypackage.mymodule:myfunction":
+          - "mypackage.mymodule:myfunction2":
+              arg1: true
+              arg2: 2
 
 ```
 
@@ -202,10 +211,25 @@ Here one pattern is defined, that will match the leaf files, assigning the varia
 The `vars` field will define additional variables based on the new environment.
 
 Currently patterns supports the following fields:
+- **match**: Optional match-filter.
+  If given, only paths matching this filter will populate templates.
+  Implemented using [wcmatch.glob], supporting:
+
+  | Special characters | Meaning                                                                       |
+  |--------------------|-------------------------------------------------------------------------------|
+  | *                  | Matches anything except slashes.                                              |
+  | **                 | Matches zero or more directories.                                             |
+  | ?                  | Matches any single character.                                                 |
+  | [`seq`]            | Matches any character in `seq`.                                               |
+  | [!`seq`]           | Matches any character not in `seq`.                                           |
+  | {`alt1`,`alt2`}    | Matches either `alt1` or `alt2`. Is applied to patterns before anything else. |
+  | \`c`               | Escapes special character `c`.                                                |
+
 - **appliesTo**: List of template names that the pattern applies to.
   The default is to apply it to all patterns.
 - **vars**: Updates the environment with additional variable definitions.
 - **mappings**: Updates the environment based on mapping transformations.
+- **call**: Call a function that should return a dict with additional variables for the environment.
 
 
 #### exclude
@@ -272,3 +296,4 @@ flowchart LR
 [datadoc]: https://emmc-asbl.github.io/tripper/latest/datadoc/introduction/
 [templates figure]: https://github.com/SINTEF/physmet-data-documentation-templates/raw/main/figs/tables.svg
 [README]: https://github.com/SINTEF/physmet-data-documentation-templates/blob/main/README.md
+[wcmatch.glob]: https://facelessuser.github.io/wcmatch/glob/#wcmatchglob

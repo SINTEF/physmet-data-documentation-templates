@@ -3,6 +3,7 @@
 # pylint: disable=too-few-public-methods
 
 import argparse
+import importlib
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -11,6 +12,7 @@ from typing import Optional, Union
 
 import parse
 import yaml
+from wcmatch import glob
 
 import tabular.io
 from tabular import Table, Tables
@@ -117,7 +119,15 @@ class Pattern:
 
         # pylint: disable=invalid-name
         self.appliesTo = s.pop("appliesTo", templates.keys())
-        self.templates = {name: templates[name] for name in self.appliesTo}
+
+        self.matchfilter = (
+            glob.compile(
+                s.pop("match"), flags=glob.CASE | glob.GLOBSTAR | glob.BRACE
+            )
+            if "match" in s
+            else None
+        )
+
         self.vars = s.pop("vars", {})
 
         self.mappings = {}
@@ -127,11 +137,30 @@ class Pattern:
                 parse.compile(k): v for k, v in maps.items()
             }
 
+        self.callspecs = []
+        for callfunc in s.pop("call", []):
+            funcspec, args = next(iter(callfunc.items()))
+            module, func = funcspec.split(":")
+            self.callspecs.append(
+                {
+                    "func": getattr(importlib.import_module(module), func),
+                    "args": args if args else {},
+                }
+            )
+
+        self.templates = {name: templates[name] for name in self.appliesTo}
+
         if s:
             raise ValueError(
                 f"unknown specifications for pattern '{pattern}': "
                 f"{', '.join(s.keys())}"
             )
+
+    def match(self, path: PathType) -> bool:
+        """Return whether `path` matches optional match filter."""
+        if self.matchfilter:
+            return self.matchfilter.match(path)
+        return True
 
     def assign_computed_variables(self, path: PathType, env: dict) -> None:
         """Update `env` with computed variables.
@@ -172,6 +201,15 @@ class Pattern:
                     f"matching mapping for variable '{var}={env[var]}'"
                 )
 
+    def assign_from_call(self, path: PathType, env: dict):
+        """Call functions."""
+        e = {}
+        for callspec in self.callspecs:
+            func = callspec["func"]
+            args = callspec["args"]
+            e.update(func(Path(path), env, **args))
+        return e
+
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
 
@@ -183,13 +221,16 @@ class Pattern:
             A dict mapping template names to JSON-LD documents.
             If `path` doesn't matche the pattern an empty dict is returned.
         """
-        docs = {}
+        docs: dict = {}
+        if not self.match(path):
+            return docs
         if r := self.pattern.parse(str(path)):
             e = env.copy()
             e.update(r.named)
 
             self.assign_computed_variables(path, e)
             self.assign_mappings(e)
+            self.assign_from_call(path, e)
 
             e.update({k: substitute(v, e) for k, v in self.vars.items() if v})
             for name, template in self.templates.items():

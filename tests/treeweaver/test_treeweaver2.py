@@ -71,6 +71,24 @@ def test_template_substitute_raises_on_missing_variable():
 # --- Tests Pattern class ---
 
 
+def test_pattern_match():
+    """Test pattern.match() method."""
+    pattern = Pattern("data/{dataset}", {}, {"match": "data/*.tif"})
+    assert pattern.match("data/dataset.tif")
+    assert not pattern.match("data/dataset.png")
+
+
+def test_pattern_call():
+    """Test pattern.call() method."""
+    callspecs = [{"callmodule:callfunc1": None}]
+    pattern = Pattern("data/{dataset}", {}, {"call": callspecs})
+    assert pattern.assign_from_call("data/dataset.tif", {}) == {"a": None}
+
+    callspecs = [{"callmodule:callfunc1": {"a": 1}}]
+    pattern = Pattern("data/{dataset}", {}, {"call": callspecs})
+    assert pattern.assign_from_call("data/dataset.tif", {}) == {"a": 1}
+
+
 def test_pattern_mapping_assigns_value_from_environment():
     """Pattern mappings should rewrite a variable based on a source value."""
     template = Template(
