@@ -141,6 +141,7 @@ class Table:
         cls,
         path: Union[str, Path],
         format: Optional[str] = None,
+        sheet: Union[str, int] = 0,
         **kwargs: Any,
     ) -> Table:
         """
@@ -152,6 +153,7 @@ class Table:
         Args:
             path (Union[str, Path]): Path to the file or directory.
             format (Optional[str], optional): Format override.
+            sheet (Union[str, int]): Sheet name or number to read.
             **kwargs: Extra parameters passed to the reader.
 
         Returns:
@@ -163,7 +165,8 @@ class Table:
         # pylint: disable=import-outside-toplevel
         from tabular.io import read
 
-        tables = read(path, format=format, **kwargs)
+        sheets = None if sheet is None else [sheet]
+        tables = read(path, format=format, sheets=sheets, **kwargs)
         tables_list = getattr(tables, "tables", None)
         if tables_list is not None and len(tables_list) > 1:
             raise ValueError(

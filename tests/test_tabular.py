@@ -174,6 +174,18 @@ def test_excel_multi_sheet_and_inference():
     assert "Simple Data" in sheet_names
 
 
+def test_read_sheets():
+    """Test read selected sheets."""
+    tables = tabular.read(FILE_EXCEL, sheets=[1, 0])
+    assert tables.names == ["Simple Data", "Mixed Formats"]
+
+
+def test_table_read_sheet():
+    """Test read selected sheets."""
+    table = Table.read(FILE_EXCEL, sheet=0)
+    assert table.headers[0] == "ID"
+
+
 # --- Tests for Table / Tables Built-In Class Methods ---
 
 
@@ -185,12 +197,6 @@ def test_table_class_read_and_write():
     out_path = TMP_ROOT / "class_write_test.csv"
     t.write(out_path)
     assert out_path.exists()
-
-
-def test_table_read_raises_on_multi_sheet():
-    """Verify Table.read raises an error if multiple tables exist."""
-    with pytest.raises(ValueError, match="Expected a single table"):
-        Table.read(FILE_EXCEL)
 
 
 def test_tables_class_read_and_write():
