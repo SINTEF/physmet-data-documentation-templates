@@ -184,7 +184,11 @@ class Pattern:
         env.setdefault("pattern", self.pattern.format)
 
     def assign_mappings(self, env: dict):
-        """Update `env` with mappings."""
+        """Update `env` with mappings.
+
+        Arguments:
+            env: Environment to update.
+        """
         for (newvar, var), maps in self.mappings.items():
             if var not in env:
                 raise PatternSpecError(
@@ -202,13 +206,20 @@ class Pattern:
                 )
 
     def assign_from_call(self, path: PathType, env: dict):
-        """Call functions."""
-        e = {}
+        """Update ` env` from calling functions described in the call
+        field in the configuration of a pattern.
+
+        Arguments:
+            path: Directory or file path to document.
+            env: Environment to update.
+        """
         for callspec in self.callspecs:
             func = callspec["func"]
             args = callspec["args"]
-            e.update(func(Path(path), env, **args))
-        return e
+            new = func(Path(path), env, **args)
+            print("***", new)
+            env.update(func(Path(path), env, **args))
+            print("*** env:", env)
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -284,6 +295,44 @@ class Treeweaver:
             for k, v in pattern.document(path, self.env).items():
                 docs[k].append(v)
         return dict(docs)
+
+    def document_table(
+        self,
+        filename: PathType,
+        format: Optional[str] = None,
+        sheet: Union[str, int] = 1,
+        reader_param: Optional[dict] = None,
+        mappings: Optional[dict] = None,
+    ) -> dict:
+        """Document a table with file paths.
+
+        This method is intended to be used with Excel and the
+        [Power Query SharePoint Folder or List connector].
+
+        Arguments:
+            filename: File name of table to read.
+            format: Format to read.
+            sheet: Name or number (starting from zero) of the sheet to load.
+            reader_param: Additional parameters sent to the reader.
+            mappings: Optional dict mapping column names to the following
+                default column names:
+                - "File Name"
+                - "Modification date"
+                - "Creation date"
+                - "Path"
+
+        Returns:
+            A dict mapping template names to JSON-LD documents.
+
+        SeeAlso:
+            https://support.microsoft.com/en-us/excel/import-data-from-data-sources-power-query
+        """
+        rparam = reader_param if reader_param else {}
+        table = Table.read(filename, format=format, sheet=sheet, **rparam)
+        if mappings or table:
+            pass
+
+        return {}
 
     def document(self, rootdir: PathType) -> dict:
         """Document a directory tree.
