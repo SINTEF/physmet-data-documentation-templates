@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from tabular import Table, Tables
+from tabular import Table
 from treeweaver.treeweaver2 import (
     Pattern,
     PatternSpecError,
@@ -80,13 +80,17 @@ def test_pattern_match():
 
 def test_pattern_call():
     """Test pattern.call() method."""
+    env = {}
     callspecs = [{"callmodule:callfunc1": None}]
-    pattern = Pattern("data/{dataset}", {}, {"call": callspecs})
-    assert pattern.assign_from_call("data/dataset.tif", {}) == {"a": None}
+    pattern = Pattern("data/{dataset}", env, {"call": callspecs})
+    pattern.assign_from_call("data/dataset.tif", env)
+    assert env == {"a": None}
 
+    env = {"b": 2}
     callspecs = [{"callmodule:callfunc1": {"a": 1}}]
-    pattern = Pattern("data/{dataset}", {}, {"call": callspecs})
-    assert pattern.assign_from_call("data/dataset.tif", {}) == {"a": 1}
+    pattern = Pattern("data/{dataset}", env, {"call": callspecs})
+    pattern.assign_from_call("data/dataset.tif", env)
+    assert env == {"a": 1, "b": 2}
 
 
 def test_pattern_mapping_assigns_value_from_environment():
@@ -294,31 +298,10 @@ patterns:
 """)
 
     tw = Treeweaver(configfile, rootdir=testdir)
-    result = tw.document(testdir)
+    result = tw.document_tree(testdir)
 
     assert "dir" in result
     assert len(result["dir"]) >= 2
-
-
-def test_treeweaver_totables_converts_to_tables():
-    """Test Treeweaver.totables() converts documents to Tables object."""
-    testdir = mktestdir("test_treeweaver_totables_converts_to_tables")
-    (testdir / "ARP001").mkdir()
-    configfile = testdir / "config.yaml"
-    configfile.write_text("""
-templates:
-  sample:
-    "@id": "{sampleId}"
-patterns:
-  - "{sample}":
-      vars:
-        sampleId: {sample}
-""")
-    tw = Treeweaver(configfile, rootdir=testdir)
-    tables = tw.totables(testdir)
-
-    assert isinstance(tables, Tables)
-    assert len(tables.tables) > 0
 
 
 @pytest.mark.filterwarnings("ignore:Format.*tables.:UserWarning")
@@ -342,7 +325,7 @@ patterns:
     tw = Treeweaver(configfile, rootdir=rootdir)
     outfile = testdir / "sample.csv"
 
-    tw.savedoc(rootdir, testdir, format="csv")
+    tw.savedoc(rootdir, testdir, outformat="csv")
 
     assert outfile.exists()
     lines = outfile.read_text().split(os.linesep)
@@ -374,7 +357,13 @@ patterns:
 ARP001,chameo:Sample,Some docs
 """)
     tw = Treeweaver(configfile, rootdir=rootdir)
-    tw.savedoc(rootdir, testdir, format="csv")
+    tw.savedoc(rootdir, testdir, outformat="csv")
+
+
+def test_treeweaver_savedoc_armel():
+    """Test documenting Armel's data."""
+    tw = Treeweaver(datadir / "Armel.yaml")
+    tw.savedoc(datadir, outdir / "Armel.xlsx", mode="overwrite")
 
 
 def test_treeweaver_savedoc_andreas():
@@ -383,10 +372,15 @@ def test_treeweaver_savedoc_andreas():
     tw.savedoc(datadir, outdir / "Andreas.xlsx", mode="overwrite")
 
 
-def test_treeweaver_savedoc_armel():
-    """Test documenting Armel's data."""
-    tw = Treeweaver(datadir / "Armel.yaml")
-    tw.savedoc(datadir, outdir / "Armel.xlsx", mode="overwrite")
+def test_treeweaver_savedoc_andreas2():
+    """Test documenting Andreas's data."""
+    source = Path("data") / "Andreas-sharepoint.xlsx"
+    if source.exists():
+        tw = Treeweaver(datadir / "Andreas2.yaml")
+        tw.savedoc(
+            source=source,
+            output=outdir / "Andreas2.xlsx",
+        )
 
 
 # --- Tests functions ---

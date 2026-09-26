@@ -111,9 +111,12 @@ class Pattern:
 
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, pattern: str, templates: dict, spec: dict) -> None:
         s = spec.copy()
         # Pre-process pattern
+        self.patt = pattern  # un-processed
         processed = re.sub(r"\{([^:}]*)\}", r"{\1:component}", pattern)
         self.pattern = parse.compile(processed, extra_types=parse_formatters)
 
@@ -169,7 +172,8 @@ class Pattern:
             path: Directory or file path to document.
             env: Environment to update.
         """
-        p = Path(env.get("rootdir", ".")) / path
+        root = Path(env.get("rootdir", "."))
+        p = root / path
         if p.exists():
             ctime = datetime.fromtimestamp(p.stat().st_ctime).isoformat()
             mtime = datetime.fromtimestamp(p.stat().st_mtime).isoformat()
@@ -183,7 +187,7 @@ class Pattern:
         env.setdefault("mtime", mtime)
         env.setdefault("pattern", self.pattern.format)
 
-    def assign_mappings(self, env: dict):
+    def assign_mappings(self, path: PathType, env: dict):
         """Update `env` with mappings.
 
         Arguments:
@@ -192,8 +196,9 @@ class Pattern:
         for (newvar, var), maps in self.mappings.items():
             if var not in env:
                 raise PatternSpecError(
-                    f"in mappings for pattern '{self.pattern}': variable "
-                    f"'{var}' is not in environment"
+                    f"In mappings for pattern '{self.patt}': variable "
+                    f"'{var}' is not in environment.\n"
+                    f"Path: '{path}'"
                 )
             for k, v in maps.items():
                 if r := k.parse(env[var]):
@@ -201,8 +206,9 @@ class Pattern:
                     break
             else:
                 raise PatternSpecError(
-                    f"in mappings for pattern '{self.pattern.format}': no "
-                    f"matching mapping for variable '{var}={env[var]}'"
+                    f"In mappings for pattern '{self.patt}': no "
+                    f"matching mapping for variable '{var}={env[var]}'.\n"
+                    f"Path: '{path}'"
                 )
 
     def assign_from_call(self, path: PathType, env: dict):
@@ -216,10 +222,7 @@ class Pattern:
         for callspec in self.callspecs:
             func = callspec["func"]
             args = callspec["args"]
-            new = func(Path(path), env, **args)
-            print("***", new)
             env.update(func(Path(path), env, **args))
-            print("*** env:", env)
 
     def document(self, path: PathType, env: dict) -> dict:
         """Document a directory or file path.
@@ -240,7 +243,7 @@ class Pattern:
             e.update(r.named)
 
             self.assign_computed_variables(path, e)
-            self.assign_mappings(e)
+            self.assign_mappings(path, e)
             self.assign_from_call(path, e)
 
             e.update({k: substitute(v, e) for k, v in self.vars.items() if v})
@@ -296,21 +299,21 @@ class Treeweaver:
                 docs[k].append(v)
         return dict(docs)
 
-    def document_table(
+    def document_pathtable(
         self,
         filename: PathType,
-        format: Optional[str] = None,
+        format: Optional[str] = None,  # pylint: disable=redefined-builtin
         sheet: Union[str, int] = 1,
         reader_param: Optional[dict] = None,
         mappings: Optional[dict] = None,
     ) -> dict:
-        """Document a table with file paths.
+        """Document a file paths listed in a table.
 
         This method is intended to be used with Excel and the
         [Power Query SharePoint Folder or List connector].
 
         Arguments:
-            filename: File name of table to read.
+            filename: File name of table with paths to document.
             format: Format to read.
             sheet: Name or number (starting from zero) of the sheet to load.
             reader_param: Additional parameters sent to the reader.
@@ -327,14 +330,48 @@ class Treeweaver:
         SeeAlso:
             https://support.microsoft.com/en-us/excel/import-data-from-data-sources-power-query
         """
+        # pylint: disable=too-many-locals
         rparam = reader_param if reader_param else {}
+        maps = mappings if mappings else {}
         table = Table.read(filename, format=format, sheet=sheet, **rparam)
-        if mappings or table:
-            pass
+        docs = defaultdict(list)
+        seen = set()
 
-        return {}
+        def getval(row, colname):
+            if (key := maps.get(colname, colname)) in table.headers:
+                return row[table.headers.index(key)]
+            return None
 
-    def document(self, rootdir: PathType) -> dict:
+        def subpaths(path):
+            paths = []
+            for p in [path] + list(path.parents):
+                if p in seen:
+                    break
+                seen.add(p)
+                paths.append(p)
+            return paths
+
+        for row in table:
+            if val := getval(row, "Modification date"):
+                self.env["mtime"] = val
+            if val := getval(row, "Creation date"):
+                self.env["ctime"] = val
+
+            dirpath = Path(getval(row, "Path"))
+            filepath = dirpath / getval(row, "File Name")
+            relpath = (
+                filepath.relative_to(self.env["baseURL"])
+                if "baseURL" in self.env
+                else filepath
+            )
+
+            for path in subpaths(relpath):
+                for k, v in self.document_path(path).items():
+                    docs[k].extend(v)
+
+        return docs
+
+    def document_tree(self, rootdir: PathType) -> dict:
         """Document a directory tree.
 
         Arguments:
@@ -358,7 +395,7 @@ class Treeweaver:
         return dict(docs)
 
     def totables(
-        self, rootdir: PathType, oldtables: Optional[Tables] = None
+        self, docs: dict, oldtables: Optional[Tables] = None
     ) -> Tables:
         """Create table documentation of directory tree.
 
@@ -367,7 +404,7 @@ class Treeweaver:
         processing.
 
         Arguments:
-            rootdir: Root directory of the directory tree to document.
+            docs: Dict mapping template names to JSON-LD documents.
             oldtables: Old versions of the generated tables. If given,
                 columns in `oldtables` that doesn't exists in the generated
                 tables will be included in the generated tables.
@@ -376,7 +413,7 @@ class Treeweaver:
             A Tables object containing one table per template type.
         """
         tables = Tables()
-        for name, docs in self.document(rootdir).items():
+        for name, doc in docs.items():
             if oldtables is None:
                 oldtable = None
             elif len(oldtables) == 1:
@@ -385,28 +422,39 @@ class Treeweaver:
                 oldtable = oldtables[name]
             else:
                 oldtable = None
-            table = totable(docs, name=name, oldtable=oldtable)
+            table = totable(doc, name=name, oldtable=oldtable)
             tables.append(table)
         return tables
 
     def savedoc(
         self,
-        rootdir: PathType,
-        path: PathType,
-        format: Optional[str] = None,  # pylint: disable=redefined-builtin
+        source: PathType,
+        output: PathType,
+        informat: Optional[str] = None,
+        sheet: Union[str, int] = 1,
+        mappings: Optional[dict] = None,
+        reader_param: Optional[dict] = None,
+        outformat: Optional[str] = None,
         mode: str = "update",
         **kwargs,
     ) -> None:
-        """Document a directory tree and save created tables to file.
-
-        Documents a directory tree and writes the results to a file
-        in the specified format (or inferred from the file extension).
+        """Like savedoc(), but gets the paths to document from a table
+        instead from a directory tree.
 
         Arguments:
-            rootdir: Root directory of the directory tree to document.
-            path: Output path. Format is inferred from the file extension
+            source: File name of table with paths to document.
+            output: Output path. Format is inferred from the file extension
                 unless explicitly provided via `format`.
-            format: Output format. Any format supported by tabular.
+            informat: Format of ` filename` to read.
+            sheet: Name or number (starting from zero) of the sheet to load.
+            reader_param: Additional parameters sent to the reader.
+            mappings: Optional dict mapping column names to the following
+                default column names:
+                - "File Name"
+                - "Modification date"
+                - "Creation date"
+                - "Path"
+            outformat: Output format. Any format supported by tabular.
                 Single-file formats: xlsx, json
                 Multi-file formats: csv
                 If not provided, format is inferred from `path` file extension.
@@ -417,25 +465,39 @@ class Treeweaver:
             **kwargs: Additional keyword arguments passed to the Tables.write()
                 method.
         """
+        # pylint: disable=too-many-positional-arguments,too-many-locals
+        # pylint: disable=too-many-arguments
         singlefile_formats = set(["csv"])
-        p: Path = Path(path)
-        if format is None:
+        s = Path(source)
+        if s.is_dir():
+            docs = self.document_tree(s)
+        else:
+            docs = self.document_pathtable(
+                s,
+                format=informat,
+                sheet=sheet,
+                reader_param=reader_param,
+                mappings=mappings,
+            )
+
+        p: Path = Path(output)
+        if outformat is None:
             if p.is_dir():
                 raise ValueError(
                     "`format` is required when `path` is a directory"
                 )
-            format = p.suffix.lstrip(".")
+            outformat = p.suffix.lstrip(".")
         if mode == "update" and p.exists():
-            if p.is_dir() and format.lower() in singlefile_formats:
+            if p.is_dir() and outformat.lower() in singlefile_formats:
                 oldtables = Tables()
-                for filename in p.glob(f"*.{format}"):
+                for filename in p.glob(f"*.{outformat}"):
                     oldtables.append(Tables.read(filename))
             else:
-                oldtables = tabular.io.read(p, format=format, **kwargs)
-            tables = self.totables(rootdir, oldtables=oldtables)
+                oldtables = tabular.io.read(p, format=outformat, **kwargs)
+            tables = self.totables(docs, oldtables=oldtables)
         else:
-            tables = self.totables(rootdir)
-        tables.write(p, format=format, **kwargs)
+            tables = self.totables(docs)
+        tables.write(p, format=outformat, **kwargs)
 
 
 def totable(
@@ -466,7 +528,6 @@ def totable(
         A Table object with headers from all unique keys across the input
         dictionaries, and rows in the order of the input list.
     """
-    # headers: dict = {}  # use dict instead of set to keep ordering
     dicts = list(dicts)  # in case dicts is a iterator
     headers = {}
     for d in dicts:
@@ -524,8 +585,11 @@ def main(argv: Optional[list[str]] = None):
         description="Discover datadoc entries from a structured directory."
     )
     parser.add_argument(
-        "rootdir",
-        help="Root directory of the file structure to be documented.",
+        "source",
+        help=(
+            "Either root directory of the file structure to be documented "
+            "or table with file paths to be documented."
+        ),
     )
     parser.add_argument(
         "--configfile",
@@ -534,6 +598,11 @@ def main(argv: Optional[list[str]] = None):
             "Configuration YAML file. Default is `treeweaver2.yaml` in "
             "`rootdir`."
         ),
+    )
+    parser.add_argument(
+        "--sheet",
+        "-s",
+        help="Sheet to read if `source` is a file name.",
     )
     parser.add_argument(
         "--format",
@@ -554,9 +623,16 @@ def main(argv: Optional[list[str]] = None):
     )
     args = parser.parse_args(argv)
 
-    defaultconf = Path(args.rootdir) / "treeweaver2.yaml"
+    source = Path(args.source)
+    rootdir = source if source.is_dir() else source.parent
+    defaultconf = rootdir / "treeweaver2.yaml"
     tw = Treeweaver(args.configfile if args.configfile else defaultconf)
-    tw.savedoc(rootdir=args.rootdir, path=args.output, format=args.format)
+    tw.savedoc(
+        source=source,
+        output=args.output,
+        sheet=args.sheet,
+        outformat=args.format,
+    )
 
 
 if __name__ == "__main__":
