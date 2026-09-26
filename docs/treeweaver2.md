@@ -189,7 +189,9 @@ patterns:
         # The following sets `data` accoring to the following statements:
         #     if dataset == "sem260925": data = "pm:SEM"
         #     if dataset match "{x}":    data = "pm:{x}"
-        # where `{x}` is a local variable that will not influence the environment
+        # where `{x}` is a local variable that will not influence the environment.
+        # The first matching mapping will be used, hence, place the catch all `{x}`
+        # as the last mapping.
         "data:dataset":
           "sem260925": "pm:SEM"
           "{x}": "pm:{x}"

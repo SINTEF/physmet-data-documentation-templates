@@ -30,12 +30,11 @@ environment:
 # Patterns matching
 # Variables will be assigned
 patterns:
-- "{sample:.4}/{instrument:underscored}/{technique:underscored}/{experiment:underscored}":
+- "Andreas/{sample}/{instrument}/{technique}/{experiment}":
     vars:
       sampleId: "{sample}"
       datasetId: "data-{sample}-{technique}-{experiment}"
       measurementId: "{sample}-{technique}-{experiment}"
-      #equipmentId: "emlab:{instrument}"  # TODO: map this to equipment list
       processedFrom: "{prefix}:{sample}"
     mappings:
       "equipmentId:instrument":

@@ -9,6 +9,7 @@ import pytest
 from tabular import Table, Tables
 from treeweaver.treeweaver2 import (
     Pattern,
+    PatternSpecError,
     Template,
     Treeweaver,
     substitute,
@@ -47,6 +48,77 @@ def test_template_substitute_raises_on_missing_variable():
 
     with pytest.raises(KeyError):
         template.substitute(env)
+
+
+def test_pattern_mapping_assigns_value_from_environment():
+    """Pattern mappings should rewrite a variable based on a source value."""
+    template = Template(
+        "measurement",
+        {"@id": "{measurementId}", "hasParticipant": "{equipmentId}"},
+    )
+    pattern = Pattern(
+        "{instrument}/{technique}",
+        {"measurement": template},
+        {
+            "vars": {"measurementId": "{instrument}-{technique}"},
+            "mappings": {
+                "equipmentId:instrument": {
+                    "SEM": "emlab:LVSEM",
+                    "SIMS": "emlab:SIMS30",
+                }
+            },
+        },
+    )
+    result = pattern.document("SEM/EBSD", {"rootdir": "."})
+
+    assert result["measurement"]["@id"] == "SEM-EBSD"
+    assert result["measurement"]["hasParticipant"] == "emlab:LVSEM"
+
+
+def test_pattern_mapping_supports_pattern_templates():
+    """Mapped values may also use parse templates and local variables."""
+    template = Template(
+        "dataset", {"@id": "{datasetId}", "source": "{mapping}"}
+    )
+    pattern = Pattern(
+        "{instrument}/{dataset}",
+        {"dataset": template},
+        {
+            "vars": {"datasetId": "{dataset}"},
+            "mappings": {
+                "mapping:dataset": {
+                    "sem260925": "pm:SEM",
+                    "{x}": "pm:{x}",
+                },
+            },
+        },
+    )
+    result = pattern.document("SEM/sem260925", {"rootdir": "."})
+
+    assert result["dataset"]["source"] == "pm:SEM"
+    assert result["dataset"]["@id"] == "sem260925"
+
+
+def test_pattern_mapping_raises_for_matching_failure():
+    """Unknown mapping values should fail loudly instead of silently
+    passing."""
+    template = Template(
+        "measurement",
+        {"@id": "{instrument}", "hasParticipant": "{equipmentId}"},
+    )
+    pattern = Pattern(
+        "{instrument}",
+        {"measurement": template},
+        {
+            "mappings": {
+                "equipmentId:instrument": {
+                    "SEM": "emlab:LVSEM",
+                }
+            }
+        },
+    )
+    with pytest.raises(PatternSpecError, match="no matching mapping"):
+        pattern.document("SIMS", {"rootdir": "."})
 
 
 def test_pattern_document_matches_path():

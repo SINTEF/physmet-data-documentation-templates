@@ -26,28 +26,35 @@ class PatternSpecError(Exception):
 
 
 # Parse formatters
-def underscored(string: str):
+def underscored(string: str) -> str:
     """Parse formatter that converts blanks to underscore."""
     return string.replace(" ", "_")
 
 
-def escaped(string: str):
+def escaped(string: str) -> str:
     """Parse formatter that converts blanks to %-encoded."""
     # Alternatively we could use urllib.parse.quote()
     return string.replace(" ", "%20")
 
 
-def xstrip(string: str):
+def xstrip(string: str) -> str:
     """Strip file extension and replace blanks with underscore."""
     return re.sub(r"\.\w+$", "", string).replace(" ", "_")
 
 
+def component(string: str) -> str:
+    """Parse a file component (not matching a directory separator)."""
+    return string
+
+
 underscored.pattern = "[^/]+"  # type: ignore[attr-defined]
 escaped.pattern = "[^/]+"  # type: ignore[attr-defined]
+component.pattern = "[^/]+"  # type: ignore[attr-defined]
 parse_formatters = {
     "underscored": underscored,
     "escaped": escaped,
     "xstrip": xstrip,
+    "component": component,
 }
 
 
@@ -103,9 +110,12 @@ class Pattern:
     """
 
     def __init__(self, pattern: str, templates: dict, spec: dict) -> None:
-        # pylint: disable=invalid-name
         s = spec.copy()
-        self.pattern = parse.compile(pattern, extra_types=parse_formatters)
+        # Pre-process pattern
+        processed = re.sub(r"\{([^:}]*)\}", r"{\1:component}", pattern)
+        self.pattern = parse.compile(processed, extra_types=parse_formatters)
+
+        # pylint: disable=invalid-name
         self.appliesTo = s.pop("appliesTo", templates.keys())
         self.templates = {name: templates[name] for name in self.appliesTo}
         self.vars = s.pop("vars", {})
@@ -413,8 +423,13 @@ def substitute(stencil: ValueType, env: dict) -> ValueType:
     raise TypeError("Unsupported stencil type:", type(stencil))
 
 
-def main():
-    """Main function for the command-line interface."""
+def main(argv: Optional[list[str]] = None):
+    """Main function for the command-line interface.
+
+    Arguments:
+        argv: List of strings to parse. Mainly used for testing.
+            Defaults to ` sys.argv`.
+    """
     parser = argparse.ArgumentParser(
         description="Discover datadoc entries from a structured directory."
     )
@@ -447,7 +462,7 @@ def main():
             "a directory for multi-file formats."
         ),
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     tw = Treeweaver(args.configfile)
     tw.savedoc(rootdir=args.rootdir, path=args.output, format=args.format)
