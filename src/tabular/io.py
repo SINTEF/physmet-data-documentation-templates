@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 import logging
-import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional, Union
 
@@ -140,13 +139,12 @@ def write(
                 out_path.with_suffix("") if out_path.suffix else out_path
             )
 
-            msg = (
-                f"Format '{actual_fmt}' does not support multiple tables. "
-                f"A directory '{target_dir}' will be created containing "
-                "the individual tables."
+            logger.warning(
+                "Format '%s' does not support multiple tables. A directory "
+                "'%s' will be created containing the individual tables.",
+                actual_fmt,
+                target_dir,
             )
-            warnings.warn(msg, UserWarning, stacklevel=2)
-
             logger.info(
                 "Splitting data into individual '%s' files in directory '%s'",
                 actual_fmt,

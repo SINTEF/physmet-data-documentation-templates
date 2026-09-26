@@ -103,8 +103,7 @@ def test_symmetric_read_write_directory_workflow():
     target_path = TMP_ROOT / "dataset.csv"
 
     # Writing multi-table CSV creates 'dataset' directory
-    with pytest.warns(UserWarning, match="does not support multiple tables"):
-        tabular.write(original_tables, target_path)
+    tabular.write(original_tables, target_path)
 
     # Re-reading exact same path loads split files from directory seamlessly
     # NOTE: NO explicit format="csv" is provided here. It infers it.
@@ -118,8 +117,7 @@ def test_symmetric_read_write_directory_workflow():
     new_table = Table("SheetC", ["ID", "Val"], [[3, "C"]])
     reloaded_tables.append_table(new_table)
 
-    with pytest.warns(UserWarning, match="does not support multiple tables"):
-        tabular.write(reloaded_tables, target_path)
+    tabular.write(reloaded_tables, target_path)
 
     # Again, read without explicit format
     updated_tables = tabular.read(target_path)
@@ -354,8 +352,7 @@ def test_tables_append_from_file_and_write():
     ts.append_table(Table("second_sheet", ["A"], [[1]]))
     split_csv_path = TMP_ROOT / "output.csv"
 
-    with pytest.warns(UserWarning, match="does not support multiple tables"):
-        tabular.write(ts, split_csv_path)
+    tabular.write(ts, split_csv_path)
 
     expected_dir = TMP_ROOT / "output"
     assert expected_dir.is_dir()
@@ -389,8 +386,7 @@ def test_csv_write_splits_multiple_tables():
     base_out_csv = TMP_ROOT / "split_output.csv"
     tables = tabular.read(FILE_EXCEL)
 
-    with pytest.warns(UserWarning, match="does not support multiple tables"):
-        tabular.write(tables, base_out_csv)
+    tabular.write(tables, base_out_csv)
 
     expected_dir = TMP_ROOT / "split_output"
     assert expected_dir.is_dir()
