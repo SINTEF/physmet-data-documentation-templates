@@ -13,6 +13,7 @@ requires-python = ">=3.12"
 dependencies = [
     "PyYAML>=6.0.3",
     "parse>=1.22.1",
+    "tripper[datadoc] @ git+https://github.com/EMMC-ASBL/tripper.git@master",
     "jsonschema>=4.26.0",
     "requests>=2.34.2",
 ]
@@ -35,9 +36,10 @@ dev = [
 ]
 
 [project.scripts]
-treeweaver = "treeweaver.treeweaver:main"
-oold-converter = "oold_converter.oold_converter:main"
 extract-prefixes = "extract_prefixes:main"
+oold-converter = "oold_converter.oold_converter:main"
+compositions = "compositions.compositions:main"
+treeweaver = "treeweaver.treeweaver:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -50,6 +52,7 @@ line-length = 79
 [tool.hatch.build.targets.wheel]
 packages = [
     "src/extract_prefixes.py",
+    "src/compositions",
     "src/oold_converter",
     "src/tabular",
     "src/treeweaver",
@@ -57,6 +60,10 @@ packages = [
 
 [tool.hatch.build.targets.sdist]
 include = ["/src/oold_converter", "/src/tabular", "/src/treeweaver"]
+
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.pylint.messages_control]
 disable = ["too-few-public-methods", "redefined-builtin"]
